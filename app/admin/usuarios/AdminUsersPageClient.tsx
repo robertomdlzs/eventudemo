@@ -34,12 +34,12 @@ export default function AdminUsersPageClient({ usersData }: AdminUsersPageClient
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const { toast } = useToast()
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (searchParams?: { search?: string, role?: string, status?: string }) => {
     setLoading(true)
     try {
       // Refresh token before making the request
       apiClient.refreshToken()
-      const fetchedUsers = await getAdminUsers()
+      const fetchedUsers = await getAdminUsers(searchParams)
       if (fetchedUsers?.users) {
         setUsers(fetchedUsers.users)
         setFilteredUsers(fetchedUsers.users)
@@ -56,33 +56,33 @@ export default function AdminUsersPageClient({ usersData }: AdminUsersPageClient
     }
   }
 
-  // Función para filtrar usuarios
-  const filterUsers = () => {
-    let filtered = users
-
-    // Filtro por búsqueda de texto
+  // Función para buscar usuarios en el backend
+  const searchUsers = async () => {
+    const searchParams: { search?: string, role?: string, status?: string } = {}
+    
     if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      searchParams.search = searchTerm
     }
-
-    // Filtro por rol
+    
     if (roleFilter !== "all") {
-      filtered = filtered.filter(user => user.role === roleFilter)
+      searchParams.role = roleFilter
     }
-
-    setFilteredUsers(filtered)
+    
+    await fetchUsers(searchParams)
   }
 
   useEffect(() => {
     fetchUsers()
   }, [])
 
+  // Debounce para evitar demasiadas búsquedas
   useEffect(() => {
-    filterUsers()
-  }, [users, searchTerm, roleFilter])
+    const timeoutId = setTimeout(() => {
+      searchUsers()
+    }, 500) // Esperar 500ms después del último cambio
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, roleFilter])
 
   const handleDelete = async (id: string) => {
     try {

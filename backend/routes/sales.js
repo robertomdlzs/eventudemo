@@ -8,6 +8,35 @@ const router = express.Router()
 // Get all sales/transactions (admin only)
 router.get("/", auth, requireRole("admin"), async (req, res) => {
   try {
+    const { search = '', status = '', payment_method = '' } = req.query
+    
+    let whereClause = 'WHERE 1=1'
+    const params = []
+    let paramIndex = 1
+
+    if (search) {
+      whereClause += ` AND (
+        s.buyer_name ILIKE $${paramIndex} OR 
+        s.buyer_email ILIKE $${paramIndex} OR 
+        e.title ILIKE $${paramIndex} OR 
+        tt.name ILIKE $${paramIndex}
+      )`
+      params.push(`%${search}%`)
+      paramIndex++
+    }
+
+    if (status) {
+      whereClause += ` AND s.status = $${paramIndex}`
+      params.push(status)
+      paramIndex++
+    }
+
+    if (payment_method) {
+      whereClause += ` AND s.payment_method = $${paramIndex}`
+      params.push(payment_method)
+      paramIndex++
+    }
+
     const query = `
       SELECT 
         s.id,
@@ -16,10 +45,8 @@ router.get("/", auth, requireRole("admin"), async (req, res) => {
         s.quantity,
         s.total_amount,
         s.status,
-        s.transaction_type,
         s.payment_method,
-        s.failure_reason,
-        s.abandoned_at,
+        s.payment_reference,
         s.created_at as transaction_date,
         e.title as event_name,
         e.date as event_date,
@@ -29,18 +56,16 @@ router.get("/", auth, requireRole("admin"), async (req, res) => {
         tt.price as ticket_price,
         u.first_name,
         u.last_name,
-        u.email as user_email,
-        s.session_id,
-        s.ip_address,
-        s.user_agent
+        u.email as user_email
       FROM sales s
       JOIN events e ON s.event_id = e.id
       JOIN ticket_types tt ON s.ticket_type_id = tt.id
       LEFT JOIN users u ON s.user_id = u.id
+      ${whereClause}
       ORDER BY s.created_at DESC
     `
 
-    const result = await db.query(query)
+    const result = await db.query(query, params)
 
     res.json({
       success: true,
@@ -700,13 +725,12 @@ router.get("/stats/overview", auth, requireRole("admin"), async (req, res) => {
         COUNT(*) as total_transactions,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_sales,
         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
-        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
-        COUNT(CASE WHEN status = 'abandoned' THEN 1 END) as abandoned_carts,
         COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_sales,
+        COUNT(CASE WHEN status = 'refunded' THEN 1 END) as refunded_sales,
         SUM(CASE WHEN status = 'completed' THEN total_amount ELSE 0 END) as total_revenue,
         AVG(CASE WHEN status = 'completed' THEN total_amount ELSE NULL END) as average_sale,
-        COUNT(CASE WHEN transaction_type = 'cart_abandonment' THEN 1 END) as cart_abandonments,
-        COUNT(CASE WHEN transaction_type = 'payment_attempt' THEN 1 END) as payment_attempts
+        COUNT(DISTINCT user_id) as unique_customers,
+        COUNT(DISTINCT event_id) as events_with_sales
       FROM sales
     `
 
@@ -720,7 +744,7 @@ router.get("/stats/overview", auth, requireRole("admin"), async (req, res) => {
         s.buyer_name,
         s.total_amount,
         s.status,
-        s.transaction_type,
+        s.payment_method,
         s.created_at,
         e.title as event_name
       FROM sales s
@@ -739,10 +763,9 @@ router.get("/stats/overview", auth, requireRole("admin"), async (req, res) => {
           (COUNT(CASE WHEN status = 'completed' THEN 1 END) * 100.0 / COUNT(*)), 2
         ) as conversion_rate,
         ROUND(
-          (COUNT(CASE WHEN status = 'abandoned' THEN 1 END) * 100.0 / COUNT(*)), 2
-        ) as abandonment_rate
+          (COUNT(CASE WHEN status = 'cancelled' THEN 1 END) * 100.0 / COUNT(*)), 2
+        ) as cancellation_rate
       FROM sales
-      WHERE transaction_type IN ('cart_abandonment', 'payment_attempt', 'direct_sale')
     `
 
     const conversionResult = await db.query(conversionQuery)

@@ -2602,6 +2602,110 @@ async function handleDeleteMedia(req, res) {
   }
 }
 
+// Get audit logs (admin only)
+router.get('/audit-logs', async (req, res) => {
+  // Skip auth check for development
+  if (process.env.NODE_ENV === 'production') {
+    // Apply auth middleware for production
+    return auth(req, res, () => {
+      return requireAdmin(req, res, () => handleGetAuditLogs(req, res))
+    })
+  }
+  
+  // For development, skip auth
+  return handleGetAuditLogs(req, res)
+})
+
+async function handleGetAuditLogs(req, res) {
+  try {
+    const { page = 1, limit = 50, search = '', severity = '', status = '', action = '' } = req.query
+    const offset = (page - 1) * limit
+
+    let whereClause = 'WHERE 1=1'
+    const params = []
+    let paramIndex = 1
+
+    if (search) {
+      whereClause += ` AND (
+        user_name ILIKE $${paramIndex} OR 
+        user_email ILIKE $${paramIndex} OR 
+        action ILIKE $${paramIndex} OR 
+        resource ILIKE $${paramIndex} OR
+        ip_address::text ILIKE $${paramIndex}
+      )`
+      params.push(`%${search}%`)
+      paramIndex++
+    }
+
+    if (severity) {
+      whereClause += ` AND severity = $${paramIndex}`
+      params.push(severity)
+      paramIndex++
+    }
+
+    if (status) {
+      whereClause += ` AND status = $${paramIndex}`
+      params.push(status)
+      paramIndex++
+    }
+
+    if (action) {
+      whereClause += ` AND action = $${paramIndex}`
+      params.push(action)
+      paramIndex++
+    }
+
+    const logsQuery = `
+      SELECT 
+        id,
+        user_name,
+        user_email,
+        action,
+        resource,
+        severity,
+        status,
+        ip_address,
+        user_agent,
+        timestamp as created_at,
+        details
+      FROM audit_logs
+      ${whereClause}
+      ORDER BY timestamp DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `
+
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM audit_logs
+      ${whereClause}
+    `
+
+    const [logsResult, countResult] = await Promise.all([
+      db.query(logsQuery, [...params, limit, offset]),
+      db.query(countQuery, params)
+    ])
+
+    res.json({
+      success: true,
+      data: {
+        logs: logsResult.rows,
+        pagination: {
+          total: parseInt(countResult.rows[0].total),
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(parseInt(countResult.rows[0].total) / limit)
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Get audit logs error:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    })
+  }
+}
+
 // Helper function to determine file type
 function getFileType(filename) {
   const ext = filename.split('.').pop().toLowerCase()

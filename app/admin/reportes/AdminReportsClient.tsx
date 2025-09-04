@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,8 @@ import {
   DollarSign,
   Download,
   Filter,
-  Search
+  Search,
+  X
 } from 'lucide-react'
 import { ActivityChart } from '@/components/admin/charts/activity-chart'
 import { TransactionDistributionChart } from '@/components/admin/charts/transaction-distribution-chart'
@@ -45,6 +46,15 @@ export default function AdminReportsClient({
     status: '',
     paymentMethod: 'all'
   })
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredData, setFilteredData] = useState({
+    sales: Array.isArray(salesData?.salesByEvent) ? salesData.salesByEvent : [],
+    salesByDate: Array.isArray(salesData?.salesByDate) ? salesData.salesByDate : [],
+    events: Array.isArray(eventsData?.events) ? eventsData.events : [],
+    users: Array.isArray(usersData?.users) ? usersData.users : [],
+    financial: Array.isArray(financialData) ? financialData : []
+  })
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -57,6 +67,120 @@ export default function AdminReportsClient({
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('es-CO')
   }
+
+  // Función para verificar si hay filtros activos
+  const hasActiveFilters = () => {
+    return searchTerm || 
+           filters.startDate || 
+           filters.endDate || 
+           (filters.paymentMethod && filters.paymentMethod !== 'all') ||
+           (filters.status && filters.status !== 'all') ||
+           (filters.category && filters.category !== 'all')
+  }
+
+  // Función para filtrar datos
+  const filterData = () => {
+    // Los datos de reportes tienen estructura diferente, extraer arrays de las propiedades correctas
+    // Usar salesByDate para métricas individuales y salesByEvent para agrupaciones
+    const safeSalesByDate = Array.isArray(salesData?.salesByDate) ? salesData.salesByDate : []
+    const safeSalesByEvent = Array.isArray(salesData?.salesByEvent) ? salesData.salesByEvent : []
+    const safeEventsData = Array.isArray(eventsData?.events) ? eventsData.events : []
+    const safeUsersData = Array.isArray(usersData?.users) ? usersData.users : []
+    const safeFinancialData = Array.isArray(financialData) ? financialData : []
+
+    // Función auxiliar para verificar si una fecha está en el rango
+    const isDateInRange = (dateString: string, startDate: string, endDate: string) => {
+      if (!dateString) return true
+      
+      // Usar solo la parte de fecha (YYYY-MM-DD) para comparación
+      const eventDate = new Date(dateString).toISOString().split('T')[0]
+      
+      if (startDate && eventDate < startDate) return false
+      if (endDate && eventDate > endDate) return false
+      return true
+    }
+
+    // Aplicar filtros de fecha y búsqueda
+    let filteredSalesByDate = safeSalesByDate
+    let filteredSalesByEvent = safeSalesByEvent
+    let filteredEvents = safeEventsData
+    let filteredUsers = safeUsersData
+
+    // Filtro por fecha
+    if (filters.startDate || filters.endDate) {
+      filteredSalesByDate = filteredSalesByDate.filter((sale: any) => 
+        isDateInRange(sale.sale_date, filters.startDate, filters.endDate)
+      )
+      filteredSalesByEvent = filteredSalesByEvent.filter((sale: any) => 
+        isDateInRange(sale.event_date, filters.startDate, filters.endDate)
+      )
+      filteredEvents = filteredEvents.filter((event: any) => 
+        isDateInRange(event.date, filters.startDate, filters.endDate)
+      )
+    }
+
+    // Filtro por método de pago (solo para salesByEvent ya que salesByDate no tiene payment_method)
+    if (filters.paymentMethod && filters.paymentMethod !== 'all') {
+      filteredSalesByEvent = filteredSalesByEvent.filter((sale: any) => 
+        sale.payment_method === filters.paymentMethod
+      )
+    }
+
+    // Filtro por estado
+    if (filters.status && filters.status !== 'all') {
+      filteredSalesByEvent = filteredSalesByEvent.filter((sale: any) => 
+        sale.status === filters.status
+      )
+      filteredEvents = filteredEvents.filter((event: any) => 
+        event.status === filters.status
+      )
+    }
+
+    // Filtro por categoría
+    if (filters.category && filters.category !== 'all') {
+      filteredEvents = filteredEvents.filter((event: any) => 
+        event.category === filters.category
+      )
+    }
+
+    // Filtro por término de búsqueda
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      
+      filteredSalesByEvent = filteredSalesByEvent.filter((sale: any) => 
+        sale.event_name?.toLowerCase().includes(searchLower) ||
+        sale.event_date?.toLowerCase().includes(searchLower) ||
+        sale.payment_method?.toLowerCase().includes(searchLower) ||
+        sale.status?.toLowerCase().includes(searchLower)
+      )
+
+      filteredEvents = filteredEvents.filter((event: any) =>
+        event.title?.toLowerCase().includes(searchLower) ||
+        event.venue?.toLowerCase().includes(searchLower) ||
+        event.category?.toLowerCase().includes(searchLower) ||
+        event.status?.toLowerCase().includes(searchLower)
+      )
+
+      filteredUsers = filteredUsers.filter((user: any) =>
+        user.name?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.role?.toLowerCase().includes(searchLower) ||
+        user.status?.toLowerCase().includes(searchLower)
+      )
+    }
+
+    setFilteredData({
+      sales: filteredSalesByEvent, // Para tablas y agrupaciones
+      salesByDate: filteredSalesByDate, // Para métricas individuales
+      events: filteredEvents,
+      users: filteredUsers,
+      financial: safeFinancialData
+    })
+  }
+
+  useEffect(() => {
+    filterData()
+  }, [searchTerm, filters, salesData, eventsData, usersData, financialData])
 
   const renderSalesReport = () => (
     <div className="space-y-6">
@@ -104,8 +228,52 @@ export default function AdminReportsClient({
               </Select>
             </div>
           </div>
+          <div className="mt-4 flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setFilters({
+                startDate: '',
+                endDate: '',
+                category: '',
+                status: '',
+                paymentMethod: 'all'
+              })}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Limpiar Filtros
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Búsqueda Avanzada
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Indicador de filtros activos */}
+      {hasActiveFilters() && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Filter className="h-4 w-4" />
+              <span className="text-sm font-medium">Filtros activos:</span>
+              <div className="flex gap-2 text-xs">
+                {filters.startDate && <Badge variant="secondary">{`Desde: ${filters.startDate}`}</Badge>}
+                {filters.endDate && <Badge variant="secondary">{`Hasta: ${filters.endDate}`}</Badge>}
+                {filters.paymentMethod && filters.paymentMethod !== 'all' && <Badge variant="secondary">{`Método: ${filters.paymentMethod}`}</Badge>}
+                {filters.status && filters.status !== 'all' && <Badge variant="secondary">{`Estado: ${filters.status}`}</Badge>}
+                {filters.category && filters.category !== 'all' && <Badge variant="secondary">{`Categoría: ${filters.category}`}</Badge>}
+                {searchTerm && <Badge variant="secondary">{`Búsqueda: "${searchTerm}"`}</Badge>}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Estadísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -115,9 +283,9 @@ export default function AdminReportsClient({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{salesData.stats?.totalSales || 0}</div>
+            <div className="text-2xl font-bold">{Array.isArray(filteredData.salesByDate) ? filteredData.salesByDate.reduce((sum: number, sale: any) => sum + parseInt(sale.sales_count), 0) : 0}</div>
             <p className="text-xs text-muted-foreground">
-              {salesData.stats?.uniqueCustomers || 0} clientes únicos
+              {Array.isArray(filteredData.salesByDate) ? filteredData.salesByDate.length : 0} días con ventas
             </p>
           </CardContent>
         </Card>
@@ -129,10 +297,10 @@ export default function AdminReportsClient({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(salesData.stats?.totalRevenue || 0)}
+              {formatCurrency(Array.isArray(filteredData.salesByDate) ? filteredData.salesByDate.reduce((sum: number, sale: any) => sum + parseFloat(sale.revenue || 0), 0) : 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Promedio: {formatCurrency(salesData.stats?.averageTicketPrice || 0)}
+              Promedio: {formatCurrency(Array.isArray(filteredData.salesByDate) && filteredData.salesByDate.length > 0 ? filteredData.salesByDate.reduce((sum: number, sale: any) => sum + parseFloat(sale.revenue || 0), 0) / filteredData.salesByDate.length : 0)}
             </p>
           </CardContent>
         </Card>
@@ -143,7 +311,7 @@ export default function AdminReportsClient({
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{salesData.stats?.eventsWithSales || 0}</div>
+            <div className="text-2xl font-bold">{Array.isArray(filteredData.sales) ? filteredData.sales.length : 0}</div>
             <p className="text-xs text-muted-foreground">
               Eventos activos
             </p>
@@ -184,15 +352,21 @@ export default function AdminReportsClient({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {salesData.salesByEvent?.map((event: any) => (
-                <TableRow key={event.event_id}>
-                  <TableCell className="font-medium">{event.event_name}</TableCell>
-                  <TableCell>{formatDate(event.event_date)}</TableCell>
-                  <TableCell>{event.sales_count}</TableCell>
-                  <TableCell>{formatCurrency(event.revenue)}</TableCell>
-                  <TableCell>{formatCurrency(event.revenue / event.sales_count)}</TableCell>
+              {Array.isArray(filteredData.sales) ? filteredData.sales.slice(0, 10).map((sale: any) => (
+                <TableRow key={sale.event_id}>
+                  <TableCell className="font-medium">{sale.event_name || 'N/A'}</TableCell>
+                  <TableCell>{formatDate(sale.event_date)}</TableCell>
+                  <TableCell>{sale.sales_count || 0}</TableCell>
+                  <TableCell>{formatCurrency(sale.revenue || 0)}</TableCell>
+                  <TableCell>{formatCurrency(sale.average_ticket_price || 0)}</TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    No hay datos de ventas disponibles
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -201,26 +375,30 @@ export default function AdminReportsClient({
       {/* Ventas por Método de Pago */}
       <Card>
         <CardHeader>
-          <CardTitle>Ventas por Método de Pago</CardTitle>
+          <CardTitle>Ventas por Evento</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {salesData.salesByPaymentMethod?.map((method: any) => (
-              <div key={method.payment_method} className="flex items-center justify-between">
+            {Array.isArray(filteredData.sales) ? filteredData.sales.map((sale: any) => (
+              <div key={sale.event_id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline">{method.payment_method}</Badge>
+                  <Badge variant="outline">{sale.event_name}</Badge>
                   <span className="text-sm text-muted-foreground">
-                    {method.sales_count} transacciones
+                    {sale.sales_count} ventas
                   </span>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium">{formatCurrency(method.revenue)}</div>
+                  <div className="font-medium">{formatCurrency(parseFloat(sale.revenue))}</div>
                   <div className="text-sm text-muted-foreground">
-                    {((method.revenue / (salesData.stats?.totalRevenue || 1)) * 100).toFixed(1)}%
+                    {((parseFloat(sale.revenue) / (Array.isArray(filteredData.salesByDate) ? filteredData.salesByDate.reduce((sum: number, sale: any) => sum + parseFloat(sale.revenue || 0), 0) : 1)) * 100).toFixed(1)}%
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-gray-500 py-4">
+                No hay datos de eventos disponibles
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -653,15 +831,59 @@ export default function AdminReportsClient({
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+          >
             <Search className="h-4 w-4 mr-2" />
             Búsqueda Avanzada
           </Button>
         </div>
       </div>
 
+      {/* Panel de Búsqueda Avanzada */}
+      {showAdvancedSearch && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Búsqueda Avanzada
+            </CardTitle>
+            <CardDescription>
+              Busca en todos los reportes por término específico
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="search">Término de búsqueda</Label>
+                <Input
+                  id="search"
+                  placeholder="Buscar en ventas, eventos, usuarios..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              {searchTerm && (
+                <div className="text-sm text-gray-600">
+                  <p>Resultados encontrados:</p>
+                  <ul className="list-disc list-inside mt-1">
+                    <li>Ventas: {filteredData.sales.length}</li>
+                    <li>Eventos: {filteredData.events.length}</li>
+                    <li>Usuarios: {filteredData.users.length}</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Contenido del Reporte */}
       {renderContent()}
     </div>
   )
 }
+

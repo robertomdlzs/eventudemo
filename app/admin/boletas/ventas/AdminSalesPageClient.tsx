@@ -66,11 +66,11 @@ export default function AdminSalesPageClient() {
   const [stats, setStats] = useState<SalesStats | null>(null)
   const { toast } = useToast()
 
-  const fetchSales = async () => {
+  const fetchSales = async (searchParams?: { search?: string, status?: string, payment_method?: string }) => {
     setLoading(true)
     try {
       const [salesData, statsData] = await Promise.all([
-        getSales(),
+        getSales(searchParams),
         getSalesStats()
       ])
       setSales(salesData)
@@ -87,33 +87,37 @@ export default function AdminSalesPageClient() {
     }
   }
 
+  // Función para buscar ventas en el backend
+  const searchSales = async () => {
+    const searchParams: { search?: string, status?: string, payment_method?: string } = {}
+    
+    if (searchTerm) {
+      searchParams.search = searchTerm
+    }
+    
+    if (statusFilter !== "all") {
+      searchParams.status = statusFilter
+    }
+    
+    if (transactionTypeFilter !== "all") {
+      searchParams.payment_method = transactionTypeFilter
+    }
+    
+    await fetchSales(searchParams)
+  }
+
   useEffect(() => {
     fetchSales()
   }, [])
 
+  // Debounce para evitar demasiadas búsquedas
   useEffect(() => {
-    let filtered = sales
+    const timeoutId = setTimeout(() => {
+      searchSales()
+    }, 500) // Esperar 500ms después del último cambio
 
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (sale) =>
-          sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sale.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sale.eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sale.ticketType.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((sale) => sale.status === statusFilter)
-    }
-
-    if (transactionTypeFilter !== "all") {
-      filtered = filtered.filter((sale) => sale.transactionType === transactionTypeFilter)
-    }
-
-    setFilteredSales(filtered)
-  }, [sales, searchTerm, statusFilter, transactionTypeFilter])
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, statusFilter, transactionTypeFilter])
 
   const getStatusBadge = (status: string) => {
     const variants = {

@@ -25,6 +25,7 @@ const organizerRoutes = require("./routes/organizer")
 const adminRoutes = require("./routes/admin")
 const seatMapRoutes = require("./routes/seatMaps")
 const paymentRoutes = require("./routes/payments")
+const epaycoRoutes = require("./routes/epayco")
 const ticketRoutes = require("./routes/tickets")
 const salesRoutes = require("./routes/sales")
 const passwordResetRoutes = require("./routes/passwordReset")
@@ -54,7 +55,7 @@ const logger = winston.createLogger({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // limit each IP to 1000 requests per windowMs (increased for testing)
   message: "Too many requests from this IP, please try again later.",
 })
 
@@ -74,6 +75,10 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path} - ${req.ip}`)
   next()
 })
+
+// JSON parsing middleware - MUST be before routes
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -101,12 +106,9 @@ app.use("/api/organizer", organizerRoutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/seat-maps", seatMapRoutes)
 app.use("/api/payments", paymentRoutes)
+app.use("/api/payments/epayco", epaycoRoutes)
 app.use("/api/tickets", ticketRoutes)
 app.use("/api/sales", salesRoutes)
-
-// Apply JSON parsing middleware AFTER routes that handle multipart uploads
-app.use(express.json({ limit: "10mb" }))
-app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))

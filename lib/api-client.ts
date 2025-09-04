@@ -298,6 +298,45 @@ export class ApiClient {
     })
   }
 
+  async getAdminAuditLogs(params?: any): Promise<ApiResponse<any>> {
+    const queryParams = params ? `?${new URLSearchParams(params).toString()}` : ""
+    return this.request(`/admin/audit-logs${queryParams}`, {
+      method: "GET",
+    })
+  }
+
+  // ePayco Payment Methods
+  async getEPaycoConfig(): Promise<ApiResponse<any>> {
+    return this.request("/payments/epayco/config", {
+      method: "GET",
+    })
+  }
+
+  async createEPaycoTransaction(paymentData: {
+    amount: number
+    currency?: string
+    description: string
+    eventId: string
+    ticketIds: string[]
+    customerInfo: {
+      name: string
+      email: string
+      phone: string
+      address: string
+    }
+  }): Promise<ApiResponse<any>> {
+    return this.request("/payments/epayco/create", {
+      method: "POST",
+      body: JSON.stringify(paymentData),
+    })
+  }
+
+  async getEPaycoTransactionStatus(transactionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/payments/epayco/status/${transactionId}`, {
+      method: "GET",
+    })
+  }
+
   async getAdminEvents(params?: any): Promise<ApiResponse<any>> {
     const queryParams = params ? `?${new URLSearchParams(params).toString()}` : ""
     return this.request(`/admin/events${queryParams}`, {

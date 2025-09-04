@@ -1032,6 +1032,32 @@ export async function getAdminUsers(params?: {
   }
 }
 
+// Función para obtener logs de auditoría
+export async function getAdminAuditLogs(params?: {
+  page?: number
+  limit?: number
+  search?: string
+  severity?: string
+  status?: string
+  action?: string
+}): Promise<{ logs: any[], pagination: any }> {
+  try {
+    // Refresh token before making the request
+    apiClient.refreshToken()
+    const response = await apiClient.getAdminAuditLogs(params)
+    if (response.success && response.data) {
+      return {
+        logs: response.data.logs,
+        pagination: response.data.pagination
+      }
+    }
+    return { logs: [], pagination: null }
+  } catch (error: any) {
+    console.error("Error fetching audit logs:", error)
+    throw new Error(error.message || "Error al obtener logs de auditoría")
+  }
+}
+
 // Función para obtener un usuario específico del administrador
 export async function getAdminUser(id: string): Promise<AdminUser | null> {
   try {

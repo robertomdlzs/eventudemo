@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { FileText, Search, Filter, Download, Eye, Clock, User, Activity, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
+import { getAdminAuditLogs } from "@/app/admin/actions"
 
 interface AuditLog {
   id: string
@@ -89,8 +90,9 @@ const mockAuditLogs: AuditLog[] = [
 ]
 
 export default function AdminAuditLogsClient() {
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(mockAuditLogs)
-  const [filteredLogs, setFilteredLogs] = useState<AuditLog[]>(mockAuditLogs)
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [filteredLogs, setFilteredLogs] = useState<AuditLog[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [severityFilter, setSeverityFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -98,23 +100,61 @@ export default function AdminAuditLogsClient() {
   const [showLogDetail, setShowLogDetail] = useState<AuditLog | null>(null)
   const { toast } = useToast()
 
-  useEffect(() => {
-    const filtered = auditLogs.filter(log => {
-      const matchesSearch = 
-        log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.ipAddress.includes(searchTerm)
-      
-      const matchesSeverity = severityFilter === "all" || log.severity === severityFilter
-      const matchesStatus = statusFilter === "all" || log.status === statusFilter
-      const matchesAction = actionFilter === "all" || log.action === actionFilter
+  const fetchAuditLogs = async (searchParams?: { search?: string, severity?: string, status?: string, action?: string }) => {
+    setLoading(true)
+    try {
+      const fetchedLogs = await getAdminAuditLogs(searchParams)
+      if (fetchedLogs?.logs) {
+        setAuditLogs(fetchedLogs.logs)
+        setFilteredLogs(fetchedLogs.logs)
+      }
+    } catch (error: any) {
+      console.error("Error fetching audit logs:", error)
+      toast({
+        title: "Error",
+        description: error.message || "No se pudieron cargar los logs de auditoría.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
-      return matchesSearch && matchesSeverity && matchesStatus && matchesAction
-    })
-    setFilteredLogs(filtered)
-  }, [auditLogs, searchTerm, severityFilter, statusFilter, actionFilter])
+  // Función para buscar logs en el backend
+  const searchLogs = async () => {
+    const searchParams: { search?: string, severity?: string, status?: string, action?: string } = {}
+    
+    if (searchTerm) {
+      searchParams.search = searchTerm
+    }
+    
+    if (severityFilter !== "all") {
+      searchParams.severity = severityFilter
+    }
+    
+    if (statusFilter !== "all") {
+      searchParams.status = statusFilter
+    }
+    
+    if (actionFilter !== "all") {
+      searchParams.action = actionFilter
+    }
+    
+    await fetchAuditLogs(searchParams)
+  }
+
+  useEffect(() => {
+    fetchAuditLogs()
+  }, [])
+
+  // Debounce para evitar demasiadas búsquedas
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchLogs()
+    }, 500) // Esperar 500ms después del último cambio
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, severityFilter, statusFilter, actionFilter])
 
   const handleExportLogs = () => {
     try {

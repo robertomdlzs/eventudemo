@@ -12,8 +12,6 @@ import {
   CreditCard, 
   Building2, 
   Smartphone, 
-  Shield, 
-  CheckCircle,
   AlertCircle,
   Info
 } from "lucide-react"
@@ -29,7 +27,6 @@ export interface PaymentMethod {
   requiresPhoneInfo: boolean
   processingTime: string
   fees: string
-  security: string[]
 }
 
 const paymentMethods: PaymentMethod[] = [
@@ -56,8 +53,7 @@ const paymentMethods: PaymentMethod[] = [
     requiresBankInfo: false,
     requiresPhoneInfo: false,
     processingTime: 'Inmediato',
-    fees: 'Sin comisión adicional',
-    security: ['Cifrado SSL 256-bit', 'PCI DSS compliant', 'Fraude protegido']
+    fees: 'Sin comisión adicional'
   },
   {
     id: 'debit_card',
@@ -69,8 +65,7 @@ const paymentMethods: PaymentMethod[] = [
     requiresBankInfo: false,
     requiresPhoneInfo: false,
     processingTime: 'Inmediato',
-    fees: 'Sin comisión adicional',
-    security: ['Cifrado SSL 256-bit', 'PCI DSS compliant', 'Fraude protegido']
+    fees: 'Sin comisión adicional'
   },
   {
     id: 'daviplata',
@@ -95,8 +90,7 @@ const paymentMethods: PaymentMethod[] = [
     requiresBankInfo: false,
     requiresPhoneInfo: false,
     processingTime: 'Inmediato',
-    fees: 'Sin comisión adicional',
-    security: ['Cifrado SSL 256-bit', 'PCI DSS compliant', 'Fraude protegido']
+    fees: 'Sin comisión adicional'
   }
 ]
 
@@ -214,23 +208,6 @@ export function PaymentMethods({
       {/* Información específica del método seleccionado */}
       {selectedPaymentMethod && (
         <div className="space-y-6">
-          {/* Información de seguridad */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-blue-800 mb-2">Medidas de Seguridad</h4>
-                <ul className="space-y-1">
-                  {selectedPaymentMethod.security.map((security, index) => (
-                    <li key={index} className="text-sm text-blue-700 flex items-center">
-                      <CheckCircle className="h-3 w-3 mr-2" />
-                      {security}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
 
           {/* Formulario de tarjeta */}
           {selectedPaymentMethod.requiresCardInfo && (
