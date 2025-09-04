@@ -21,6 +21,7 @@ export default function CheckoutPage() {
   const { isAuthenticated, user, isLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   
   // Estado para información personal
   const [personalData, setPersonalData] = useState({
@@ -53,6 +54,10 @@ export default function CheckoutPage() {
   const [phoneData, setPhoneData] = useState({
     phone: ''
   })
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     if (user) {
@@ -233,6 +238,18 @@ export default function CheckoutPage() {
     return cart.total + Math.round(cart.total * 0.05) // 5% de servicio
   }
 
+  // Evitar error de hidratación mostrando contenido consistente
+  if (!isClient || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Cargando...</h1>
+          <p className="text-gray-600 mb-4">Verificando autenticación...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (cart.items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -242,17 +259,6 @@ export default function CheckoutPage() {
           <Link href="/carrito">
             <Button>Volver al Carrito</Button>
           </Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Cargando...</h1>
-          <p className="text-gray-600 mb-4">Verificando autenticación...</p>
         </div>
       </div>
     )
