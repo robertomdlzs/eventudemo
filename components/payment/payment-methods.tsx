@@ -12,6 +12,7 @@ import {
   CreditCard, 
   Building2, 
   Smartphone, 
+  CheckCircle,
   AlertCircle,
   Info
 } from "lucide-react"
