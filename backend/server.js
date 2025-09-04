@@ -154,7 +154,8 @@ const wsServer = new WebSocketServer(server)
 global.wsServer = wsServer
 
 // Start server
-server.listen(PORT, () => {
+const HOST = process.env.HOST || '0.0.0.0'
+server.listen(PORT, HOST, () => {
   logger.info(`Server running on port ${PORT}`)
   logger.info(`WebSocket server initialized`)
   logger.info(`Using ${dbType} database`)

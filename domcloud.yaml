@@ -1,0 +1,42 @@
+# Configuración para DomCloud
+name: eventu-app
+version: 1.0.0
+
+# Configuración del servidor
+server:
+  port: 3000
+  host: 0.0.0.0
+
+# Configuración de build
+build:
+  command: npm run build:production
+  start: npm start
+
+# Variables de entorno
+env:
+  NODE_ENV: production
+  PORT: 3000
+  HOST: 0.0.0.0
+
+# Configuración de archivos estáticos
+static:
+  directory: .next/static
+  publicPath: /_next/static
+
+# Configuración de logs
+logging:
+  level: info
+  format: combined
+
+# Configuración de base de datos
+database:
+  type: postgresql
+  host: localhost
+  port: 5432
+  name: eventu_db
+
+# Configuración de seguridad
+security:
+  cors: true
+  helmet: true
+  rateLimit: true
