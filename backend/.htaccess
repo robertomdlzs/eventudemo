@@ -1,0 +1,45 @@
+RewriteEngine On
+
+# Enable CORS
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+Header always set Access-Control-Max-Age "3600"
+
+# Handle CORS preflight requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# API Routes
+RewriteRule ^api/users/?$ api/users/read.php [L]
+RewriteRule ^api/users/([0-9]+)/?$ api/users/read_single.php?id=$1 [L]
+RewriteRule ^api/users/create/?$ api/users/create.php [L]
+RewriteRule ^api/users/update/?$ api/users/update.php [L]
+RewriteRule ^api/users/delete/?$ api/users/delete.php [L]
+
+RewriteRule ^api/events/?$ api/events/read.php [L]
+RewriteRule ^api/events/([0-9]+)/?$ api/events/read_single.php?id=$1 [L]
+RewriteRule ^api/events/slug/([a-zA-Z0-9\-]+)/?$ api/events/read_single.php?slug=$1 [L]
+RewriteRule ^api/events/create/?$ api/events/create.php [L]
+RewriteRule ^api/events/update/?$ api/events/update.php [L]
+RewriteRule ^api/events/delete/?$ api/events/delete.php [L]
+RewriteRule ^api/events/featured/?$ api/events/featured.php [L]
+RewriteRule ^api/events/search/?$ api/events/search.php [L]
+
+RewriteRule ^api/categories/?$ api/categories/read.php [L]
+RewriteRule ^api/categories/([0-9]+)/?$ api/categories/read_single.php?id=$1 [L]
+
+RewriteRule ^api/auth/login/?$ api/auth/login.php [L]
+RewriteRule ^api/auth/register/?$ api/auth/register.php [L]
+RewriteRule ^api/auth/logout/?$ api/auth/logout.php [L]
+
+RewriteRule ^api/sales/?$ api/sales/read.php [L]
+RewriteRule ^api/sales/create/?$ api/sales/create.php [L]
+
+RewriteRule ^api/tickets/?$ api/tickets/read.php [L]
+RewriteRule ^api/ticket-types/([0-9]+)/?$ api/ticket-types/read.php?event_id=$1 [L]
+
+# Default fallback
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ index.php [QSA,L]

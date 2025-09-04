@@ -1,0 +1,405 @@
+const express = require("express")
+const jwt = require("jsonwebtoken")
+const User = require("../models/User")
+const { auth } = require("../middleware/auth")
+const { Pool } = require("pg")
+require("dotenv").config()
+
+const router = express.Router()
+
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:Eventu321@localhost:5432/eventu_db",
+})
+
+// Function to check if user has events (for organizers)
+async function userHasEvents(userId) {
+  try {
+    const result = await pool.query(
+      "SELECT COUNT(*) as event_count FROM events WHERE organizer_id = $1",
+      [userId]
+    )
+    return parseInt(result.rows[0].event_count) > 0
+  } catch (error) {
+    console.error("Error checking user events:", error)
+    return false
+  }
+}
+
+// Register
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password, name, phone } = req.body
+
+    // Validation
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, password, and name are required",
+      })
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      })
+    }
+
+    // Check if user exists
+    const existingUser = await User.findByEmail(email)
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "User already exists with this email",
+      })
+    }
+
+    // Create user
+    const user = await User.create({ email, password, name, phone })
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "7d" },
+    )
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      data: {
+        user: user.toJSON(),
+        token,
+      },
+    })
+  } catch (error) {
+    console.error("Register error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Login
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      })
+    }
+
+    // Find user
+    const user = await User.findByEmail(email)
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      })
+    }
+
+    // Check password
+    const isValidPassword = await user.validatePassword(password)
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      })
+    }
+
+    // Check if user is active
+    if (user.status !== "active") {
+      return res.status(401).json({
+        success: false,
+        message: "Account is not active",
+      })
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "7d" },
+    )
+
+    // Determine redirect URL based on user role
+    let redirectUrl = "/"
+    let welcomeMessage = "Bienvenido"
+    
+    switch (user.role) {
+      case "admin":
+        redirectUrl = "/admin"
+        welcomeMessage = "Bienvenido al Panel de Administración"
+        break
+      case "organizer":
+        // Check if organizer has events
+        const hasEvents = await userHasEvents(user.id)
+        if (hasEvents) {
+          redirectUrl = "/organizer"
+          welcomeMessage = "Bienvenido al Panel de Organizador"
+        } else {
+          redirectUrl = "/"
+          welcomeMessage = "Bienvenido a Eventu. Para acceder al panel de organizador, necesitas crear al menos un evento."
+        }
+        break
+      case "user":
+      default:
+        redirectUrl = "/"
+        welcomeMessage = "Bienvenido a Eventu"
+        break
+    }
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      data: {
+        user: user.toJSON(),
+        token,
+        redirectUrl,
+        welcomeMessage,
+        role: user.role
+      },
+    })
+  } catch (error) {
+    console.error("Login error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Get current user profile
+router.get("/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+
+    res.json({
+      success: true,
+      data: user.toJSON(),
+    })
+  } catch (error) {
+    console.error("Get profile error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Update profile
+router.put("/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+
+    const updatedUser = await user.update(req.body)
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser.toJSON(),
+    })
+  } catch (error) {
+    console.error("Update profile error:", error)
+    
+    // Manejar errores específicos
+    if (error.message === "Current password is incorrect") {
+      return res.status(400).json({
+        success: false,
+        message: "La contraseña actual es incorrecta",
+      })
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Refresh token
+router.post("/refresh", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "7d" },
+    )
+
+    res.json({
+      success: true,
+      message: "Token refreshed successfully",
+      data: {
+        token,
+      },
+    })
+  } catch (error) {
+    console.error("Refresh token error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Update user role to admin (temporary endpoint for testing)
+router.post("/make-admin", async (req, res) => {
+  try {
+    const { email } = req.body
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      })
+    }
+
+    const result = await pool.query(
+      "UPDATE users SET role = 'admin' WHERE email = $1 RETURNING *",
+      [email]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+
+    res.json({
+      success: true,
+      message: "User role updated to admin",
+      data: result.rows[0]
+    })
+  } catch (error) {
+    console.error("Make admin error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Change password
+router.post("/change-password", auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    // Validation
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      })
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long",
+      })
+    }
+
+    // Find user
+    const user = await User.findById(req.user.userId)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+
+    // Verify current password
+    const bcrypt = require("bcryptjs")
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password_hash)
+    
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      })
+    }
+
+    // Hash new password
+    const saltRounds = 10
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds)
+
+    // Update password in database
+    const result = await pool.query(
+      "UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, first_name, last_name, role, status, phone",
+      [hashedNewPassword, user.id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update password",
+      })
+    }
+
+    const updatedUser = result.rows[0]
+
+    res.json({
+      success: true,
+      message: "Password changed successfully",
+      data: {
+        user: updatedUser,
+      },
+    })
+  } catch (error) {
+    console.error("Change password error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Logout (client-side token removal, optional endpoint for logging)
+router.post("/logout", auth, async (req, res) => {
+  try {
+    // In a real app, you might want to blacklist the token
+    // For now, we'll just acknowledge the logout
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    })
+  } catch (error) {
+    console.error("Logout error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+module.exports = router

@@ -1,0 +1,3984 @@
+"use client"
+
+import type React from "react"
+import { useState, useRef, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Progress } from "@/components/ui/progress"
+import { Switch } from "@/components/ui/switch"
+import { useToast } from "@/hooks/use-toast"
+import {
+  MousePointer,
+  Move,
+  ZoomIn,
+  ZoomOut,
+  Eye,
+  Users,
+  MapPin,
+  RotateCcw,
+  Clock,
+  RockingChairIcon as Chair,
+  Box,
+  Table,
+  Edit3,
+  Theater,
+  Grid3X3,
+  RectangleVerticalIcon as Rectangle,
+  Pen,
+  Hand,
+  Maximize,
+  DollarSign,
+  Calculator,
+  Settings,
+  Save,
+  Trash2,
+  Undo,
+  Redo,
+  BarChart3,
+  TrendingUp,
+  Layers,
+  Palette,
+  Zap,
+  Target,
+  Sparkles,
+  Info,
+  HelpCircle,
+  Keyboard,
+  MousePointer2,
+  Music,
+  Star,
+  Crown,
+  Wheelchair,
+  Tag,
+} from "lucide-react"
+import { SeatMapManager } from "@/lib/seat-map-manager"
+import type { SeatSection, Seat, SeatMapData, SavedTemplate } from "@/lib/seat-map-storage"
+import { SeatMapStorage } from "@/lib/seat-map-storage"
+
+interface AdminSeatMapPageClientProps {
+  eventId: string
+}
+
+type Tool =
+  | "select"
+  | "move"
+  | "draw-seats"
+  | "draw-section"
+  | "draw-stage"
+  | "price-editor"
+  | "zoom-in"
+  | "zoom-out"
+  | "pan"
+  | "draw-curve"
+  | "draw-aisle"
+  | "draw-pattern"
+  | "draw-accessible"
+  | "draw-premium"
+
+type DrawingMode = "rectangle" | "circle" | "freehand" | "grid" | "curve" | "stadium" | "theater" | "arena"
+
+interface StageConfig {
+  x: number
+  y: number
+  width: number
+  height: number
+  label: string
+  rotation: number
+  type: "theater" | "stadium" | "arena" | "concert" | "conference" | "custom"
+  shape: "rectangle" | "circle" | "oval" | "trapezoid" | "polygon"
+  hasCurtain: boolean
+  hasBackdrop: boolean
+  hasWings: boolean
+  depth: number
+  elevation: number
+}
+
+interface DrawingState {
+  isDrawing: boolean
+  startPoint: { x: number; y: number }
+  currentPoint: { x: number; y: number }
+  previewShape: any
+}
+
+// PriceZone interface - REMOVED
+
+interface PricingRule {
+  id: string
+  name: string
+  type: "time-based" | "demand-based" | "hybrid"
+  isActive: boolean
+  conditions: {
+    daysBeforeEvent?: number
+    demandThreshold?: number
+    salesPercentage?: number
+    timeOfDay?: { start: string; end: string }
+    dayOfWeek?: number[]
+  }
+  priceAdjustment: {
+    type: "percentage" | "fixed"
+    value: number
+    maxIncrease?: number
+    minPrice?: number
+  }
+  appliesTo: {
+    sectionIds?: string[]
+    seatTypes?: string[]
+    priceRanges?: { min: number; max: number }[]
+  }
+  priority: number
+  createdAt: Date
+  lastApplied?: Date
+}
+
+interface DynamicPriceCalculation {
+  originalPrice: number
+  adjustedPrice: number
+  appliedRules: string[]
+  adjustmentPercentage: number
+  reason: string
+}
+
+export default function AdminSeatMapPageClient({ eventId }: AdminSeatMapPageClientProps) {
+  const { toast } = useToast()
+  const [seatMapManager] = useState(() => new SeatMapManager(eventId))
+  const [sections, setSections] = useState<SeatSection[]>([])
+  const [selectedTool, setSelectedTool] = useState<Tool>("select")
+  const [drawingMode, setDrawingMode] = useState<DrawingMode>("rectangle")
+  const [selectedSection, setSelectedSection] = useState<SeatSection | null>(null)
+  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null)
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([])
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [drawingState, setDrawingState] = useState<DrawingState>({
+    isDrawing: false,
+    startPoint: { x: 0, y: 0 },
+    currentPoint: { x: 0, y: 0 },
+    previewShape: null,
+  })
+  const [isPublished, setIsPublished] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [savedMaps, setSavedMaps] = useState<SeatMapData[]>([])
+  const [templates, setTemplates] = useState<SavedTemplate[]>([])
+  
+  // Templates predefinidos para diferentes tipos de eventos
+  const predefinedTemplates = [
+    {
+      id: "theater-classic",
+      name: "Teatro Clásico",
+      description: "Teatro tradicional con platea, palcos y balcón",
+      type: "theater",
+      icon: Theater,
+      sections: [
+        { name: "Platea", type: "theater-seats", rows: 15, seatsPerRow: 20, price: 80000, color: "#059669" },
+        { name: "Palcos Laterales", type: "premium-boxes", rows: 8, seatsPerRow: 4, price: 120000, color: "#EA580C" },
+        { name: "Balcón", type: "balcony", rows: 12, seatsPerRow: 18, price: 60000, color: "#7C3AED" },
+        { name: "Orquesta", type: "orchestra", rows: 6, seatsPerRow: 16, price: 100000, color: "#7C2D12" }
+      ]
+    },
+    {
+      id: "stadium-arena",
+      name: "Estadio/Arena",
+      description: "Estadio deportivo con gradas circulares",
+      type: "stadium",
+      icon: Users,
+      sections: [
+        { name: "Grada Norte", type: "stadium-seats", rows: 25, seatsPerRow: 30, price: 45000, color: "#DC2626" },
+        { name: "Grada Sur", type: "stadium-seats", rows: 25, seatsPerRow: 30, price: 45000, color: "#DC2626" },
+        { name: "Grada Este", type: "stadium-seats", rows: 20, seatsPerRow: 25, price: 40000, color: "#EA580C" },
+        { name: "Grada Oeste", type: "stadium-seats", rows: 20, seatsPerRow: 25, price: 40000, color: "#EA580C" },
+        { name: "Palco VIP", type: "premium-boxes", rows: 5, seatsPerRow: 8, price: 150000, color: "#7C3AED" }
+      ]
+    },
+    {
+      id: "concert-hall",
+      name: "Sala de Conciertos",
+      description: "Sala acústica para conciertos sinfónicos",
+      type: "concert",
+      icon: Music,
+      sections: [
+        { name: "Platea Principal", type: "theater-seats", rows: 20, seatsPerRow: 25, price: 90000, color: "#059669" },
+        { name: "Terraza", type: "balcony", rows: 15, seatsPerRow: 20, price: 70000, color: "#7C3AED" },
+        { name: "Palcos Superiores", type: "premium-boxes", rows: 10, seatsPerRow: 6, price: 130000, color: "#EA580C" },
+        { name: "Área de Pie", type: "standing-area", capacity: 200, price: 35000, color: "#4B5563" }
+      ]
+    },
+    {
+      id: "conference-center",
+      name: "Centro de Conferencias",
+      description: "Sala para conferencias y eventos corporativos",
+      type: "conference",
+      icon: Users,
+      sections: [
+        { name: "Auditorio Principal", type: "theater-seats", rows: 12, seatsPerRow: 30, price: 60000, color: "#059669" },
+        { name: "Balcón", type: "balcony", rows: 8, seatsPerRow: 25, price: 45000, color: "#7C3AED" },
+        { name: "Asientos Accesibles", type: "accessible-seats", rows: 4, seatsPerRow: 8, price: 60000, color: "#0891B2" }
+      ]
+    },
+    {
+      id: "dining-event",
+      name: "Evento Gastronómico",
+      description: "Evento con mesas y asientos para cenas",
+      type: "dining",
+      icon: Table,
+      sections: [
+        { name: "Mesas VIP", type: "dining-tables", rows: 6, seatsPerRow: 8, price: 120000, color: "#7C3AED" },
+        { name: "Mesas Estándar", type: "dining-tables", rows: 8, seatsPerRow: 10, price: 80000, color: "#059669" },
+        { name: "Área de Pie", type: "standing-area", capacity: 100, price: 40000, color: "#4B5563" }
+      ]
+    }
+  ]
+  const [history, setHistory] = useState<any[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
+  const [showGrid, setShowGrid] = useState(true)
+  const [showLabels, setShowLabels] = useState(true)
+  const [showPrices, setShowPrices] = useState(true)
+  const [snapToGrid, setSnapToGrid] = useState(true)
+  const [gridSize, setGridSize] = useState(20)
+  const [showPriceEditor, setShowPriceEditor] = useState(false)
+  const [showBulkPriceEditor, setShowBulkPriceEditor] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [activeTab, setActiveTab] = useState("tools")
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  const canvasRef = useRef<SVGSVGElement>(null)
+
+  // Dynamic pricing states
+  const [dynamicPricingEnabled, setDynamicPricingEnabled] = useState(false)
+  const [pricingRules, setPricingRules] = useState<PricingRule[]>([])
+  const [showDynamicPricingDialog, setShowDynamicPricingDialog] = useState(false)
+  const [demandSimulation, setDemandSimulation] = useState({
+    currentDemand: 0.3, // 30% demand
+    timeToEvent: 30, // days
+    salesVelocity: 0.05, // 5% per day
+  })
+
+  // Price zones state - REMOVED
+
+  // Stage configuration state
+  const [stageConfig, setStageConfig] = useState<StageConfig>({
+    x: 300,
+    y: 50,
+    width: 200,
+    height: 40,
+    label: "ESCENARIO",
+    rotation: 0,
+    type: "theater",
+    shape: "rectangle",
+    hasCurtain: true,
+    hasBackdrop: false,
+    hasWings: false,
+    depth: 20,
+    elevation: 0,
+  })
+  const [isStageSelected, setIsStageSelected] = useState(false)
+  const [isDraggingElement, setIsDraggingElement] = useState(false)
+  const [draggedElementId, setDraggedElementId] = useState<string | null>(null)
+
+  // Form states
+  const [editingSection, setEditingSection] = useState({
+    name: "",
+    capacity: 0,
+    price: 0,
+    color: "",
+    officialNotes: "",
+  })
+
+  const [editingSeat, setEditingSeat] = useState({
+    price: 0,
+    type: "regular" as "regular" | "vip" | "accessible" | "table-unit",
+    notes: "",
+  })
+
+  const [formData, setFormData] = useState({
+    name: "",
+    type: "seats" as "seats" | "boxes" | "tables" | "general",
+    capacity: 50,
+    price: 50000,
+    color: "#3B82F6",
+    rows: 5,
+    seatsPerRow: 10,
+  })
+
+  // Advanced tools configuration with better organization
+  const toolCategories = {
+    selection: [
+      {
+        id: "select",
+        name: "Seleccionar",
+        icon: MousePointer2,
+        cursor: "default",
+        shortcut: "V",
+        description: "Selecciona y edita elementos",
+      },
+      {
+        id: "move",
+        name: "Mover",
+        icon: Move,
+        cursor: "move",
+        shortcut: "M",
+        description: "Mueve elementos por el lienzo",
+      },
+    ],
+    navigation: [
+      {
+        id: "pan",
+        name: "Navegar",
+        icon: Hand,
+        cursor: "grab",
+        shortcut: "H",
+        description: "Navega por el lienzo",
+      },
+      {
+        id: "zoom-in",
+        name: "Acercar",
+        icon: ZoomIn,
+        cursor: "zoom-in",
+        shortcut: "+",
+        description: "Acerca la vista",
+      },
+      {
+        id: "zoom-out",
+        name: "Alejar",
+        icon: ZoomOut,
+        cursor: "zoom-out",
+        shortcut: "-",
+        description: "Aleja la vista",
+      },
+    ],
+    drawing: [
+      {
+        id: "draw-seats",
+        name: "Asientos",
+        icon: Chair,
+        cursor: "crosshair",
+        shortcut: "S",
+        description: "Dibuja asientos automáticamente",
+      },
+      {
+        id: "draw-section",
+        name: "Sección",
+        icon: Rectangle,
+        cursor: "crosshair",
+        shortcut: "R",
+        description: "Crea nuevas secciones",
+      },
+      {
+        id: "draw-stage",
+        name: "Escenario",
+        icon: Theater,
+        cursor: "crosshair",
+        shortcut: "T",
+        description: "Dibuja el escenario",
+      },
+      {
+        id: "draw-curve",
+        name: "Curva",
+        icon: Pen,
+        cursor: "crosshair",
+        shortcut: "C",
+        description: "Dibuja secciones curvas",
+      },
+      {
+        id: "draw-aisle",
+        name: "Pasillo",
+        icon: Layers,
+        cursor: "crosshair",
+        shortcut: "A",
+        description: "Crea pasillos entre secciones",
+      },
+      {
+        id: "draw-pattern",
+        name: "Patrón",
+        icon: Grid3X3,
+        cursor: "crosshair",
+        shortcut: "P",
+        description: "Dibuja patrones de asientos",
+      },
+    ],
+    editing: [
+      {
+        id: "price-editor",
+        name: "Precios",
+        icon: DollarSign,
+        cursor: "crosshair",
+        shortcut: "P",
+        description: "Edita precios de asientos",
+      },
+    ],
+  }
+
+  const sectionTypes = [
+    {
+      value: "theater-seats",
+      label: "Butacas de Teatro",
+      icon: Chair,
+      color: "#059669",
+      description: "Butacas acolchadas con respaldo alto",
+      seatShape: "theater-chair",
+      spacing: { row: 24, seat: 18 },
+    },
+    {
+      value: "stadium-seats",
+      label: "Gradas de Estadio",
+      icon: Chair,
+      color: "#DC2626",
+      description: "Asientos plegables en gradas",
+      seatShape: "stadium-seat",
+      spacing: { row: 20, seat: 16 },
+    },
+    {
+      value: "premium-boxes",
+      label: "Palcos Premium",
+      icon: Box,
+      color: "#EA580C",
+      description: "Palcos exclusivos con servicios premium",
+      seatShape: "premium-box",
+      spacing: { row: 30, seat: 25 },
+    },
+    {
+      value: "dining-tables",
+      label: "Mesas de Cena",
+      icon: Table,
+      color: "#7C3AED",
+      description: "Mesas para eventos gastronómicos",
+      seatShape: "dining-chair",
+      spacing: { row: 35, seat: 30 },
+    },
+    {
+      value: "accessible-seats",
+      label: "Asientos Accesibles",
+      icon: Users,
+      color: "#0891B2",
+      description: "Asientos para personas con movilidad reducida",
+      seatShape: "accessible-seat",
+      spacing: { row: 40, seat: 35 },
+    },
+    {
+      value: "standing-area",
+      label: "Área de Pie",
+      icon: Users,
+      color: "#4B5563",
+      description: "Área de pie sin asientos asignados",
+      seatShape: "standing",
+      spacing: { row: 0, seat: 0 },
+    },
+    {
+      value: "balcony",
+      label: "Balcón",
+      icon: Rectangle,
+      color: "#059669",
+      description: "Balcón elevado con vista panorámica",
+      seatShape: "balcony-seat",
+      spacing: { row: 22, seat: 18 },
+    },
+    {
+      value: "orchestra",
+      label: "Orquesta",
+      icon: Chair,
+      color: "#7C2D12",
+      description: "Área de orquesta con asientos especiales",
+      seatShape: "orchestra-seat",
+      spacing: { row: 20, seat: 16 },
+    },
+  ]
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case "z":
+            e.preventDefault()
+            if (e.shiftKey) {
+              redo()
+            } else {
+              undo()
+            }
+            break
+          case "s":
+            e.preventDefault()
+            handleSave()
+            break
+          case "=":
+          case "+":
+            e.preventDefault()
+            handleZoom("in")
+            break
+          case "-":
+            e.preventDefault()
+            handleZoom("out")
+            break
+        }
+      } else {
+        switch (e.key.toLowerCase()) {
+          case "v":
+            setSelectedTool("select")
+            break
+          case "m":
+            setSelectedTool("move")
+            break
+          case "h":
+            setSelectedTool("pan")
+            break
+          case "s":
+            setSelectedTool("draw-seats")
+            break
+          case "r":
+            setSelectedTool("draw-section")
+            break
+          case "t":
+            setSelectedTool("draw-stage")
+            break
+          case "p":
+            setSelectedTool("price-editor")
+            break
+          case "g":
+            setShowGrid(!showGrid)
+            break
+          case "?":
+            setShowShortcuts(true)
+            break
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [showGrid])
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setIsAutoSaving(true)
+      const timer = setTimeout(() => {
+        handleSave()
+        setIsAutoSaving(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [hasUnsavedChanges])
+
+  // Load initial data
+  useEffect(() => {
+    const loadMapAndData = async () => {
+      try {
+        await seatMapManager.load(eventId)
+        setSections(seatMapManager.getSections())
+        setHasUnsavedChanges(seatMapManager.hasChanges())
+        const currentMap = new SeatMapStorage().getSeatMap(eventId)
+        if (currentMap) {
+          setIsPublished(currentMap.metadata.isPublished)
+          setLastSaved(currentMap.metadata.updatedAt)
+          if (currentMap.metadata && (currentMap.metadata as any).stageConfig) {
+            setStageConfig((currentMap.metadata as any).stageConfig)
+          }
+        }
+        loadSavedMaps()
+        loadTemplates()
+        saveToHistory()
+        if (pricingRules.length === 0) {
+          setPricingRules(getDefaultPricingRules())
+        }
+      } catch (error) {
+        showNotification("error", "Error al cargar el mapa de asientos.")
+        console.error("Failed to load seat map:", error)
+      }
+    }
+
+    loadMapAndData()
+
+    const interval = setInterval(() => {
+      setHasUnsavedChanges(seatMapManager.hasChanges())
+    }, 1000)
+
+    return () => {
+      clearInterval(interval)
+      seatMapManager.destroy()
+    }
+  }, [seatMapManager, eventId])
+
+  // Update editing states when selection changes
+  useEffect(() => {
+    if (selectedSection) {
+      setEditingSection({
+        name: selectedSection.name,
+        capacity: selectedSection.capacity,
+        price: selectedSection.price,
+        color: selectedSection.color,
+        officialNotes: selectedSection.officialNotes || "",
+      })
+    }
+  }, [selectedSection])
+
+  useEffect(() => {
+    if (selectedSeat) {
+      setEditingSeat({
+        price: selectedSeat.price,
+        type: selectedSeat.type || "regular",
+        notes: (selectedSeat as any).notes || "",
+      })
+    }
+  }, [selectedSeat])
+
+  // History management
+  const saveToHistory = () => {
+    const currentState = {
+      sections: seatMapManager.getSections(),
+      stageConfig,
+      timestamp: Date.now(),
+    }
+
+    const newHistory = history.slice(0, historyIndex + 1)
+    newHistory.push(currentState)
+
+    if (newHistory.length > 50) {
+      newHistory.shift()
+    }
+
+    setHistory(newHistory)
+    setHistoryIndex(newHistory.length - 1)
+  }
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      const previousState = history[historyIndex - 1]
+      setHistoryIndex(historyIndex - 1)
+      setHasUnsavedChanges(true)
+      showNotification("success", "Acción deshecha")
+    }
+  }
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1]
+      setHistoryIndex(historyIndex + 1)
+      setHasUnsavedChanges(true)
+      showNotification("success", "Acción rehecha")
+    }
+  }
+
+  const handleSave = async () => {
+    try {
+      await seatMapManager.save()
+      setLastSaved(new Date())
+      setHasUnsavedChanges(false)
+      showNotification("success", "Mapa guardado exitosamente")
+    } catch (error) {
+      showNotification("error", "Error al guardar el mapa")
+    }
+  }
+
+  const loadSavedMaps = async () => {
+    try {
+      const maps = await seatMapManager.getSavedMaps()
+      setSavedMaps(maps)
+    } catch (error) {
+      showNotification("error", "Error al cargar mapas guardados")
+    }
+  }
+
+  const loadTemplates = () => {
+    const allTemplates = SeatMapStorage.getAllTemplates()
+    setTemplates(allTemplates)
+  }
+
+  const applyTemplate = (template: any) => {
+    if (confirm(`¿Aplicar template "${template.name}"? Esto reemplazará el mapa actual.`)) {
+      // Limpiar secciones existentes
+      seatMapManager.clear()
+      
+      // Aplicar el template
+      template.sections.forEach((sectionConfig: any) => {
+        const section = seatMapManager.createSection({
+          name: sectionConfig.name,
+          type: sectionConfig.type as any,
+          x: 100 + Math.random() * 200, // Posición aleatoria
+          y: 100 + Math.random() * 200,
+          capacity: sectionConfig.rows * sectionConfig.seatsPerRow,
+          price: sectionConfig.price,
+          color: sectionConfig.color,
+          rows: sectionConfig.rows,
+          seatsPerRow: sectionConfig.seatsPerRow,
+        })
+      })
+      
+      // Actualizar estado
+      setSections([...seatMapManager.getSections()])
+      setHasUnsavedChanges(true)
+      
+      toast({
+        title: "Template aplicado",
+        description: `El template "${template.name}" ha sido aplicado exitosamente.`,
+      })
+    }
+  }
+
+  const showNotification = (type: "success" | "error" | "info", message: string) => {
+    toast({
+      title: type === "success" ? "Éxito" : type === "error" ? "Error" : "Información",
+      description: message,
+      variant: type === "error" ? "destructive" : "default",
+    })
+  }
+
+  // Price management functions
+  const handleSeatClick = (seat: Seat, section: SeatSection, event?: React.MouseEvent) => {
+    if (selectedTool === "select") {
+      // Si se presiona Ctrl, permitir selección múltiple
+      if (event?.ctrlKey || event?.metaKey) {
+        setSelectedSeats(prev => {
+          if (prev.includes(seat.id)) {
+            // Si ya está seleccionado, quitarlo
+            return prev.filter(id => id !== seat.id)
+          } else {
+            // Si no está seleccionado, agregarlo
+            return [...prev, seat.id]
+          }
+        })
+        setSelectedSeat(seat)
+        setSelectedSection(section)
+      } else {
+        // Selección simple
+        setSelectedSeats([])
+        setSelectedSeat(seat)
+        setSelectedSection(section)
+      }
+      setIsStageSelected(false)
+    } else if (selectedTool === "price-editor") {
+      setSelectedSeat(seat)
+      setShowPriceEditor(true)
+    }
+  }
+
+  const handleSectionClick = (section: SeatSection) => {
+    if (selectedTool === "select") {
+      setSelectedSection(section)
+      setSelectedSeat(null)
+      setIsStageSelected(false)
+      seatMapManager.selectSection(section.id)
+      setSections([...seatMapManager.getSections()])
+    } else if (selectedTool === "price-editor") {
+      setSelectedSection(section)
+      setShowPriceEditor(true)
+    } else if (selectedTool === "move") {
+      setSelectedSection(section)
+      setSelectedSeat(null)
+      setIsStageSelected(false)
+    }
+  }
+
+  const handleStageClick = () => {
+    if (selectedTool === "select" || selectedTool === "move") {
+      setIsStageSelected(true)
+      setSelectedSection(null)
+      setSelectedSeat(null)
+    }
+  }
+
+  const updateSeatPrice = (seatId: string, newPrice: number) => {
+    const section = sections.find((s) => s.seats.some((seat) => seat.id === seatId))
+    if (section) {
+      const seat = section.seats.find((s) => s.id === seatId)
+      if (seat) {
+        seat.price = newPrice
+        setSections([...sections])
+        setHasUnsavedChanges(true)
+        showNotification("success", `Precio actualizado a ${formatPrice(newPrice)}`)
+      }
+    }
+  }
+
+  const updateSectionPrice = (sectionId: string, newPrice: number) => {
+    seatMapManager.updateSectionProperties(sectionId, { price: newPrice })
+    setSections([...seatMapManager.getSections()])
+    setHasUnsavedChanges(true)
+    showNotification("success", `Precio de sección actualizado a ${formatPrice(newPrice)}`)
+  }
+
+  // Función para eliminar una sección completa
+  const deleteSection = (sectionId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar esta sección? Esta acción eliminará todos los asientos de la sección y no se puede deshacer.')) {
+      // Eliminar la sección del manager
+      seatMapManager.deleteSection(sectionId)
+      
+      // Actualizar el estado local
+      setSections([...seatMapManager.getSections()])
+      
+      // Limpiar selecciones si la sección eliminada estaba seleccionada
+      if (selectedSection?.id === sectionId) {
+        setSelectedSection(null)
+      }
+      
+      setHasUnsavedChanges(true)
+      showNotification("success", "Sección eliminada correctamente")
+    }
+  }
+
+  // Función para eliminar un asiento individual
+  const deleteSeat = (sectionId: string, seatId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar este asiento?')) {
+      // Eliminar el asiento del manager
+      seatMapManager.deleteSeat(sectionId, seatId)
+      
+      // Actualizar el estado local
+      setSections([...seatMapManager.getSections()])
+      
+      // Limpiar selecciones si el asiento eliminado estaba seleccionado
+      if (selectedSeat?.id === seatId) {
+        setSelectedSeat(null)
+      }
+      
+      setHasUnsavedChanges(true)
+      showNotification("success", "Asiento eliminado correctamente")
+    }
+  }
+
+  // Función para eliminar múltiples asientos seleccionados
+  const deleteSelectedSeats = () => {
+    if (!selectedSection) return
+    
+    const selectedSeatsInSection = selectedSection.seats.filter(seat => 
+      selectedSeats.includes(seat.id)
+    )
+    
+    if (selectedSeatsInSection.length === 0) {
+      showNotification("warning", "No hay asientos seleccionados para eliminar")
+      return
+    }
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar ${selectedSeatsInSection.length} asientos seleccionados?`)) {
+      // Eliminar cada asiento seleccionado
+      selectedSeatsInSection.forEach(seat => {
+        seatMapManager.deleteSeat(selectedSection.id, seat.id)
+      })
+      
+      // Actualizar el estado local
+      setSections([...seatMapManager.getSections()])
+      
+      // Limpiar selecciones
+      setSelectedSeats([])
+      setSelectedSeat(null)
+      
+      setHasUnsavedChanges(true)
+      showNotification("success", `${selectedSeatsInSection.length} asientos eliminados correctamente`)
+    }
+  }
+
+  // applyPriceZoneToSection function - REMOVED
+
+  const bulkUpdatePrices = (percentage: number) => {
+    sections.forEach((section) => {
+      const newPrice = Math.round(section.price * (1 + percentage / 100))
+      seatMapManager.updateSectionProperties(section.id, { price: newPrice })
+
+      section.seats.forEach((seat) => {
+        seat.price = Math.round(seat.price * (1 + percentage / 100))
+      })
+    })
+
+    setSections([...seatMapManager.getSections()])
+    setHasUnsavedChanges(true)
+    showNotification("success", `Precios actualizados en ${percentage > 0 ? "+" : ""}${percentage}%`)
+  }
+
+  // Dynamic pricing calculation
+  const calculateDynamicPrice = (
+    originalPrice: number,
+    sectionId: string,
+    seatType: string,
+  ): DynamicPriceCalculation => {
+    if (!dynamicPricingEnabled) {
+      return {
+        originalPrice,
+        adjustedPrice: originalPrice,
+        appliedRules: [],
+        adjustmentPercentage: 0,
+        reason: "Dynamic pricing disabled",
+      }
+    }
+
+    let adjustedPrice = originalPrice
+    const appliedRules: string[] = []
+    let totalAdjustment = 0
+    const reasons: string[] = []
+
+    // Sort rules by priority
+    const activeRules = pricingRules.filter((rule) => rule.isActive).sort((a, b) => a.priority - b.priority)
+
+    for (const rule of activeRules) {
+      let shouldApply = false
+      let ruleAdjustment = 0
+
+      // Check if rule applies to this seat/section
+      const appliesToSection = !rule.appliesTo.sectionIds || rule.appliesTo.sectionIds.includes(sectionId)
+      const appliesToSeatType = !rule.appliesTo.seatTypes || rule.appliesTo.seatTypes.includes(seatType)
+      const appliesToPriceRange =
+        !rule.appliesTo.priceRanges ||
+        rule.appliesTo.priceRanges.some((range) => originalPrice >= range.min && originalPrice <= range.max)
+
+      if (!appliesToSection || !appliesToSeatType || !appliesToPriceRange) {
+        continue
+      }
+
+      // Time-based rules
+      if (rule.type === "time-based" || rule.type === "hybrid") {
+        if (rule.conditions.daysBeforeEvent && demandSimulation.timeToEvent <= rule.conditions.daysBeforeEvent) {
+          shouldApply = true
+          reasons.push(`${rule.conditions.daysBeforeEvent} days before event`)
+        }
+
+        if (rule.conditions.timeOfDay) {
+          const now = new Date()
+          const currentHour = now.getHours()
+          const startHour = Number.parseInt(rule.conditions.timeOfDay.start.split(":")[0])
+          const endHour = Number.parseInt(rule.conditions.timeOfDay.end.split(":")[0])
+
+          if (currentHour >= startHour && currentHour <= endHour) {
+            shouldApply = true
+            reasons.push(`Peak hours (${rule.conditions.timeOfDay.start}-${rule.conditions.timeOfDay.end})`)
+          }
+        }
+
+        if (rule.conditions.dayOfWeek) {
+          const dayOfWeek = new Date().getDay()
+          if (rule.conditions.dayOfWeek.includes(dayOfWeek)) {
+            shouldApply = true
+            reasons.push("Peak day of week")
+          }
+        }
+      }
+
+      // Demand-based rules
+      if (rule.type === "demand-based" || rule.type === "hybrid") {
+        if (rule.conditions.demandThreshold && demandSimulation.currentDemand >= rule.conditions.demandThreshold) {
+          shouldApply = true
+          reasons.push(`High demand (${Math.round(demandSimulation.currentDemand * 100)}%)`)
+        }
+
+        if (rule.conditions.salesPercentage) {
+          const currentSalesPercentage = demandSimulation.currentDemand
+          if (currentSalesPercentage >= rule.conditions.salesPercentage) {
+            shouldApply = true
+            reasons.push(`Sales threshold reached (${Math.round(currentSalesPercentage * 100)}%)`)
+          }
+        }
+      }
+
+      if (shouldApply) {
+        if (rule.priceAdjustment.type === "percentage") {
+          ruleAdjustment = (adjustedPrice * rule.priceAdjustment.value) / 100
+        } else {
+          ruleAdjustment = rule.priceAdjustment.value
+        }
+
+        // Apply limits
+        if (rule.priceAdjustment.maxIncrease && ruleAdjustment > rule.priceAdjustment.maxIncrease) {
+          ruleAdjustment = rule.priceAdjustment.maxIncrease
+        }
+
+        adjustedPrice += ruleAdjustment
+        totalAdjustment += ruleAdjustment
+        appliedRules.push(rule.name)
+
+        // Apply minimum price
+        if (rule.priceAdjustment.minPrice && adjustedPrice < rule.priceAdjustment.minPrice) {
+          adjustedPrice = rule.priceAdjustment.minPrice
+        }
+      }
+    }
+
+    const adjustmentPercentage = originalPrice > 0 ? (totalAdjustment / originalPrice) * 100 : 0
+
+    return {
+      originalPrice,
+      adjustedPrice: Math.round(adjustedPrice),
+      appliedRules,
+      adjustmentPercentage,
+      reason: reasons.join(", ") || "No dynamic pricing applied",
+    }
+  }
+
+  const createPricingRule = (ruleData: Partial<PricingRule>): PricingRule => {
+    return {
+      id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: ruleData.name || "New Rule",
+      type: ruleData.type || "time-based",
+      isActive: ruleData.isActive ?? true,
+      conditions: ruleData.conditions || {},
+      priceAdjustment: ruleData.priceAdjustment || { type: "percentage", value: 10 },
+      appliesTo: ruleData.appliesTo || {},
+      priority: ruleData.priority || 1,
+      createdAt: new Date(),
+      ...ruleData,
+    }
+  }
+
+  const addPricingRule = (ruleData: Partial<PricingRule>) => {
+    const newRule = createPricingRule(ruleData)
+    setPricingRules((prev) => [...prev, newRule])
+    showNotification("success", `Regla "${newRule.name}" creada`)
+  }
+
+  const updatePricingRule = (ruleId: string, updates: Partial<PricingRule>) => {
+    setPricingRules((prev) => prev.map((rule) => (rule.id === ruleId ? { ...rule, ...updates } : rule)))
+    showNotification("success", "Regla actualizada")
+  }
+
+  const deletePricingRule = (ruleId: string) => {
+    setPricingRules((prev) => prev.filter((rule) => rule.id !== ruleId))
+    showNotification("success", "Regla eliminada")
+  }
+
+  const simulateDemandChange = (newDemand: number) => {
+    setDemandSimulation((prev) => ({ ...prev, currentDemand: newDemand }))
+    // Recalculate all prices
+    if (dynamicPricingEnabled) {
+      showNotification("info", `Demanda simulada: ${Math.round(newDemand * 100)}%`)
+    }
+  }
+
+  const getDefaultPricingRules = (): PricingRule[] => [
+    {
+      id: "early-bird",
+      name: "Early Bird Discount",
+      type: "time-based",
+      isActive: true,
+      conditions: { daysBeforeEvent: 60 },
+      priceAdjustment: { type: "percentage", value: -15, minPrice: 25000 },
+      appliesTo: {},
+      priority: 1,
+      createdAt: new Date(),
+    },
+    {
+      id: "last-minute",
+      name: "Last Minute Premium",
+      type: "time-based",
+      isActive: true,
+      conditions: { daysBeforeEvent: 7 },
+      priceAdjustment: { type: "percentage", value: 25, maxIncrease: 50000 },
+      appliesTo: {},
+      priority: 2,
+      createdAt: new Date(),
+    },
+    {
+      id: "high-demand",
+      name: "High Demand Surge",
+      type: "demand-based",
+      isActive: true,
+      conditions: { demandThreshold: 0.7 },
+      priceAdjustment: { type: "percentage", value: 20, maxIncrease: 40000 },
+      appliesTo: {},
+      priority: 3,
+      createdAt: new Date(),
+    },
+    {
+      id: "peak-hours",
+      name: "Peak Hours Premium",
+      type: "time-based",
+      isActive: true,
+      conditions: { timeOfDay: { start: "18:00", end: "22:00" } },
+      priceAdjustment: { type: "percentage", value: 10 },
+      appliesTo: {},
+      priority: 4,
+      createdAt: new Date(),
+    },
+    {
+      id: "weekend-premium",
+      name: "Weekend Premium",
+      type: "time-based",
+      isActive: true,
+      conditions: { dayOfWeek: [5, 6, 0] }, // Friday, Saturday, Sunday
+      priceAdjustment: { type: "percentage", value: 15 },
+      appliesTo: {},
+      priority: 5,
+      createdAt: new Date(),
+    },
+  ]
+
+  // Advanced drawing functions
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const x = (e.clientX - rect.left - pan.x) / zoom
+    const y = (e.clientY - rect.top - pan.y) / zoom
+
+    const snappedX = snapToGrid ? Math.round(x / gridSize) * gridSize : x
+    const snappedY = snapToGrid ? Math.round(y / gridSize) * gridSize : y
+
+    switch (selectedTool) {
+      case "draw-seats":
+      case "draw-section":
+      case "draw-stage":
+        setDrawingState({
+          isDrawing: true,
+          startPoint: { x: snappedX, y: snappedY },
+          currentPoint: { x: snappedX, y: snappedY },
+          previewShape: null,
+        })
+        break
+      case "pan":
+        setIsDragging(true)
+        setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+        break
+      case "move":
+        // Check if clicking on stage
+        if (
+          x >= stageConfig.x &&
+          x <= stageConfig.x + stageConfig.width &&
+          y >= stageConfig.y &&
+          y <= stageConfig.y + stageConfig.height
+        ) {
+          setIsDraggingElement(true)
+          setDraggedElementId("stage")
+          setDragStart({ x: e.clientX, y: e.clientY })
+        }
+        break
+    }
+  }
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const x = (e.clientX - rect.left - pan.x) / zoom
+    const y = (e.clientY - rect.top - pan.y) / zoom
+
+    const snappedX = snapToGrid ? Math.round(x / gridSize) * gridSize : x
+    const snappedY = snapToGrid ? Math.round(y / gridSize) * gridSize : y
+
+    if (drawingState.isDrawing) {
+      setDrawingState((prev) => ({
+        ...prev,
+        currentPoint: { x: snappedX, y: snappedY },
+      }))
+    }
+
+    if (isDragging && selectedTool === "pan") {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      })
+    }
+
+    if (isDraggingElement && selectedTool === "move") {
+      const deltaX = (e.clientX - dragStart.x) / zoom
+      const deltaY = (e.clientY - dragStart.y) / zoom
+
+      if (draggedElementId === "stage") {
+        setStageConfig((prev) => ({
+          ...prev,
+          x: prev.x + deltaX,
+          y: prev.y + deltaY,
+        }))
+      } else if (draggedElementId && selectedSection) {
+        seatMapManager.updateSectionPosition(
+          selectedSection.id,
+          selectedSection.position.x + deltaX,
+          selectedSection.position.y + deltaY,
+        )
+        setSections([...seatMapManager.getSections()])
+      }
+
+      setDragStart({ x: e.clientX, y: e.clientY })
+      setHasUnsavedChanges(true)
+    }
+  }
+
+  const handleCanvasMouseUp = (e: React.MouseEvent) => {
+    if (drawingState.isDrawing) {
+      finishDrawing()
+    }
+    setIsDragging(false)
+    setIsDraggingElement(false)
+    setDraggedElementId(null)
+    setDrawingState((prev) => ({ ...prev, isDrawing: false }))
+  }
+
+  const finishDrawing = () => {
+    const { startPoint, currentPoint } = drawingState
+    const width = Math.abs(currentPoint.x - startPoint.x)
+    const height = Math.abs(currentPoint.y - startPoint.y)
+    const x = Math.min(startPoint.x, currentPoint.x)
+    const y = Math.min(startPoint.y, currentPoint.y)
+
+    if (width < 10 || height < 10) return
+
+    if (selectedTool === "draw-section") {
+      createSectionFromDrawing(x, y, width, height)
+    } else if (selectedTool === "draw-seats") {
+      createSeatsFromDrawing(x, y, width, height)
+    } else if (selectedTool === "draw-stage") {
+      setStageConfig({
+        x,
+        y,
+        width,
+        height,
+        label: "ESCENARIO",
+        rotation: 0,
+      })
+      setHasUnsavedChanges(true)
+    }
+
+    saveToHistory()
+  }
+
+  const createSectionFromDrawing = (x: number, y: number, width: number, height: number) => {
+    const sectionName = `Sección ${sections.length + 1}`
+    const newSection = seatMapManager.createSection({
+      name: sectionName,
+      type: formData.type,
+      x,
+      y,
+      width,
+      height,
+      capacity: formData.capacity,
+      price: formData.price,
+      color: formData.color,
+      rows: formData.rows,
+      seatsPerRow: formData.seatsPerRow,
+    })
+
+    setSections(seatMapManager.getSections())
+    setHasUnsavedChanges(true)
+    showNotification("success", `Sección "${sectionName}" creada`)
+  }
+
+  const createSeatsFromDrawing = (x: number, y: number, width: number, height: number) => {
+    const seatSize = 20
+    const seatSpacing = 5
+    const seatsPerRow = Math.floor(width / (seatSize + seatSpacing))
+    const rows = Math.floor(height / (seatSize + seatSpacing))
+
+    if (seatsPerRow > 0 && rows > 0) {
+      const sectionName = `Asientos ${sections.length + 1}`
+      const newSection = seatMapManager.createSection({
+        name: sectionName,
+        type: "seats",
+        x,
+        y,
+        capacity: seatsPerRow * rows,
+        price: formData.price,
+        color: formData.color,
+        rows,
+        seatsPerRow,
+      })
+
+      setSections(seatMapManager.getSections())
+      setHasUnsavedChanges(true)
+      showNotification("success", `${seatsPerRow * rows} asientos creados`)
+    }
+  }
+
+  const handleZoom = (direction: "in" | "out", center?: { x: number; y: number }) => {
+    const factor = direction === "in" ? 1.2 : 1 / 1.2
+    const newZoom = Math.max(0.1, Math.min(5, zoom * factor))
+
+    if (center) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (rect) {
+        const zoomPoint = {
+          x: (center.x - rect.left - pan.x) / zoom,
+          y: (center.y - rect.top - pan.y) / zoom,
+        }
+
+        setPan((prev) => ({
+          x: prev.x - zoomPoint.x * (newZoom - zoom),
+          y: prev.y - zoomPoint.y * (newZoom - zoom),
+        }))
+      }
+    }
+
+    setZoom(newZoom)
+  }
+
+  const resetView = () => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }
+
+  const fitToScreen = () => {
+    if (sections.length === 0) return
+
+    const bounds = sections.reduce(
+      (acc, section) => ({
+        minX: Math.min(acc.minX, section.position.x),
+        minY: Math.min(acc.minY, section.position.y),
+        maxX: Math.max(acc.maxX, section.position.x + section.dimensions.width),
+        maxY: Math.max(acc.maxY, section.position.y + section.dimensions.height),
+      }),
+      {
+        minX: Number.POSITIVE_INFINITY,
+        minY: Number.POSITIVE_INFINITY,
+        maxX: Number.NEGATIVE_INFINITY,
+        maxY: Number.NEGATIVE_INFINITY,
+      },
+    )
+
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const contentWidth = bounds.maxX - bounds.minX
+    const contentHeight = bounds.maxY - bounds.minY
+    const padding = 50
+
+    const scaleX = (rect.width - padding * 2) / contentWidth
+    const scaleY = (rect.height - padding * 2) / contentHeight
+    const newZoom = Math.min(scaleX, scaleY, 2)
+
+    const centerX = (bounds.minX + bounds.maxX) / 2
+    const centerY = (bounds.minY + bounds.maxY) / 2
+
+    setPan({
+      x: rect.width / 2 - centerX * newZoom,
+      y: rect.height / 2 - centerY * newZoom,
+    })
+    setZoom(newZoom)
+  }
+
+  // Render preview shape while drawing
+  const renderPreviewShape = () => {
+    if (!drawingState.isDrawing) return null
+
+    const { startPoint, currentPoint } = drawingState
+    const width = Math.abs(currentPoint.x - startPoint.x)
+    const height = Math.abs(currentPoint.y - startPoint.y)
+    const x = Math.min(startPoint.x, currentPoint.x)
+    const y = Math.min(startPoint.y, currentPoint.y)
+
+    if (selectedTool === "draw-section" || selectedTool === "draw-seats") {
+      return (
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill="rgba(59, 130, 246, 0.2)"
+          stroke="#3B82F6"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          className="pointer-events-none"
+        />
+      )
+    }
+
+    if (selectedTool === "draw-stage") {
+      return (
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill="rgba(55, 65, 81, 0.3)"
+          stroke="#374151"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          rx="8"
+          className="pointer-events-none"
+        />
+      )
+    }
+
+    return null
+  }
+
+  // Replace the existing renderSeat function with this updated version that includes dynamic pricing
+  const renderSeat = (seat: Seat, section: SeatSection) => {
+    const seatSize = 16
+    const tableSize = 32
+
+    // Calculate dynamic price
+    const dynamicPrice = calculateDynamicPrice(seat.price, section.id, seat.type || "regular")
+    const displayPrice = dynamicPrice.adjustedPrice
+    const priceChanged = dynamicPrice.adjustedPrice !== dynamicPrice.originalPrice
+
+    // Color based on price range
+    const getPriceColor = (price: number) => {
+      if (price >= 100000) return "#DC2626" // Red for premium
+      if (price >= 75000) return "#EA580C" // Orange for high
+      if (price >= 50000) return "#059669" // Green for medium
+      return "#4B5563" // Gray for low
+    }
+
+    const fill = seat.status === "available" ? getPriceColor(displayPrice) : "#94A3B8"
+    const isSelected = selectedSeats.includes(seat.id)
+    const stroke = selectedSeat?.id === seat.id || isSelected ? "#EF4444" : "#1E293B"
+    const strokeWidth = selectedSeat?.id === seat.id || isSelected ? "3" : "1"
+    const className = "cursor-pointer hover:opacity-80 transition-all duration-200"
+    const title = `${section.name} - Fila ${seat.row} Asiento ${seat.number} - ${formatPrice(displayPrice)}${priceChanged ? ` (Original: ${formatPrice(dynamicPrice.originalPrice)})` : ""}\n${dynamicPrice.reason}`
+
+    switch (seat.type) {
+      case "regular":
+      case "theater-chair":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Asiento de teatro con respaldo */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={seatSize}
+              height={seatSize * 1.3}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="3"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Respaldo */}
+            <rect
+              x={seat.position.x + 2}
+              y={seat.position.y + seatSize + 2}
+              width={seatSize - 4}
+              height={seatSize * 0.3}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth="1"
+              rx="2"
+              className="pointer-events-none"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + seatSize - 3}
+                cy={seat.position.y + 3}
+                r="3"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + seatSize - 3}
+                cy={seat.position.y + seatSize - 3}
+                r="4"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + seatSize / 2}
+              y={seat.position.y + seatSize / 2 + 4}
+              textAnchor="middle"
+              fontSize="10"
+              fill="white"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      case "vip":
+      case "premium-box":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Palco premium con decoración */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={seatSize * 1.4}
+              height={seatSize * 1.4}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="4"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Indicador VIP */}
+            <circle
+              cx={seat.position.x + seatSize * 1.4 - 6}
+              cy={seat.position.y + 6}
+              r="4"
+              fill="#FFD700"
+              stroke="white"
+              strokeWidth="1"
+              className="pointer-events-none"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + seatSize * 1.4 - 3}
+                cy={seat.position.y + 3}
+                r="3"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + seatSize * 1.4 - 3}
+                cy={seat.position.y + seatSize * 1.4 - 3}
+                r="4"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + (seatSize * 1.4) / 2}
+              y={seat.position.y + (seatSize * 1.4) / 2 + 4}
+              textAnchor="middle"
+              fontSize="9"
+              fill="white"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      case "table-unit":
+      case "dining-chair":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Mesa con sillas alrededor */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={tableSize}
+              height={tableSize}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="4"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Sillas alrededor de la mesa */}
+            <circle
+              cx={seat.position.x - 4}
+              cy={seat.position.y + tableSize / 2}
+              r="3"
+              fill={fill}
+              stroke={stroke}
+              strokeWidth="1"
+            />
+            <circle
+              cx={seat.position.x + tableSize + 4}
+              cy={seat.position.y + tableSize / 2}
+              r="3"
+              fill={fill}
+              stroke={stroke}
+              strokeWidth="1"
+            />
+            <circle
+              cx={seat.position.x + tableSize / 2}
+              cy={seat.position.y - 4}
+              r="3"
+              fill={fill}
+              stroke={stroke}
+              strokeWidth="1"
+            />
+            <circle
+              cx={seat.position.x + tableSize / 2}
+              cy={seat.position.y + tableSize + 4}
+              r="3"
+              fill={fill}
+              stroke={stroke}
+              strokeWidth="1"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + tableSize - 5}
+                cy={seat.position.y + 5}
+                r="4"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + tableSize - 5}
+                cy={seat.position.y + tableSize - 5}
+                r="5"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + tableSize / 2}
+              y={seat.position.y + tableSize + 16}
+              textAnchor="middle"
+              fontSize="10"
+              fill="#374151"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      case "stadium-seat":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Asiento de estadio plegable */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={seatSize * 0.9}
+              height={seatSize * 0.8}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="2"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Respaldo plegable */}
+            <rect
+              x={seat.position.x + 1}
+              y={seat.position.y + seatSize * 0.8 + 1}
+              width={seatSize * 0.9 - 2}
+              height={seatSize * 0.2}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth="1"
+              rx="1"
+              className="pointer-events-none"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + seatSize * 0.9 - 3}
+                cy={seat.position.y + 3}
+                r="3"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + seatSize * 0.9 - 3}
+                cy={seat.position.y + seatSize * 0.8 - 3}
+                r="4"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + (seatSize * 0.9) / 2}
+              y={seat.position.y + (seatSize * 0.8) / 2 + 3}
+              textAnchor="middle"
+              fontSize="9"
+              fill="white"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      case "accessible-seat":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Asiento accesible con indicador */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={seatSize * 1.2}
+              height={seatSize * 1.2}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="4"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Indicador de accesibilidad */}
+            <circle
+              cx={seat.position.x + seatSize * 1.2 - 6}
+              cy={seat.position.y + 6}
+              r="4"
+              fill="#0891B2"
+              stroke="white"
+              strokeWidth="1"
+              className="pointer-events-none"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + seatSize * 1.2 - 3}
+                cy={seat.position.y + 3}
+                r="3"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + seatSize * 1.2 - 3}
+                cy={seat.position.y + seatSize * 1.2 - 3}
+                r="4"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + (seatSize * 1.2) / 2}
+              y={seat.position.y + (seatSize * 1.2) / 2 + 4}
+              textAnchor="middle"
+              fontSize="9"
+              fill="white"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      case "balcony-seat":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Asiento de balcón elevado */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={seatSize * 1.1}
+              height={seatSize * 1.1}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="3"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Indicador de balcón */}
+            <circle
+              cx={seat.position.x + seatSize * 1.1 - 6}
+              cy={seat.position.y + 6}
+              r="4"
+              fill="#7C3AED"
+              stroke="white"
+              strokeWidth="1"
+              className="pointer-events-none"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + seatSize * 1.1 - 3}
+                cy={seat.position.y + 3}
+                r="3"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + seatSize * 1.1 - 3}
+                cy={seat.position.y + seatSize * 1.1 - 3}
+                r="4"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + (seatSize * 1.1) / 2}
+              y={seat.position.y + (seatSize * 1.1) / 2 + 4}
+              textAnchor="middle"
+              fontSize="9"
+              fill="white"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      case "orchestra-seat":
+        return (
+          <g key={seat.id} onClick={(e) => handleSeatClick(seat, section, e)}>
+            {/* Asiento de orquesta especial */}
+            <rect
+              x={seat.position.x}
+              y={seat.position.y}
+              width={seatSize * 1.15}
+              height={seatSize * 1.15}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              rx="3"
+              className={className}
+              filter="url(#seatShadow)"
+            >
+              <title>{title}</title>
+            </rect>
+            {/* Indicador de orquesta */}
+            <circle
+              cx={seat.position.x + seatSize * 1.15 - 6}
+              cy={seat.position.y + 6}
+              r="4"
+              fill="#7C2D12"
+              stroke="white"
+              strokeWidth="1"
+              className="pointer-events-none"
+            />
+            {priceChanged && (
+              <circle
+                cx={seat.position.x + seatSize * 1.15 - 3}
+                cy={seat.position.y + 3}
+                r="3"
+                fill="#FF6B35"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            {isSelected && selectedSeat?.id !== seat.id && (
+              <circle
+                cx={seat.position.x + seatSize * 1.15 - 3}
+                cy={seat.position.y + seatSize * 1.15 - 3}
+                r="4"
+                fill="#EF4444"
+                stroke="white"
+                strokeWidth="1"
+                className="pointer-events-none"
+              />
+            )}
+            <text
+              x={seat.position.x + (seatSize * 1.15) / 2}
+              y={seat.position.y + (seatSize * 1.15) / 2 + 4}
+              textAnchor="middle"
+              fontSize="9"
+              fill="white"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {seat.number}
+            </text>
+          </g>
+        )
+      default:
+        return null
+    }
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const getCompletionPercentage = () => {
+    const totalCapacity = seatMapManager.getTotalCapacity()
+    if (totalCapacity === 0) return 0
+    return Math.min(100, sections.length * 20 + (totalCapacity > 0 ? 30 : 0) + (isPublished ? 50 : 0))
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        {/* Enhanced Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-50">
+          <div className="px-6 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                      Editor de Mapas de Asientos
+                    </h1>
+                    <p className="text-sm text-slate-600">
+                      Herramienta profesional para diseñar mapas y gestionar precios
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progress Indicator */}
+                <div className="hidden lg:flex items-center gap-3 ml-8">
+                  <div className="text-xs text-slate-600">Progreso:</div>
+                  <div className="w-32">
+                    <Progress value={getCompletionPercentage()} className="h-2" />
+                  </div>
+                  <div className="text-xs font-medium text-slate-700">{getCompletionPercentage()}%</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Auto-save indicator */}
+                {isAutoSaving && (
+                  <div className="flex items-center gap-2 text-sm text-blue-600">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+                    Guardando...
+                  </div>
+                )}
+
+                {/* Status badges */}
+                <div className="flex items-center gap-2">
+                  {hasUnsavedChanges && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Sin guardar
+                    </Badge>
+                  )}
+                  <Badge variant={isPublished ? "default" : "secondary"} className={isPublished ? "bg-green-600" : ""}>
+                    {isPublished ? "Publicado" : "Borrador"}
+                  </Badge>
+                  {lastSaved && (
+                    <span className="text-xs text-slate-500">Guardado: {lastSaved.toLocaleTimeString()}</span>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={() => setShowShortcuts(true)}>
+                        <Keyboard className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Atajos de teclado</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={() => setIsPreviewMode(!isPreviewMode)}>
+                        {isPreviewMode ? <Edit3 className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{isPreviewMode ? "Modo Edición" : "Vista Previa"}</TooltipContent>
+                  </Tooltip>
+
+                  <Button onClick={handleSave} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Save className="h-4 w-4 mr-2" />
+                    Guardar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de Herramientas Superior - Estilo Word */}
+        <div className="bg-white/95 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
+          <div className="px-6 py-3">
+            <div className="flex items-center justify-between">
+              {/* Tabs de Herramientas */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-0">
+                  <TabsTrigger value="tools" className="text-sm">
+                    <MousePointer className="h-4 w-4 mr-2" />
+                    Herramientas
+                  </TabsTrigger>
+                  <TabsTrigger value="pricing" className="text-sm">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Precios
+                  </TabsTrigger>
+                  <TabsTrigger value="view" className="text-sm">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Vista
+                  </TabsTrigger>
+                  <TabsTrigger value="stats" className="text-sm">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Stats
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Contenido de las Tabs */}
+                <div className="mt-4">
+                  <TabsContent value="tools" className="space-y-0">
+                    <div className="flex flex-wrap gap-2">
+                      {/* Herramientas de Selección */}
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <span className="text-xs font-medium text-slate-600 mr-2">Selección:</span>
+                        {toolCategories.selection.map((tool) => {
+                          const Icon = tool.icon
+                          return (
+                            <Tooltip key={tool.id}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant={selectedTool === tool.id ? "default" : "ghost"}
+                                  size="sm"
+                                  className={`h-8 px-3 transition-all duration-200 ${
+                                    selectedTool === tool.id ? "bg-blue-600 text-white shadow-md" : "hover:bg-slate-100"
+                                  }`}
+                                  onClick={() => setSelectedTool(tool.id as Tool)}
+                                >
+                                  <Icon className="h-4 w-4 mr-1" />
+                                  <span className="text-xs">{tool.name}</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">
+                                <p>{tool.description}</p>
+                                <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )
+                        })}
+                      </div>
+
+                      {/* Herramientas de Navegación */}
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <span className="text-xs font-medium text-slate-600 mr-2">Navegación:</span>
+                        {toolCategories.navigation.map((tool) => {
+                          const Icon = tool.icon
+                          return (
+                            <Tooltip key={tool.id}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant={selectedTool === tool.id ? "default" : "ghost"}
+                                  size="sm"
+                                  className={`h-8 px-3 transition-all duration-200 ${
+                                    selectedTool === tool.id ? "bg-green-600 text-white shadow-md" : "hover:bg-slate-100"
+                                  }`}
+                                  onClick={() => setSelectedTool(tool.id as Tool)}
+                                >
+                                  <Icon className="h-4 w-4 mr-1" />
+                                  <span className="text-xs">{tool.name}</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">
+                                <p>{tool.description}</p>
+                                <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )
+                        })}
+                      </div>
+
+                      {/* Herramientas de Dibujo */}
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <span className="text-xs font-medium text-slate-600 mr-2">Dibujo:</span>
+                        {toolCategories.drawing.map((tool) => {
+                          const Icon = tool.icon
+                          return (
+                            <Tooltip key={tool.id}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant={selectedTool === tool.id ? "default" : "ghost"}
+                                  size="sm"
+                                  className={`h-8 px-3 transition-all duration-200 ${
+                                    selectedTool === tool.id ? "bg-purple-600 text-white shadow-md" : "hover:bg-slate-100"
+                                  }`}
+                                  onClick={() => setSelectedTool(tool.id as Tool)}
+                                >
+                                  <Icon className="h-4 w-4 mr-1" />
+                                  <span className="text-xs">{tool.name}</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">
+                                <p>{tool.description}</p>
+                                <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )
+                        })}
+                      </div>
+
+                      {/* Herramientas de Edición */}
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <span className="text-xs font-medium text-slate-600 mr-2">Edición:</span>
+                        {toolCategories.editing.map((tool) => {
+                          const Icon = tool.icon
+                          return (
+                            <Tooltip key={tool.id}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant={selectedTool === tool.id ? "default" : "ghost"}
+                                  size="sm"
+                                  className={`h-8 px-3 transition-all duration-200 ${
+                                    selectedTool === tool.id ? "bg-orange-600 text-white shadow-md" : "hover:bg-slate-100"
+                                  }`}
+                                  onClick={() => setSelectedTool(tool.id as Tool)}
+                                >
+                                  <Icon className="h-4 w-4 mr-1" />
+                                  <span className="text-xs">{tool.name}</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">
+                                <p>{tool.description}</p>
+                                <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )
+                        })}
+                      </div>
+
+                      {/* Controles de Historial */}
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <span className="text-xs font-medium text-slate-600 mr-2">Historial:</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={undo}
+                          disabled={historyIndex <= 0}
+                          className="h-8 px-3"
+                        >
+                          <Undo className="h-4 w-4 mr-1" />
+                          <span className="text-xs">Deshacer</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={redo}
+                          disabled={historyIndex >= history.length - 1}
+                          className="h-8 px-3"
+                        >
+                          <Redo className="h-4 w-4 mr-1" />
+                          <span className="text-xs">Rehacer</span>
+                        </Button>
+                      </div>
+
+                      {/* Configuración Rápida */}
+                      {(selectedTool === "draw-seats" || selectedTool === "draw-section") && (
+                        <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-2 border border-blue-200">
+                          <span className="text-xs font-medium text-blue-600 mr-2">Precio:</span>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1000"
+                            value={formData.price}
+                            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) || 0 })}
+                            className="h-8 w-24 text-xs"
+                            placeholder="Precio"
+                          />
+                          <span className="text-xs text-blue-600">{formatPrice(formData.price)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="pricing" className="space-y-0">
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm text-slate-600">
+                        Herramientas de precios y configuración económica
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="view" className="space-y-0">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowGrid(!showGrid)}
+                          className="h-8 px-3"
+                        >
+                          <Grid3X3 className="h-4 w-4 mr-1" />
+                          <span className="text-xs">Cuadrícula</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowLabels(!showLabels)}
+                          className="h-8 px-3"
+                        >
+                          <Tag className="h-4 w-4 mr-1" />
+                          <span className="text-xs">Etiquetas</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="stats" className="space-y-0">
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm text-slate-600">
+                        Estadísticas y análisis del mapa
+                      </div>
+                    </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex h-[calc(100vh-200px)]">
+          {/* Sidebar Derecho - Más compacto */}
+          <div className="w-64 bg-white/95 backdrop-blur-sm border-r border-slate-200/60 overflow-y-auto shadow-lg">
+            <div className="p-4">
+              {/* Templates Predefinidos */}
+              <Card className="border-slate-200/60 mb-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <Star className="h-4 w-4 text-yellow-600" />
+                    Templates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="text-xs text-slate-500 mb-3">
+                    Aplica templates predefinidos
+                  </div>
+                  {predefinedTemplates.map((template) => {
+                    const Icon = template.icon
+                    return (
+                      <Tooltip key={template.id}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start transition-all duration-200 hover:bg-yellow-50 hover:border-yellow-300"
+                            onClick={() => applyTemplate(template)}
+                          >
+                            <Icon className="h-4 w-4 mr-2" />
+                            <div className="text-left">
+                              <div className="font-medium text-sm">{template.name}</div>
+                              <div className="text-xs text-slate-500">{template.description}</div>
+                            </div>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <div className="space-y-2">
+                            <p className="font-medium">{template.name}</p>
+                            <p className="text-sm">{template.description}</p>
+                            <div className="text-xs text-slate-400">
+                              <p>Secciones: {template.sections.length}</p>
+                              <p>Total asientos: {template.sections.reduce((acc, s) => acc + (s.rows * s.seatsPerRow), 0)}</p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+
+              {/* Configuración del Escenario */}
+              <Card className="border-slate-200/60 mb-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <Theater className="h-4 w-4 text-purple-600" />
+                    Escenario
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label htmlFor="stageLabel" className="text-xs font-medium text-slate-700">
+                      Etiqueta
+                    </Label>
+                    <Input
+                      id="stageLabel"
+                      value={stageConfig.label}
+                      onChange={(e) => {
+                        setStageConfig((prev) => ({ ...prev, label: e.target.value }))
+                        setHasUnsavedChanges(true)
+                      }}
+                      className="mt-1 h-8 text-xs"
+                      placeholder="Nombre del escenario"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="stageLabel" className="text-xs font-medium text-slate-700">
+                        Ancho
+                      </Label>
+                      <Input
+                        id="stageWidth"
+                        type="number"
+                        min="50"
+                        value={stageConfig.width}
+                        onChange={(e) => {
+                          setStageConfig((prev) => ({ ...prev, width: Number(e.target.value) || 200 }))
+                          setHasUnsavedChanges(true)
+                        }}
+                        className="mt-1 h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="stageHeight" className="text-xs font-medium text-slate-700">
+                        Alto
+                      </Label>
+                      <Input
+                        id="stageHeight"
+                        type="number"
+                        min="20"
+                        value={stageConfig.height}
+                        onChange={(e) => {
+                          setStageConfig((prev) => ({ ...prev, height: Number(e.target.value) || 40 }))
+                          setHasUnsavedChanges(true)
+                        }}
+                        className="mt-1 h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            <div className="p-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
+                  <TabsTrigger value="tools" className="text-sm">
+                    <MousePointer className="h-4 w-4 mr-2" />
+                    Herramientas
+                  </TabsTrigger>
+                  <TabsTrigger value="pricing" className="text-sm">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Precios
+                  </TabsTrigger>
+                  <TabsTrigger value="view" className="text-sm">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Vista
+                  </TabsTrigger>
+                  <TabsTrigger value="stats" className="text-sm">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Stats
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="tools" className="space-y-6">
+                  {/* Selection Tools */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-700">
+                        <Target className="h-5 w-5 text-blue-600" />
+                        Selección
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {toolCategories.selection.map((tool) => {
+                        const Icon = tool.icon
+                        return (
+                          <Tooltip key={tool.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={selectedTool === tool.id ? "default" : "ghost"}
+                                size="default"
+                                className={`w-full justify-start h-10 transition-all duration-200 ${
+                                  selectedTool === tool.id ? "bg-blue-600 text-white shadow-md" : "hover:bg-slate-100"
+                                }`}
+                                onClick={() => setSelectedTool(tool.id as Tool)}
+                              >
+                                <Icon className="h-4 w-4 mr-3" />
+                                <span className="text-sm">{tool.name}</span>
+                                <Badge variant="secondary" className="ml-auto text-xs">
+                                  {tool.shortcut}
+                                </Badge>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{tool.description}</p>
+                              <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+
+                  {/* Navigation Tools */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-700">
+                        <Hand className="h-5 w-5 text-green-600" />
+                        Navegación
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {toolCategories.navigation.map((tool) => {
+                        const Icon = tool.icon
+                        return (
+                          <Tooltip key={tool.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={selectedTool === tool.id ? "default" : "ghost"}
+                                size="default"
+                                className={`w-full justify-start h-10 transition-all duration-200 ${
+                                  selectedTool === tool.id ? "bg-green-600 text-white shadow-md" : "hover:bg-slate-100"
+                                }`}
+                                onClick={() => setSelectedTool(tool.id as Tool)}
+                              >
+                                <Icon className="h-4 w-4 mr-3" />
+                                <span className="text-sm">{tool.name}</span>
+                                <Badge variant="secondary" className="ml-auto text-xs">
+                                  {tool.shortcut}
+                                </Badge>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{tool.description}</p>
+                              <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+
+                  {/* Drawing Tools */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Pen className="h-4 w-4 text-purple-600" />
+                        Dibujo
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {toolCategories.drawing.map((tool) => {
+                        const Icon = tool.icon
+                        return (
+                          <Tooltip key={tool.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={selectedTool === tool.id ? "default" : "ghost"}
+                                size="sm"
+                                className={`w-full justify-start transition-all duration-200 ${
+                                  selectedTool === tool.id ? "bg-purple-600 text-white shadow-md" : "hover:bg-slate-100"
+                                }`}
+                                onClick={() => setSelectedTool(tool.id as Tool)}
+                              >
+                                <Icon className="h-4 w-4 mr-2" />
+                                {tool.name}
+                                <Badge variant="secondary" className="ml-auto text-xs">
+                                  {tool.shortcut}
+                                </Badge>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{tool.description}</p>
+                              <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })}
+
+                      {(selectedTool === "draw-seats" || selectedTool === "draw-section") && (
+                        <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <Label className="text-xs font-medium text-slate-700">Precio por Defecto</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1000"
+                            value={formData.price}
+                            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) || 0 })}
+                            className="h-8 mt-1"
+                            placeholder="Precio en COP"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">{formatPrice(formData.price)}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Templates Predefinidos */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Star className="h-4 w-4 text-yellow-600" />
+                        Templates
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="text-xs text-slate-500 mb-3">
+                        Aplica templates predefinidos para diferentes tipos de eventos
+                      </div>
+                      {predefinedTemplates.map((template) => {
+                        const Icon = template.icon
+                        return (
+                          <Tooltip key={template.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start transition-all duration-200 hover:bg-yellow-50 hover:border-yellow-300"
+                                onClick={() => applyTemplate(template)}
+                              >
+                                <Icon className="h-4 w-4 mr-2" />
+                                <div className="text-left">
+                                  <div className="font-medium text-sm">{template.name}</div>
+                                  <div className="text-xs text-slate-500">{template.description}</div>
+                                </div>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs">
+                              <div className="space-y-2">
+                                <p className="font-medium">{template.name}</p>
+                                <p className="text-sm">{template.description}</p>
+                                <div className="text-xs text-slate-400">
+                                  <p>Secciones: {template.sections.length}</p>
+                                  <p>Total asientos: {template.sections.reduce((acc, s) => acc + (s.rows * s.seatsPerRow), 0)}</p>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+
+                  {/* Editing Tools */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Edit3 className="h-4 w-4 text-orange-600" />
+                        Edición
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {toolCategories.editing.map((tool) => {
+                        const Icon = tool.icon
+                        return (
+                          <Tooltip key={tool.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={selectedTool === tool.id ? "default" : "ghost"}
+                                size="sm"
+                                className={`w-full justify-start transition-all duration-200 ${
+                                  selectedTool === tool.id ? "bg-orange-600 text-white shadow-md" : "hover:bg-slate-100"
+                                }`}
+                                onClick={() => setSelectedTool(tool.id as Tool)}
+                              >
+                                <Icon className="h-4 w-4 mr-2" />
+                                {tool.name}
+                                <Badge variant="secondary" className="ml-auto text-xs">
+                                  {tool.shortcut}
+                                </Badge>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{tool.description}</p>
+                              <p className="text-xs text-slate-400">Atajo: {tool.shortcut}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+
+                  {/* History Controls */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Clock className="h-4 w-4 text-indigo-600" />
+                        Historial
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={undo}
+                              disabled={historyIndex <= 0}
+                              className="flex-1 bg-transparent"
+                            >
+                              <Undo className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Deshacer (Ctrl+Z)</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={redo}
+                              disabled={historyIndex >= history.length - 1}
+                              className="flex-1"
+                            >
+                              <Redo className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Rehacer (Ctrl+Shift+Z)</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="pricing" className="space-y-4">
+                  {/* Price Management */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <DollarSign className="h-4 w-4 text-green-600" />
+                        Gestión de Precios
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Dialog open={showBulkPriceEditor} onOpenChange={setShowBulkPriceEditor}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+                            <Calculator className="h-4 w-4 mr-2" />
+                            Precios Masivos
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <Sparkles className="h-5 w-5 text-blue-600" />
+                              Gestión Masiva de Precios
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-6">
+                            {/* Price Zones - REMOVED */}
+
+                            {/* Bulk Operations */}
+                            <div>
+                              <h4 className="font-medium mb-3 flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4" />
+                                Operaciones Masivas
+                              </h4>
+                              <div className="grid grid-cols-4 gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => bulkUpdatePrices(10)}
+                                  className="text-green-600 border-green-200 hover:bg-green-50"
+                                >
+                                  +10%
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => bulkUpdatePrices(20)}
+                                  className="text-green-600 border-green-200 hover:bg-green-50"
+                                >
+                                  +20%
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => bulkUpdatePrices(-10)}
+                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                >
+                                  -10%
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => bulkUpdatePrices(-20)}
+                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                >
+                                  -20%
+                                </Button>
+                              </div>
+                              
+                              {/* Botón para eliminar asientos seleccionados */}
+                              <div className="pt-3 border-t border-slate-200">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={deleteSelectedSeats}
+                                  className="w-full"
+                                  disabled={selectedSeats.length === 0}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Eliminar {selectedSeats.length > 0 ? `${selectedSeats.length} Asientos` : 'Asientos Seleccionados'}
+                                </Button>
+                                <p className="text-xs text-slate-500 mt-2 text-center">
+                                  ⚠️ Solo elimina asientos de la sección actualmente seleccionada
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Separator />
+
+                      <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-lg">
+                        <p className="flex items-center gap-2">
+                          <Info className="h-3 w-3" />
+                          Selecciona asientos para editar precios individuales
+                        </p>
+                        <p>• Los precios se configuran individualmente por asiento</p>
+                        <p>• Los cambios se aplican en tiempo real</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Dynamic Pricing */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Zap className="h-4 w-4 text-yellow-600" />
+                        Precios Dinámicos
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-yellow-600" />
+                          <Label className="text-sm font-medium">Activar Precios Dinámicos</Label>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={dynamicPricingEnabled}
+                          onChange={(e) => setDynamicPricingEnabled(e.target.checked)}
+                          className="rounded w-4 h-4"
+                        />
+                      </div>
+
+                      {dynamicPricingEnabled && (
+                        <>
+                          <div className="space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <Label className="text-sm font-medium text-slate-700">Simulación de Demanda</Label>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-slate-600">Demanda Actual:</span>
+                                <Badge variant="outline" className="text-xs font-mono">
+                                  {Math.round(demandSimulation.currentDemand * 100)}%
+                                </Badge>
+                              </div>
+                              <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={demandSimulation.currentDemand}
+                                onChange={(e) => simulateDemandChange(Number.parseFloat(e.target.value))}
+                                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-slate-600">Días al Evento:</span>
+                                <Badge variant="outline" className="text-xs font-mono">
+                                  {demandSimulation.timeToEvent}
+                                </Badge>
+                              </div>
+                              <input
+                                type="range"
+                                min="1"
+                                max="365"
+                                value={demandSimulation.timeToEvent}
+                                onChange={(e) =>
+                                  setDemandSimulation((prev) => ({
+                                    ...prev,
+                                    timeToEvent: Number.parseInt(e.target.value),
+                                  }))
+                                }
+                                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                            </div>
+                          </div>
+
+                          <Dialog open={showDynamicPricingDialog} onOpenChange={setShowDynamicPricingDialog}>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+                                <Settings className="h-4 w-4 mr-2" />
+                                Configurar Reglas
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <Settings className="h-5 w-5 text-blue-600" />
+                                  Configuración de Precios Dinámicos
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-6">
+                                {/* Active Rules */}
+                                <div>
+                                  <h4 className="font-medium mb-3">Reglas Activas</h4>
+                                  <div className="space-y-3">
+                                    {pricingRules.map((rule) => (
+                                      <div
+                                        key={rule.id}
+                                        className="flex items-center justify-between p-4 border rounded-xl hover:shadow-sm transition-all duration-200"
+                                      >
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-3 mb-2">
+                                            <Badge
+                                              variant={rule.isActive ? "default" : "secondary"}
+                                              className="text-xs"
+                                            >
+                                              {rule.type}
+                                            </Badge>
+                                            <span className="font-medium">{rule.name}</span>
+                                          </div>
+                                          <p className="text-sm text-slate-600">
+                                            {rule.priceAdjustment.type === "percentage"
+                                              ? `${rule.priceAdjustment.value > 0 ? "+" : ""}${rule.priceAdjustment.value}%`
+                                              : `${rule.priceAdjustment.value > 0 ? "+" : ""}${formatPrice(rule.priceAdjustment.value)}`}
+                                          </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => updatePricingRule(rule.id, { isActive: !rule.isActive })}
+                                          >
+                                            {rule.isActive ? "Desactivar" : "Activar"}
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => deletePricingRule(rule.id)}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Quick Rule Templates */}
+                                <div>
+                                  <h4 className="font-medium mb-3">Plantillas de Reglas</h4>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        addPricingRule({
+                                          name: "Flash Sale",
+                                          type: "time-based",
+                                          conditions: { daysBeforeEvent: 14 },
+                                          priceAdjustment: { type: "percentage", value: -20 },
+                                        })
+                                      }
+                                      className="h-auto p-3 text-left"
+                                    >
+                                      <div>
+                                        <div className="font-medium text-sm">Flash Sale</div>
+                                        <div className="text-xs text-slate-600">-20% descuento</div>
+                                      </div>
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        addPricingRule({
+                                          name: "Sold Out Soon",
+                                          type: "demand-based",
+                                          conditions: { demandThreshold: 0.9 },
+                                          priceAdjustment: { type: "percentage", value: 30 },
+                                        })
+                                      }
+                                      className="h-auto p-3 text-left"
+                                    >
+                                      <div>
+                                        <div className="font-medium text-sm">Casi Agotado</div>
+                                        <div className="text-xs text-slate-600">+30% premium</div>
+                                      </div>
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        addPricingRule({
+                                          name: "VIP Premium",
+                                          type: "hybrid",
+                                          conditions: { demandThreshold: 0.5, daysBeforeEvent: 30 },
+                                          priceAdjustment: { type: "percentage", value: 25 },
+                                          appliesTo: { seatTypes: ["vip"] },
+                                        })
+                                      }
+                                      className="h-auto p-3 text-left"
+                                    >
+                                      <div>
+                                        <div className="font-medium text-sm">VIP Premium</div>
+                                        <div className="text-xs text-slate-600">+25% para VIP</div>
+                                      </div>
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        addPricingRule({
+                                          name: "Happy Hour",
+                                          type: "time-based",
+                                          conditions: { timeOfDay: { start: "14:00", end: "17:00" } },
+                                          priceAdjustment: { type: "percentage", value: -10 },
+                                        })
+                                      }
+                                      className="h-auto p-3 text-left"
+                                    >
+                                      <div>
+                                        <div className="font-medium text-sm">Happy Hour</div>
+                                        <div className="text-xs text-slate-600">-10% horario</div>
+                                      </div>
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+
+                          <div className="text-xs text-slate-600 space-y-1 bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-lg border border-yellow-200">
+                            <p className="flex items-center gap-2 font-medium">
+                              <Sparkles className="h-3 w-3" />
+                              {pricingRules.filter((r) => r.isActive).length} reglas activas
+                            </p>
+                            <p>• Los precios se ajustan automáticamente</p>
+                            <p>• Indicador naranja = precio dinámico</p>
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="view" className="space-y-4">
+                  {/* View Controls */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Eye className="h-4 w-4 text-blue-600" />
+                        Controles de Vista
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => handleZoom("in")} className="flex-1">
+                              <ZoomIn className="h-4 w-4 mr-2" />
+                              Acercar
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Acercar vista (+)</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => handleZoom("out")} className="flex-1">
+                              <ZoomOut className="h-4 w-4 mr-2" />
+                              Alejar
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Alejar vista (-)</TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      <Button variant="outline" size="sm" onClick={resetView} className="w-full bg-transparent">
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Restablecer Vista
+                      </Button>
+
+                      <Button variant="outline" size="sm" onClick={fitToScreen} className="w-full bg-transparent">
+                        <Maximize className="h-4 w-4 mr-2" />
+                        Ajustar a Pantalla
+                      </Button>
+
+                      <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="text-sm font-medium text-slate-700">Zoom Actual</div>
+                        <div className="text-2xl font-bold text-blue-600">{Math.round(zoom * 100)}%</div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Grid3X3 className="h-4 w-4 text-slate-600" />
+                            <Label className="text-sm">Mostrar Cuadrícula</Label>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={showGrid}
+                            onChange={(e) => setShowGrid(e.target.checked)}
+                            className="rounded w-4 h-4"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4 text-slate-600" />
+                            <Label className="text-sm">Ajustar a Cuadrícula</Label>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={snapToGrid}
+                            onChange={(e) => setSnapToGrid(e.target.checked)}
+                            className="rounded w-4 h-4"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Layers */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <Layers className="h-4 w-4 text-indigo-600" />
+                        Capas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-slate-600 rounded" />
+                          <span className="text-sm">Escenario</span>
+                        </div>
+                        <Eye className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-blue-600 rounded" />
+                          <span className="text-sm">Secciones</span>
+                        </div>
+                        <Eye className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-green-600 rounded" />
+                          <span className="text-sm">Asientos</span>
+                        </div>
+                        <Eye className="h-4 w-4 text-slate-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="stats" className="space-y-4">
+                  {/* Statistics */}
+                  <Card className="border-slate-200/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <BarChart3 className="h-4 w-4 text-green-600" />
+                        Estadísticas del Mapa
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                          <div className="text-2xl font-bold text-blue-700">{sections.length}</div>
+                          <div className="text-xs text-blue-600">Secciones</div>
+                        </div>
+                        <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                          <div className="text-2xl font-bold text-green-700">{seatMapManager.getTotalCapacity()}</div>
+                          <div className="text-xs text-green-600">Capacidad</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <span className="text-sm text-slate-600">Precio base promedio:</span>
+                          <Badge variant="secondary" className="font-mono">
+                            {formatPrice(seatMapManager.getAveragePrice())}
+                          </Badge>
+                        </div>
+
+                        {dynamicPricingEnabled && (
+                          <>
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
+                              <span className="text-sm text-orange-700">Precio dinámico prom:</span>
+                              <Badge variant="secondary" className="text-orange-700 font-mono">
+                                {formatPrice(
+                                  sections.reduce((total, section) => {
+                                    const sectionAvg =
+                                      section.seats.reduce((seatTotal, seat) => {
+                                        const dynamicPrice = calculateDynamicPrice(
+                                          seat.price,
+                                          section.id,
+                                          seat.type || "regular",
+                                        )
+                                        return seatTotal + dynamicPrice.adjustedPrice
+                                      }, 0) / section.seats.length
+                                    return total + sectionAvg
+                                  }, 0) / sections.length || 0,
+                                )}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                              <span className="text-sm text-green-700">Ingresos dinámicos:</span>
+                              <Badge variant="secondary" className="text-green-700 font-mono">
+                                {formatPrice(
+                                  sections.reduce((total, section) => {
+                                    return (
+                                      total +
+                                      section.seats.reduce((seatTotal, seat) => {
+                                        const dynamicPrice = calculateDynamicPrice(
+                                          seat.price,
+                                          section.id,
+                                          seat.type || "regular",
+                                        )
+                                        return seatTotal + dynamicPrice.adjustedPrice
+                                      }, 0)
+                                    )
+                                  }, 0),
+                                )}
+                              </Badge>
+                            </div>
+                          </>
+                        )}
+
+                        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
+                          <span className="text-sm text-emerald-700">Ingresos estimados:</span>
+                          <Badge variant="secondary" className="text-emerald-700 font-mono">
+                            {formatPrice(seatMapManager.getTotalCapacity() * seatMapManager.getAveragePrice())}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Section Types Breakdown */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-slate-700">Distribución por Tipo</h4>
+                        {sectionTypes.map((type) => {
+                          const count = sections.filter((s) => s.type === type.value).length
+                          const percentage = sections.length > 0 ? (count / sections.length) * 100 : 0
+                          return (
+                            <div key={type.value} className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded" style={{ backgroundColor: type.color }} />
+                                <span>{type.label}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-slate-600">{count}</span>
+                                <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-300"
+                                    style={{
+                                      width: `${percentage}%`,
+                                      backgroundColor: type.color,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+
+          {/* Enhanced Main Canvas - Made larger */}
+          <div className="flex-1 flex flex-col">
+            <Card className="flex-1 m-2 border-slate-200/60 shadow-xl">
+              <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200/60">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <MapPin className="h-3 w-3 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-800">Lienzo de Diseño</div>
+                      <div className="text-xs text-slate-600">Diseña tu mapa de asientos profesional</div>
+                    </div>
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                      {sections.length} secc.
+                    </Badge>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                      {seatMapManager.getTotalCapacity()} asientos
+                    </Badge>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-mono text-xs">
+                      {formatPrice(seatMapManager.getTotalCapacity() * seatMapManager.getAveragePrice())}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 p-0 relative">
+                <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30" style={{ minHeight: '600px' }}>
+                  <svg
+                    ref={canvasRef}
+                    className="w-full h-full transition-all duration-200"
+                    style={{
+                      cursor: toolCategories.selection
+                        .concat(toolCategories.navigation, toolCategories.drawing, toolCategories.editing)
+                        .find((t) => t.id === selectedTool)?.cursor,
+                      minWidth: '1200px',
+                      minHeight: '800px'
+                    }}
+                    onMouseDown={handleCanvasMouseDown}
+                    onMouseMove={handleCanvasMouseMove}
+                    onMouseUp={handleCanvasMouseUp}
+                    onMouseLeave={handleCanvasMouseUp}
+                  >
+                    <defs>
+                      <pattern
+                        id="grid"
+                        width={gridSize}
+                        height={gridSize}
+                        patternUnits="userSpaceOnUse"
+                        opacity={showGrid ? 0.4 : 0}
+                      >
+                        <path d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`} fill="none" stroke="#E2E8F0" strokeWidth="1" />
+                      </pattern>
+
+                      <filter id="seatShadow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#00000015" />
+                      </filter>
+
+                      <linearGradient id="stageGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#475569" />
+                        <stop offset="100%" stopColor="#334155" />
+                      </linearGradient>
+
+                      <linearGradient id="canvasGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F8FAFC" />
+                        <stop offset="50%" stopColor="#F1F5F9" />
+                        <stop offset="100%" stopColor="#E2E8F0" />
+                      </linearGradient>
+                    </defs>
+
+                    <rect width="100%" height="100%" fill="url(#canvasGradient)" />
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                      {/* Stage */}
+                      <g className="transition-all duration-200">
+                        <rect
+                          x={stageConfig.x}
+                          y={stageConfig.y}
+                          width={stageConfig.width}
+                          height={stageConfig.height}
+                          fill="url(#stageGradient)"
+                          stroke={isStageSelected ? "#EF4444" : "transparent"}
+                          strokeWidth={isStageSelected ? 3 : 0}
+                          strokeDasharray={isStageSelected ? "8,4" : "none"}
+                          rx="12"
+                          className="cursor-pointer transition-all duration-200 hover:opacity-90"
+                          filter="url(#seatShadow)"
+                          onClick={handleStageClick}
+                        />
+                        <text
+                          x={stageConfig.x + stageConfig.width / 2}
+                          y={stageConfig.y + stageConfig.height / 2 + 6}
+                          textAnchor="middle"
+                          fill="white"
+                          fontSize="16"
+                          fontWeight="bold"
+                          className="pointer-events-none select-none"
+                        >
+                          {stageConfig.label}
+                        </text>
+                        {isStageSelected && (
+                          <circle
+                            cx={stageConfig.x + stageConfig.width + 10}
+                            cy={stageConfig.y - 10}
+                            r="6"
+                            fill="#EF4444"
+                            className="animate-pulse"
+                          />
+                        )}
+                      </g>
+
+                      {/* Sections */}
+                      {sections.map((section) => (
+                        <g key={section.id} className="transition-all duration-200">
+                          <rect
+                            x={section.position.x - 12}
+                            y={section.position.y - 12}
+                            width={section.dimensions.width + 24}
+                            height={section.dimensions.height + 24}
+                            fill="transparent"
+                            stroke={selectedSection?.id === section.id ? "#EF4444" : "transparent"}
+                            strokeWidth={selectedSection?.id === section.id ? 3 : 0}
+                            strokeDasharray={selectedSection?.id === section.id ? "8,4" : "none"}
+                            rx="8"
+                            className="cursor-pointer transition-all duration-200"
+                            onClick={() => handleSectionClick(section)}
+                          />
+
+                          <rect
+                            x={section.position.x}
+                            y={section.position.y - 30}
+                            width={Math.max(140, section.name.length * 9)}
+                            height={24}
+                            fill={section.color}
+                            rx="6"
+                            className="pointer-events-none shadow-sm"
+                            filter="url(#seatShadow)"
+                          />
+                          <text
+                            x={section.position.x + 8}
+                            y={section.position.y - 12}
+                            fill="white"
+                            fontSize="13"
+                            fontWeight="bold"
+                            className="pointer-events-none select-none"
+                          >
+                            {section.name} - {formatPrice(section.price)}
+                          </text>
+
+                          {selectedSection?.id === section.id && (
+                            <circle
+                              cx={section.position.x + section.dimensions.width + 15}
+                              cy={section.position.y - 15}
+                              r="6"
+                              fill="#EF4444"
+                              className="animate-pulse"
+                            />
+                          )}
+
+                          {section.seats.map((seat) => renderSeat(seat, section))}
+                        </g>
+                      ))}
+
+                      {renderPreviewShape()}
+                    </g>
+                  </svg>
+
+                  {/* Enhanced Floating Toolbar - Positioned to fit within container */}
+                  <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-xl border border-slate-200/60 z-20">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" />
+                        <Badge variant="outline" className="text-sm font-mono bg-blue-50 text-blue-700 border-blue-200">
+                          {selectedTool.replace("-", " ").toUpperCase()}
+                        </Badge>
+                      </div>
+
+                      {dynamicPricingEnabled && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-gradient-to-r from-yellow-50 to-orange-50 text-orange-700 border-orange-200"
+                        >
+                          <Zap className="h-3 w-3 mr-1" />
+                          DINÁMICO
+                        </Badge>
+                      )}
+
+                      {selectedSeat && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 font-mono">
+                          {formatPrice(
+                            calculateDynamicPrice(
+                              selectedSeat.price,
+                              sections.find((s) => s.seats.includes(selectedSeat))?.id || "",
+                              selectedSeat.type || "regular",
+                            ).adjustedPrice,
+                          )}
+                        </Badge>
+                      )}
+
+                      {selectedSection && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-green-50 text-green-700 border-green-200 font-mono"
+                        >
+                          {formatPrice(selectedSection.price)}
+                        </Badge>
+                      )}
+
+                      {isStageSelected && (
+                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                          <Theater className="h-3 w-3 mr-1" />
+                          ESCENARIO
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Enhanced Price Legend - Positioned to fit within container */}
+                  <div className="absolute top-24 right-6 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-xl border border-slate-200/60 z-20">
+                    <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                      <Palette className="h-4 w-4 text-slate-600" />
+                      Leyenda de Precios
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm" />
+                        <span className="text-slate-700">Premium</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-orange-500 shadow-sm" />
+                        <span className="text-slate-700">Alto</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm" />
+                        <span className="text-slate-700">Medio</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-500 shadow-sm" />
+                        <span className="text-slate-700">Básico</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Instructions - Positioned to fit within container */}
+                  <div className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-slate-200/60 max-w-xs z-20">
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center gap-1 font-medium text-slate-700">
+                        <HelpCircle className="h-3 w-3" />
+                        Instrucciones
+                      </div>
+                      {selectedTool === "select" && (
+                        <>
+                          <p className="text-slate-600">• Clic para seleccionar</p>
+                          <p className="text-slate-600">• Ctrl+Clic para selección múltiple</p>
+                        </>
+                      )}
+                      {selectedTool === "move" && (
+                        <p className="text-slate-600">• Clic + arrastra para mover</p>
+                      )}
+                      {selectedTool === "pan" && (
+                        <p className="text-slate-600">• Arrastra para navegar</p>
+                      )}
+                      {selectedTool === "draw-section" && (
+                        <p className="text-slate-600">• Arrastra para crear sección</p>
+                      )}
+                      {selectedTool === "draw-seats" && (
+                        <p className="text-slate-600">• Arrastra para crear asientos</p>
+                      )}
+                      {selectedTool === "draw-stage" && (
+                        <p className="text-slate-600">• Arrastra para crear escenario</p>
+                      )}
+                      {selectedTool === "price-editor" && (
+                        <p className="text-slate-600">• Clic para editar precios</p>
+                      )}
+                      <p className="text-xs text-slate-500 mt-1 pt-1 border-t border-slate-200">
+                        Colores = rangos de precios. <kbd className="px-1 py-0.5 bg-slate-100 rounded text-xs">?</kbd> atajos.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Zoom Controls - Positioned to fit within container */}
+                  <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-slate-200/60 z-20">
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleZoom("out")} className="w-8 h-8 p-0">
+                        <ZoomOut className="h-4 w-4" />
+                      </Button>
+                      <div className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-mono min-w-[60px] text-center">
+                        {Math.round(zoom * 100)}%
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleZoom("in")} className="w-8 h-8 p-0">
+                        <ZoomIn className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Enhanced Editor Panel - Made smaller */}
+            {(selectedSeat || selectedSection || isStageSelected) && (
+              <Card className="mx-1 mb-1 border-slate-200/60 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200/60">
+                  <CardTitle className="flex items-center gap-2">
+                    {isStageSelected ? (
+                      <>
+                        <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                          <Theater className="h-3 w-3 text-white" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-800">Editor de Escenario</div>
+                          <div className="text-xs text-slate-600">Configura las propiedades del escenario</div>
+                        </div>
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
+                          Escenario
+                        </Badge>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-6 h-6 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
+                          <DollarSign className="h-3 w-3 text-white" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-800">Editor de Precios</div>
+                          <div className="text-xs text-slate-600">Gestiona precios y propiedades</div>
+                        </div>
+                        {selectedSeat && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                            Asiento {selectedSeat.row}
+                            {selectedSeat.number}
+                          </Badge>
+                        )}
+                        {selectedSection && (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                            {selectedSection.name}
+                          </Badge>
+                        )}
+                        {selectedSeats.length > 0 && (
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                            {selectedSeats.length} asientos seleccionados
+                          </Badge>
+                        )}
+                      </>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3">
+                  {isStageSelected ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div className="space-y-3">
+                        <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          Configuración del Escenario
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor="stageLabel" className="text-sm font-medium text-slate-700">
+                              Etiqueta
+                            </Label>
+                            <Input
+                              id="stageLabel"
+                              value={stageConfig.label}
+                              onChange={(e) => {
+                                setStageConfig((prev) => ({ ...prev, label: e.target.value }))
+                                setHasUnsavedChanges(true)
+                              }}
+                              className="mt-1"
+                              placeholder="Nombre del escenario"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label htmlFor="stageWidth" className="text-sm font-medium text-slate-700">
+                                Ancho
+                              </Label>
+                              <Input
+                                id="stageWidth"
+                                type="number"
+                                min="50"
+                                value={stageConfig.width}
+                                onChange={(e) => {
+                                  setStageConfig((prev) => ({ ...prev, width: Number(e.target.value) || 200 }))
+                                  setHasUnsavedChanges(true)
+                                }}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="stageHeight" className="text-sm font-medium text-slate-700">
+                                Alto
+                              </Label>
+                              <Input
+                                id="stageHeight"
+                                type="number"
+                                min="20"
+                                value={stageConfig.height}
+                                onChange={(e) => {
+                                  setStageConfig((prev) => ({ ...prev, height: Number(e.target.value) || 40 }))
+                                  setHasUnsavedChanges(true)
+                                }}
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Tipo de Escenario */}
+                          <div>
+                            <Label htmlFor="stageType" className="text-sm font-medium text-slate-700">
+                              Tipo de Escenario
+                            </Label>
+                            <select
+                              id="stageType"
+                              value={stageConfig.type}
+                              onChange={(e) => {
+                                setStageConfig((prev) => ({ ...prev, type: e.target.value as any }))
+                                setHasUnsavedChanges(true)
+                              }}
+                              className="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"
+                            >
+                              <option value="theater">Teatro</option>
+                              <option value="stadium">Estadio</option>
+                              <option value="arena">Arena</option>
+                              <option value="concert">Concierto</option>
+                              <option value="conference">Conferencia</option>
+                              <option value="custom">Personalizado</option>
+                            </select>
+                          </div>
+                          
+                          {/* Forma del Escenario */}
+                          <div>
+                            <Label htmlFor="stageShape" className="text-sm font-medium text-slate-700">
+                              Forma
+                            </Label>
+                            <select
+                              id="stageShape"
+                              value={stageConfig.shape}
+                              onChange={(e) => {
+                                setStageConfig((prev) => ({ ...prev, shape: e.target.value as any }))
+                                setHasUnsavedChanges(true)
+                              }}
+                              className="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"
+                            >
+                              <option value="rectangle">Rectangular</option>
+                              <option value="circle">Circular</option>
+                              <option value="oval">Oval</option>
+                              <option value="trapezoid">Trapezoidal</option>
+                              <option value="polygon">Poligonal</option>
+                            </select>
+                          </div>
+                          
+                          {/* Características del Escenario */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700">
+                              Características
+                            </Label>
+                            <div className="space-y-2">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={stageConfig.hasCurtain}
+                                  onChange={(e) => {
+                                    setStageConfig((prev) => ({ ...prev, hasCurtain: e.target.checked }))
+                                    setHasUnsavedChanges(true)
+                                  }}
+                                  className="rounded"
+                                />
+                                <span className="text-sm">Telón</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={stageConfig.hasBackdrop}
+                                  onChange={(e) => {
+                                    setStageConfig((prev) => ({ ...prev, hasBackdrop: e.target.checked }))
+                                    setHasUnsavedChanges(true)
+                                  }}
+                                  className="rounded"
+                                />
+                                <span className="text-sm">Fondo</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={stageConfig.hasWings}
+                                  onChange={(e) => {
+                                    setStageConfig((prev) => ({ ...prev, hasWings: e.target.checked }))
+                                    setHasUnsavedChanges(true)
+                                  }}
+                                  className="rounded"
+                                />
+                                <span className="text-sm">Bastidores</span>
+                              </label>
+                            </div>
+                          </div>
+                          
+                          {/* Dimensiones Avanzadas */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label htmlFor="stageDepth" className="text-sm font-medium text-slate-700">
+                                Profundidad
+                              </Label>
+                              <Input
+                                id="stageDepth"
+                                type="number"
+                                min="0"
+                                value={stageConfig.depth}
+                                onChange={(e) => {
+                                  setStageConfig((prev) => ({ ...prev, depth: Number(e.target.value) || 0 }))
+                                  setHasUnsavedChanges(true)
+                                }}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="stageElevation" className="text-sm font-medium text-slate-700">
+                                Elevación
+                              </Label>
+                              <Input
+                                id="stageElevation"
+                                type="number"
+                                min="0"
+                                value={stageConfig.elevation}
+                                onChange={(e) => {
+                                  setStageConfig((prev) => ({ ...prev, elevation: Number(e.target.value) || 0 }))
+                                  setHasUnsavedChanges(true)
+                                }}
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                                              <div className="space-y-3">
+                          <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            Posición
+                          </h4>
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label htmlFor="stageX" className="text-sm font-medium text-slate-700">
+                                Posición X
+                              </Label>
+                              <Input
+                                id="stageX"
+                                type="number"
+                                value={Math.round(stageConfig.x)}
+                                onChange={(e) => {
+                                  setStageConfig((prev) => ({ ...prev, x: Number(e.target.value) || 0 }))
+                                  setHasUnsavedChanges(true)
+                                }}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="stageY" className="text-sm font-medium text-slate-700">
+                                Posición Y
+                              </Label>
+                              <Input
+                                id="stageY"
+                                type="number"
+                                value={Math.round(stageConfig.y)}
+                                onChange={(e) => {
+                                  setStageConfig((prev) => ({ ...prev, y: Number(e.target.value) || 0 }))
+                                  setHasUnsavedChanges(true)
+                                }}
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div className="text-xs text-slate-600">
+                              <p>• Usa la herramienta "Mover" para arrastrar el escenario</p>
+                              <p>• Las coordenadas se actualizan automáticamente</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {selectedSeat && (
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                            <Chair className="h-4 w-4" />
+                            Precio Individual
+                          </h4>
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="seatPrice" className="text-sm font-medium text-slate-700">
+                                Precio del Asiento
+                              </Label>
+                              <Input
+                                id="seatPrice"
+                                type="number"
+                                min="0"
+                                step="1000"
+                                value={editingSeat.price}
+                                onChange={(e) => {
+                                  const newPrice = Number(e.target.value) || 0
+                                  setEditingSeat((prev) => ({ ...prev, price: newPrice }))
+                                  updateSeatPrice(selectedSeat.id, newPrice)
+                                }}
+                                className="mt-1"
+                              />
+                              <p className="text-sm text-slate-500 mt-1 font-mono">{formatPrice(editingSeat.price)}</p>
+                            </div>
+                            {dynamicPricingEnabled && (
+                              <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                                <div className="text-xs text-orange-700">
+                                  <p className="font-medium">Precio Dinámico Activo</p>
+                                  <p>El precio final puede variar según las reglas configuradas</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Botón para eliminar asiento */}
+                            <div className="pt-3 border-t border-slate-200">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  const section = sections.find(s => s.seats.includes(selectedSeat))
+                                  if (section) {
+                                    deleteSeat(section.id, selectedSeat.id)
+                                  }
+                                }}
+                                className="w-full"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Eliminar Asiento
+                              </Button>
+                              <p className="text-xs text-slate-500 mt-2 text-center">
+                                ⚠️ Esta acción no se puede deshacer
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedSection && (
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                            <Rectangle className="h-4 w-4" />
+                            Precio de Sección
+                          </h4>
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="sectionPrice" className="text-sm font-medium text-slate-700">
+                                Precio Base
+                              </Label>
+                              <Input
+                                id="sectionPrice"
+                                type="number"
+                                min="0"
+                                step="1000"
+                                value={editingSection.price}
+                                onChange={(e) => {
+                                  const newPrice = Number(e.target.value) || 0
+                                  setEditingSection((prev) => ({ ...prev, price: newPrice }))
+                                  updateSectionPrice(selectedSection.id, newPrice)
+                                }}
+                                className="mt-1"
+                              />
+                              <p className="text-sm text-slate-500 mt-1 font-mono">
+                                {formatPrice(editingSection.price)}
+                              </p>
+                            </div>
+                            <div>
+                              <Label htmlFor="sectionColor" className="text-sm font-medium text-slate-700">
+                                Color de Sección
+                              </Label>
+                              <div className="flex items-center gap-3 mt-1">
+                                <input
+                                  id="sectionColor"
+                                  type="color"
+                                  value={editingSection.color}
+                                  onChange={(e) => {
+                                    setEditingSection((prev) => ({ ...prev, color: e.target.value }))
+                                    seatMapManager.updateSectionProperties(selectedSection.id, {
+                                      color: e.target.value,
+                                    })
+                                    setSections([...seatMapManager.getSections()])
+                                  }}
+                                  className="w-10 h-10 rounded-lg border-2 border-slate-200 cursor-pointer shadow-sm"
+                                />
+                                <div className="flex-1">
+                                  <div className="text-sm font-mono text-slate-600">{editingSection.color}</div>
+                                  <div className="text-xs text-slate-500">Haz clic para cambiar</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Botón para eliminar sección */}
+                          <div className="pt-3 border-t border-slate-200">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteSection(selectedSection.id)}
+                              className="w-full"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Eliminar Sección
+                            </Button>
+                            <p className="text-xs text-slate-500 mt-2 text-center">
+                              ⚠️ Esta acción eliminará todos los asientos de la sección
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Zonas de Precios - REMOVED */}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Keyboard Shortcuts Dialog */}
+        <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Keyboard className="h-5 w-5 text-blue-600" />
+                Atajos de Teclado
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-3 text-slate-700">Herramientas</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Seleccionar</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">V</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Mover</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">M</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Navegar</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">H</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Asientos</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">S</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sección</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">R</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Escenario</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">T</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Precios</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">P</kbd>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-3 text-slate-700">Acciones</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Guardar</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+S</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Deshacer</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+Z</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Rehacer</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+Shift+Z</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Acercar</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl++</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Alejar</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+-</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Cuadrícula</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">G</kbd>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Ayuda</span>
+                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">?</kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
+  )
+}
