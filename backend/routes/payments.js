@@ -13,12 +13,14 @@ async function updateTicketInventory(ticketTypeId, eventId, quantity) {
     const checkAvailabilityQuery = `
       SELECT 
         e.total_capacity,
-        e.sold,
+        COALESCE(SUM(s.quantity), 0) as sold,
         tt.available_quantity as ticket_type_available,
         tt.name as ticket_type_name
       FROM events e
       LEFT JOIN ticket_types tt ON tt.id = $1
+      LEFT JOIN sales s ON e.id = s.event_id AND s.status = 'completed'
       WHERE e.id = $2
+      GROUP BY e.total_capacity, tt.available_quantity, tt.name
     `
     const availabilityCheck = await db.query(checkAvailabilityQuery, [ticketTypeId, eventId])
     
@@ -46,13 +48,7 @@ async function updateTicketInventory(ticketTypeId, eventId, quantity) {
     `
     await db.query(updateTicketTypeQuery, [quantity, ticketTypeId])
 
-    // 3. Actualizar capacidad total del evento
-    const updateEventCapacityQuery = `
-      UPDATE events 
-      SET sold = sold + $1
-      WHERE id = $2
-    `
-    await db.query(updateEventCapacityQuery, [quantity, eventId])
+    // 3. No necesitamos actualizar la tabla events ya que calculamos sold dinámicamente
 
     await db.query("COMMIT")
     
@@ -533,7 +529,7 @@ router.post("/check-availability", auth, async (req, res) => {
         e.id as event_id,
         e.title as event_title,
         e.total_capacity,
-        e.sold as event_sold,
+        COALESCE(SUM(s.quantity), 0) as event_sold,
         tt.id as ticket_type_id,
         tt.name as ticket_type_name,
         tt.available_quantity,
@@ -541,7 +537,9 @@ router.post("/check-availability", auth, async (req, res) => {
         tt.price
       FROM events e
       LEFT JOIN ticket_types tt ON tt.id = $1
+      LEFT JOIN sales s ON e.id = s.event_id AND s.status = 'completed'
       WHERE e.id = $2 AND tt.id = $1
+      GROUP BY e.id, e.title, e.total_capacity, tt.id, tt.name, tt.available_quantity, tt.sold, tt.price
     `
 
     const result = await db.query(availabilityQuery, [ticketTypeId, eventId])

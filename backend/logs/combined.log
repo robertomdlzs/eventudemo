@@ -4260,3 +4260,24 @@
 {"level":"info","message":"POST /api/payments/check-availability - ::1","service":"eventu-backend","timestamp":"2025-09-04T18:35:39.097Z"}
 {"level":"info","message":"POST /api/payments/check-availability - ::1","service":"eventu-backend","timestamp":"2025-09-04T18:35:43.893Z"}
 {"level":"info","message":"POST /api/payments/check-availability - ::1","service":"eventu-backend","timestamp":"2025-09-04T18:36:56.604Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T19:08:15.248Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T19:08:15.262Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T19:08:15.262Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T19:08:15.303Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T19:08:30.358Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T19:08:30.362Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T19:08:30.363Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T19:08:30.402Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T19:08:42.942Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T19:08:42.951Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T19:08:42.951Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T19:08:42.985Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T19:08:56.272Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T19:08:56.274Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T19:08:56.274Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T19:08:56.314Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T19:09:10.214Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T19:09:10.219Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T19:09:10.220Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T19:09:10.313Z"}
+{"level":"info","message":"GET /api/payments/epayco/config - ::1","service":"eventu-backend","timestamp":"2025-09-04T19:09:33.513Z"}
