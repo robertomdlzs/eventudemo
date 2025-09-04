@@ -4285,3 +4285,11 @@
 {"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T19:56:01.482Z"}
 {"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T19:56:01.483Z"}
 {"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T19:56:01.524Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T20:04:21.414Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T20:04:21.424Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T20:04:21.424Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T20:04:21.484Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-04T20:04:49.925Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-04T20:04:49.927Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-04T20:04:49.927Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-04T20:04:49.943Z"}
