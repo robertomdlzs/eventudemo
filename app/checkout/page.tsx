@@ -13,8 +13,10 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { PaymentMethods } from "@/components/payment/payment-methods"
+import CobruTestPayment from "@/components/payment/CobruTestPayment"
 import { PaymentLogos } from "@/components/payment/payment-logos"
 import { apiClient } from "@/lib/api-client"
+import { toast } from "@/hooks/use-toast"
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart()
@@ -32,7 +34,7 @@ export default function CheckoutPage() {
   })
 
   // Estado para método de pago
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('credit_card')
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cobru')
   
   // Estado para datos de tarjeta
   const [cardData, setCardData] = useState({
@@ -123,8 +125,8 @@ export default function CheckoutPage() {
       // Verificar disponibilidad de boletos antes de procesar el pago
       for (const item of cart.items) {
         const availabilityResponse = await apiClient.checkTicketAvailability({
-          eventId: item.eventId,
-          ticketTypeId: item.ticketTypeId,
+          eventId: Number(item.eventId),
+          ticketTypeId: Number(item.ticketTypeId),
           quantity: item.quantity
         })
 
@@ -166,8 +168,8 @@ export default function CheckoutPage() {
           currency: 'COP',
           description: `Compra de boletas - ${cart.items.map(item => item.eventTitle).join(', ')}`,
           customerId: user?.id || 0,
-          eventId: cart.items[0]?.eventId || 0,
-          ticketTypeId: cart.items[0]?.ticketTypeId || 0,
+          eventId: Number(cart.items[0]?.eventId) || 0,
+          ticketTypeId: Number(cart.items[0]?.ticketTypeId) || 0,
           quantity: cart.items.reduce((total, item) => total + item.quantity, 0)
         }
 
@@ -183,8 +185,8 @@ export default function CheckoutPage() {
           currency: 'COP',
           description: `Compra de boletas - ${cart.items.map(item => item.eventTitle).join(', ')}`,
           customerId: user?.id || 0,
-          eventId: cart.items[0]?.eventId || 0,
-          ticketTypeId: cart.items[0]?.ticketTypeId || 0,
+          eventId: Number(cart.items[0]?.eventId) || 0,
+          ticketTypeId: Number(cart.items[0]?.ticketTypeId) || 0,
           quantity: cart.items.reduce((total, item) => total + item.quantity, 0)
         }
 
@@ -197,8 +199,8 @@ export default function CheckoutPage() {
           currency: 'COP',
           description: `Compra de boletas - ${cart.items.map(item => item.eventTitle).join(', ')}`,
           customerId: user?.id || 0,
-          eventId: cart.items[0]?.eventId || 0,
-          ticketTypeId: cart.items[0]?.ticketTypeId || 0,
+          eventId: Number(cart.items[0]?.eventId) || 0,
+          ticketTypeId: Number(cart.items[0]?.ticketTypeId) || 0,
           quantity: cart.items.reduce((total, item) => total + item.quantity, 0)
         }
 
@@ -358,57 +360,39 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Métodos de pago */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Método de Pago
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PaymentMethods
-                  selectedMethod={selectedPaymentMethod}
-                  onMethodChange={setSelectedPaymentMethod}
-                  cardData={cardData}
-                  onCardDataChange={handleCardDataChange}
-                  bankData={bankData}
-                  onBankDataChange={handleBankDataChange}
-                  phoneData={phoneData}
-                  onPhoneDataChange={handlePhoneDataChange}
-                />
-              </CardContent>
-            </Card>
+            {/* Métodos de pago - Cobru */}
+            <CobruTestPayment
+              amount={cart.total}
+              currency="COP"
+              description={`Compra de boletos - ${cart.items.length} item(s)`}
+              reference={`EVENT-${Date.now()}`}
+              customerEmail={personalData.email}
+              customerName={`${personalData.firstName} ${personalData.lastName}`}
+              customerPhone={personalData.phone}
+              onSuccess={(transactionData) => {
+                console.log('Pago exitoso:', transactionData);
+                // Aquí puedes manejar el pago exitoso
+                toast({
+                  title: "Pago exitoso",
+                  description: "Tu pago ha sido procesado correctamente",
+                });
+                // Redirigir a página de éxito
+                router.push('/checkout/success');
+              }}
+              onError={(error) => {
+                console.error('Error en pago:', error);
+                toast({
+                  title: "Error en el pago",
+                  description: error,
+                  variant: "destructive",
+                });
+              }}
+              onCancel={() => {
+                console.log('Pago cancelado');
+                router.push('/carrito');
+              }}
+            />
 
-            {/* Botón de confirmación */}
-            <Card>
-              <CardContent className="pt-6">
-                <Button 
-                  onClick={handleSubmit}
-                  className="w-full" 
-                  size="lg"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Procesando...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      Confirmar Pago Seguro
-                    </div>
-                  )}
-                </Button>
-                
-                {/* Información de seguridad */}
-                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
-                  <Shield className="h-4 w-4" />
-                  <span>Pago procesado de forma segura con encriptación SSL</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Resumen del pedido */}
