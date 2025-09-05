@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const CobruService = require('../services/cobruService');
-const { authenticateToken } = require('../middleware/auth');
 
 const cobruService = new CobruService();
 
@@ -29,7 +28,7 @@ router.get('/config', (req, res) => {
  * POST /api/payments/cobru/create
  * Crear transacción de pago con Cobru
  */
-router.post('/create', authenticateToken, async (req, res) => {
+router.post('/create', async (req, res) => {
   try {
     const {
       amount,
@@ -151,7 +150,7 @@ router.post('/create', authenticateToken, async (req, res) => {
  * GET /api/payments/cobru/status/:transactionId
  * Obtener estado de una transacción
  */
-router.get('/status/:transactionId', authenticateToken, async (req, res) => {
+router.get('/status/:transactionId', async (req, res) => {
   try {
     const { transactionId } = req.params;
 
@@ -249,7 +248,7 @@ router.post('/webhook', async (req, res) => {
  * POST /api/payments/cobru/refund
  * Procesar reembolso
  */
-router.post('/refund', authenticateToken, async (req, res) => {
+router.post('/refund', async (req, res) => {
   try {
     const { transactionId, amount, reason } = req.body;
 
