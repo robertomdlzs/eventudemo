@@ -68,3 +68,4 @@ SELECT COUNT(*) FROM sales;
 - No incluye permisos específicos de usuarios (usar `--no-owner --no-privileges`)
 - Compatible con PostgreSQL 12+
 - Incluye todos los datos de ejemplo para testing
+

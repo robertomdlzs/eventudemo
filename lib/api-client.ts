@@ -337,6 +337,44 @@ export class ApiClient {
     })
   }
 
+  // Cobru Payment Methods
+  async getCobruConfig(): Promise<ApiResponse<any>> {
+    return this.request("/payments/cobru/config", {
+      method: "GET",
+    })
+  }
+
+  async createCobruTransaction(paymentData: {
+    amount: number
+    currency?: string
+    description: string
+    reference: string
+    customerEmail?: string
+    customerName?: string
+    customerPhone?: string
+    eventId?: string
+    ticketTypeId?: string
+    quantity?: number
+  }): Promise<ApiResponse<any>> {
+    return this.request("/payments/cobru/create", {
+      method: "POST",
+      body: JSON.stringify(paymentData),
+    })
+  }
+
+  async getCobruTransactionStatus(transactionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/payments/cobru/status/${transactionId}`, {
+      method: "GET",
+    })
+  }
+
+  async processCobruRefund(transactionId: string, amount?: number, reason?: string): Promise<ApiResponse<any>> {
+    return this.request("/payments/cobru/refund", {
+      method: "POST",
+      body: JSON.stringify({ transactionId, amount, reason }),
+    })
+  }
+
   async getAdminEvents(params?: any): Promise<ApiResponse<any>> {
     const queryParams = params ? `?${new URLSearchParams(params).toString()}` : ""
     return this.request(`/admin/events${queryParams}`, {

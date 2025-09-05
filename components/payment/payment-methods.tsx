@@ -14,13 +14,14 @@ import {
   Smartphone, 
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  Zap
 } from "lucide-react"
 
 export interface PaymentMethod {
   id: string
   name: string
-  type: 'card' | 'pse' | 'digital_wallet'
+  type: 'card' | 'pse' | 'digital_wallet' | 'gateway'
   description: string
   icon: React.ReactNode
   requiresCardInfo: boolean
@@ -28,6 +29,7 @@ export interface PaymentMethod {
   requiresPhoneInfo: boolean
   processingTime: string
   fees: string
+  gateway?: string
 }
 
 const paymentMethods: PaymentMethod[] = [
@@ -92,6 +94,19 @@ const paymentMethods: PaymentMethod[] = [
     requiresPhoneInfo: false,
     processingTime: 'Inmediato',
     fees: 'Sin comisión adicional'
+  },
+  {
+    id: 'cobru',
+    name: 'Cobru',
+    type: 'gateway',
+    description: 'Pagos seguros en Colombia - Nequi, Daviplata, Bancolombia, PSE',
+    icon: <Zap className="h-5 w-5" />,
+    requiresCardInfo: false,
+    requiresBankInfo: false,
+    requiresPhoneInfo: false,
+    processingTime: 'Inmediato',
+    fees: 'Sin comisión adicional',
+    gateway: 'cobru'
   }
 ]
 
