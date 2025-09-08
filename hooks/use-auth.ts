@@ -19,7 +19,13 @@ interface AuthState {
   isLoading: boolean
 }
 
-export function useAuth(): AuthState {
+interface AuthActions {
+  login: (user: User, token: string) => void
+  logout: () => void
+  updateToken: (token: string) => void
+}
+
+export function useAuth(): AuthState & AuthActions {
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     user: null,
@@ -79,5 +85,55 @@ export function useAuth(): AuthState {
     }
   }, [])
 
-  return authState
+  const login = (user: User, token: string) => {
+    if (typeof window === 'undefined') return
+    
+    localStorage.setItem("eventu_authenticated", "true")
+    localStorage.setItem("auth_token", token)
+    localStorage.setItem("current_user", JSON.stringify(user))
+    
+    setAuthState({
+      isAuthenticated: true,
+      user,
+      token,
+      isLoading: false
+    })
+    
+    window.dispatchEvent(new Event("authStateChanged"))
+  }
+
+  const logout = () => {
+    if (typeof window === 'undefined') return
+    
+    localStorage.removeItem("eventu_authenticated")
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("current_user")
+    
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      token: null,
+      isLoading: false
+    })
+    
+    window.dispatchEvent(new Event("authStateChanged"))
+  }
+
+  const updateToken = (token: string) => {
+    if (typeof window === 'undefined') return
+    
+    localStorage.setItem("auth_token", token)
+    
+    setAuthState(prev => ({
+      ...prev,
+      token
+    }))
+  }
+
+  return {
+    ...authState,
+    login,
+    logout,
+    updateToken
+  }
 }

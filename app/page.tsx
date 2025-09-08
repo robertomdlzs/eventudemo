@@ -1,6 +1,8 @@
 import { Suspense } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { AlertCircle } from "lucide-react"
 import FeaturedEventsCarousel from "@/components/featured-events-carousel"
 import { EventsExplorer } from "@/components/events-explorer"
 import { CountdownBanner } from "@/components/countdown-banner"
@@ -23,7 +25,7 @@ export default function Home() {
 
       <main className="flex-1">
         <section className="py-20 bg-gradient-to-br from-primary-600 via-secondary-600 to-primary-700 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg?height=800&width=1200&text=Pattern')] opacity-5"></div>
+          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-primary-900/20 to-secondary-900/20"></div>
           <div className="container mx-auto px-4 relative z-10">
             <Suspense
@@ -46,8 +48,27 @@ export default function Home() {
             date="20 DE JUNIO 2025"
             location="PARQUE NORTE - BARRANQUILLA"
             daysLeft={15}
-            imageUrl="/placeholder.svg?height=200&width=1200&text=PANACA+VIAJERO+BARRANQUILLA"
+            imageUrl="/placeholder.jpg"
           />
+        </div>
+
+        {/* Aviso sobre pagos desactivados */}
+        <div className="container mx-auto px-4 py-6">
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="text-orange-800">
+                  <p className="font-medium mb-2">Sistema de Pagos Temporalmente Desactivado</p>
+                  <p className="text-sm">
+                    La funcionalidad de pagos está temporalmente desactivada mientras realizamos mejoras al sistema. 
+                    Puedes explorar los eventos y agregar boletos al carrito, pero para completar tu compra, 
+                    por favor contacta directamente con el organizador del evento.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="bg-gradient-to-b from-white to-neutral-50 py-8">
@@ -66,7 +87,7 @@ export default function Home() {
 
         <section className="py-24 bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary-900/20 to-secondary-900/20"></div>
-          <div className="absolute inset-0 bg-[url('/placeholder.svg?height=400&width=1200&text=Newsletter+Pattern')] opacity-5"></div>
+          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-5xl font-bold mb-8 bg-gradient-to-r from-white via-neutral-100 to-neutral-200 bg-clip-text text-transparent">

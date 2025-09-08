@@ -108,7 +108,7 @@ export default function NotificacionesPage() {
           if (permission === 'granted') {
             new Notification('Eventu', {
               body: 'Esta es una notificación de prueba',
-              icon: '/assets?path=images/eventu-logo.svg'
+              icon: '/images/eventu-logo.svg'
             })
             toast({
               title: "Notificación enviada",

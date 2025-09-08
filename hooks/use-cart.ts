@@ -31,7 +31,11 @@ export function useCart() {
         try {
           const parsedCart = JSON.parse(savedCart)
           console.log('Carrito cargado desde localStorage:', parsedCart)
-          return parsedCart
+          // Asegurar que el carrito tenga la estructura correcta
+          return {
+            items: parsedCart.items || [],
+            total: parsedCart.total || 0
+          }
         } catch (error) {
           console.error('Error loading cart from localStorage:', error)
           localStorage.removeItem(CART_STORAGE_KEY)
@@ -40,6 +44,14 @@ export function useCart() {
     }
     return { items: [], total: 0 }
   })
+
+  // Recalcular total si es necesario al cargar
+  useEffect(() => {
+    if (cart.total === null || cart.total === undefined) {
+      const newTotal = recalculateTotal(cart.items)
+      setCart(prev => ({ ...prev, total: newTotal }))
+    }
+  }, [cart.items, cart.total])
 
   // Guardar carrito en localStorage cuando cambie
   useEffect(() => {
@@ -90,7 +102,7 @@ export function useCart() {
         
         const newCart = {
           items: updatedItems,
-          total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+          total: updatedItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
         }
         
         console.log('Carrito actualizado (item existente):', newCart)
@@ -100,7 +112,7 @@ export function useCart() {
         const newItems = [...prevCart.items, newItem]
         const newCart = {
           items: newItems,
-          total: newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+          total: newItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
         }
         
         console.log('Carrito actualizado (nuevo item):', newCart)
@@ -117,7 +129,7 @@ export function useCart() {
       
       return {
         items: updatedItems,
-        total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        total: updatedItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
       }
     })
   }
@@ -128,7 +140,7 @@ export function useCart() {
       
       return {
         items: updatedItems,
-        total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        total: updatedItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
       }
     })
   }
@@ -136,6 +148,11 @@ export function useCart() {
   const clearCart = () => {
     setCart({ items: [], total: 0 })
     localStorage.removeItem(CART_STORAGE_KEY)
+  }
+
+  // Función para recalcular el total del carrito
+  const recalculateTotal = (items: CartItem[]) => {
+    return items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
   }
 
   const getCartItemCount = () => {

@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
-import { BarChart3, Calendar, ChevronDown, Home, Settings, Ticket, Users, ImageIcon } from "lucide-react"
+import { BarChart3, Calendar, ChevronDown, Home, Settings, Ticket, Users, ImageIcon, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -21,6 +21,7 @@ const menuItems = [
     items: [
       { title: "Ver Eventos", href: "/admin/eventos" },
       { title: "Crear Evento", href: "/admin/eventos/crear" },
+      { title: "Evento Próximo", href: "/admin/evento-proximo" },
       { title: "Categorías", href: "/admin/eventos/categorias" },
       { title: "Mapas de Asientos", href: "/admin/eventos/mapas-asientos" },
     ],
@@ -75,7 +76,7 @@ export function AdminSidebar() {
       <div className="p-6 border-b border-gray-200">
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/assets?path=images/eventu-logo.svg"
+            src="/images/eventu-logo.svg"
             alt="Eventu"
             width={120}
             height={32}

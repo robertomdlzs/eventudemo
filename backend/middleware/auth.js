@@ -15,6 +15,23 @@ const auth = async (req, res, next) => {
     const token = authHeader.replace("Bearer ", "")
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret")
 
+
+
+    // Verificar timeout de sesión si existe timestamp de actividad
+    if (decoded.lastActivity) {
+      const now = Date.now()
+      const lastActivity = decoded.lastActivity
+      const timeoutMs = 15 * 60 * 1000 // 15 minutos
+      
+      if (now - lastActivity > timeoutMs) {
+        return res.status(401).json({
+          success: false,
+          message: "Session expired due to inactivity.",
+          code: "SESSION_TIMEOUT"
+        })
+      }
+    }
+
     const user = await User.findById(decoded.userId)
 
     if (!user) {

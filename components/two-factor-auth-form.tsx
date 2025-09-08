@@ -168,7 +168,7 @@ export function TwoFactorAuthForm({
           <div className="flex flex-col items-center justify-center space-y-4">
             {/* Simulated QR Code - In a real app, this would be a generated QR code from a library like 'qrcode' */}
             <img
-              src="/placeholder.svg?height=200&width=200"
+              src="/placeholder.svg"
               alt="Código QR simulado para 2FA"
               className="border p-2 rounded-lg"
             />

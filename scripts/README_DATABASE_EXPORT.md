@@ -69,3 +69,4 @@ SELECT COUNT(*) FROM sales;
 - Compatible con PostgreSQL 12+
 - Incluye todos los datos de ejemplo para testing
 
+

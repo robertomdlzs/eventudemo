@@ -106,59 +106,77 @@ export default function AdminPagosClient() {
   }
 
   const handleProcessPayment = async (paymentId: string) => {
-    setLoading(true)
-    try {
-      // Simular procesamiento de pago
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setPayments(prev => prev.map(payment => 
-        payment.id === paymentId 
-          ? { ...payment, status: 'completed' as const, processedAt: new Date().toISOString() }
-          : payment
-      ))
+    // FUNCIONALIDAD DESACTIVADA
+    toast({
+      title: "Función desactivada",
+      description: "El procesamiento de pagos está temporalmente desactivado",
+      variant: "destructive"
+    })
+    return
+    
+    // Código original comentado:
+    // setLoading(true)
+    // try {
+    //   // Simular procesamiento de pago
+    //   await new Promise(resolve => setTimeout(resolve, 1000))
+    //   
+    //   setPayments(prev => prev.map(payment => 
+    //     payment.id === paymentId 
+    //       ? { ...payment, status: 'completed' as const, processedAt: new Date().toISOString() }
+    //       : payment
+    //   ))
 
-      toast({
-        title: "Pago procesado",
-        description: "La transacción ha sido procesada exitosamente",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Error al procesar el pago",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
-    }
+    //   toast({
+    //     title: "Pago procesado",
+    //     description: "La transacción ha sido procesada exitosamente",
+    //   })
+    // } catch (error) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Error al procesar el pago",
+    //     variant: "destructive"
+    //   })
+    // } finally {
+    //   setLoading(false)
+    // }
   }
 
   const handleRefundPayment = async (paymentId: string) => {
-    if (!confirm("¿Estás seguro de que quieres reembolsar este pago?")) return
+    // FUNCIONALIDAD DESACTIVADA
+    toast({
+      title: "Función desactivada",
+      description: "El procesamiento de reembolsos está temporalmente desactivado",
+      variant: "destructive"
+    })
+    return
+    
+    // Código original comentado:
+    // if (!confirm("¿Estás seguro de que quieres reembolsar este pago?")) return
 
-    setLoading(true)
-    try {
-      // Simular reembolso
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setPayments(prev => prev.map(payment => 
-        payment.id === paymentId 
-          ? { ...payment, status: 'refunded' as const }
-          : payment
-      ))
+    // setLoading(true)
+    // try {
+    //   // Simular reembolso
+    //   await new Promise(resolve => setTimeout(resolve, 1000))
+    //   
+    //   setPayments(prev => prev.map(payment => 
+    //     payment.id === paymentId 
+    //       ? { ...payment, status: 'refunded' as const }
+    //       : payment
+    //   ))
 
-      toast({
-        title: "Reembolso procesado",
-        description: "El reembolso ha sido procesado exitosamente",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Error al procesar el reembolso",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
-    }
+    //   toast({
+    //     title: "Reembolso procesado",
+    //     description: "El reembolso ha sido procesado exitosamente",
+    //   })
+    // } catch (error) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Error al procesar el reembolso",
+    //     variant: "destructive"
+    //   })
+    // } finally {
+    //   setLoading(false)
+    // }
   }
 
   const exportPayments = () => {
@@ -233,11 +251,27 @@ export default function AdminPagosClient() {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
           Gestión de Pagos
         </h1>
-        <Button variant="outline" size="sm" onClick={exportPayments}>
+        <Button variant="outline" size="sm" onClick={exportPayments} disabled>
           <Download className="mr-2 h-4 w-4" />
-          Exportar
+          Exportar (Desactivado)
         </Button>
       </div>
+
+      {/* Mensaje de funcionalidad desactivada */}
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+            <div className="text-orange-800">
+              <p className="font-medium mb-2">Sistema de Pagos Temporalmente Desactivado</p>
+              <p className="text-sm">
+                La funcionalidad de pagos está temporalmente desactivada mientras realizamos mejoras al sistema. 
+                Los datos mostrados son de ejemplo y las funciones de procesamiento están deshabilitadas.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -397,9 +431,9 @@ export default function AdminPagosClient() {
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleProcessPayment(payment.id)}
-                          disabled={loading}
+                          disabled={true}
                         >
-                          {loading ? "Procesando..." : "Procesar"}
+                          Procesar (Desactivado)
                         </Button>
                       )}
                       {payment.status === 'completed' && (
@@ -407,9 +441,9 @@ export default function AdminPagosClient() {
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleRefundPayment(payment.id)}
-                          disabled={loading}
+                          disabled={true}
                         >
-                          {loading ? "Procesando..." : "Reembolsar"}
+                          Reembolsar (Desactivado)
                         </Button>
                       )}
                     </div>

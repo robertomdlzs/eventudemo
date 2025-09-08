@@ -29,7 +29,7 @@ export default function SignupClientPage() {
           <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
             <div className="max-w-md text-center space-y-6">
               <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto backdrop-blur-sm">
-                <img src="/assets?path=images/eventu-logo.svg" alt="Eventu Logo" className="w-10 h-10" />
+                <img src="/images/eventu-logo.svg" alt="Eventu Logo" className="w-10 h-10" />
               </div>
               <h1 className="text-4xl font-bold">¡Únete a la comunidad Eventu!</h1>
               <p className="text-xl text-white/90 leading-relaxed">
@@ -40,25 +40,25 @@ export default function SignupClientPage() {
               <div className="grid grid-cols-1 gap-4 mt-8">
                 <div className="flex items-center gap-3 text-white/90">
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <img src="/assets?path=images/eventu-logo.svg" alt="Icono Calendario" className="w-4 h-4" />
+                    <img src="/images/eventu-logo.svg" alt="Icono Calendario" className="w-4 h-4" />
                   </div>
                   <span>Acceso a eventos exclusivos</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/90">
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <img src="/assets?path=images/eventu-logo.svg" alt="Icono Ticket" className="w-4 h-4" />
+                    <img src="/images/eventu-logo.svg" alt="Icono Ticket" className="w-4 h-4" />
                   </div>
                   <span>Descuentos especiales</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/90">
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <img src="/assets?path=images/eventu-logo.svg" alt="Icono Usuarios" className="w-4 h-4" />
+                    <img src="/images/eventu-logo.svg" alt="Icono Usuarios" className="w-4 h-4" />
                   </div>
                   <span>Conecta con personas afines</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/90">
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <img src="/assets?path=images/eventu-logo.svg" alt="Icono Corazón" className="w-4 h-4" />
+                    <img src="/images/eventu-logo.svg" alt="Icono Corazón" className="w-4 h-4" />
                   </div>
                   <span>Experiencias personalizadas</span>
                 </div>
@@ -105,7 +105,7 @@ export default function SignupClientPage() {
             {/* Título móvil */}
             <div className="lg:hidden text-center mb-8">
               <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <img src="/assets?path=images/eventu-logo.svg" alt="Eventu Logo" className="w-8 h-8" />
+                <img src="/images/eventu-logo.svg" alt="Eventu Logo" className="w-8 h-8" />
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">¡Únete a Eventu!</h1>
               <p className="text-slate-600">Crea tu cuenta en segundos</p>

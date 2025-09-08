@@ -190,7 +190,7 @@ function transformBackendEvent(backendEvent: any): EventData {
     longDescription: backendEvent.long_description || backendEvent.description,
     image:
       backendEvent.image_url ||
-      `/assets?path=placeholders/placeholder.svg?height=400&width=600&text=${encodeURIComponent(backendEvent.title)}`,
+      `/placeholder.svg`,
     date: new Date(backendEvent.date).toLocaleDateString("es-CO", {
       day: "numeric",
       month: "long",

@@ -1,7 +1,7 @@
 export function getAssetUrl(path: string): string {
   // Remove leading slash if present
   const cleanPath = path.startsWith("/") ? path.slice(1) : path
-  return `/assets?path=${encodeURIComponent(cleanPath)}`
+  return `/${cleanPath}`
 }
 
 export function getPlaceholderUrl(options: {
@@ -19,7 +19,7 @@ export function getPlaceholderUrl(options: {
   if (options.bg) params.set("bg", options.bg)
   if (options.color) params.set("color", options.color)
 
-  return `/assets?path=placeholders/placeholder.svg${params.toString() ? "?" + params.toString() : ""}`
+  return `/placeholder.svg`
 }
 
 export const ASSET_PATHS = {

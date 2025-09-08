@@ -155,7 +155,7 @@ export default function SellEventPage() {
 
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-700 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/placeholder.svg?height=800&width=1200&text=Pattern')] opacity-10"></div>
+        <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">

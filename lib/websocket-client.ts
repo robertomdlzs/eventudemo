@@ -20,6 +20,16 @@ interface RealtimeUpdate {
   timestamp: string
 }
 
+interface SeatMapUpdate {
+  eventId: string
+  updates: Array<{
+    seatId: string
+    status: 'available' | 'reserved' | 'occupied'
+    userId?: string
+    timestamp: string
+  }>
+}
+
 class WebSocketClient {
   private socket: Socket | null = null
   private isConnected = false
@@ -46,12 +56,12 @@ class WebSocketClient {
     }
   }
 
-  connect(token?: string) {
+  connect(eventId?: string) {
     if (this.socket?.connected) {
       return
     }
 
-    const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null)
+    const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
     
     if (!authToken) {
       console.warn('No authentication token available for WebSocket connection')
@@ -70,6 +80,11 @@ class WebSocketClient {
       })
 
       this.setupSocketEventHandlers()
+      
+      // Unirse a la sala del evento si se proporciona
+      if (eventId) {
+        this.socket.emit('joinEvent', eventId)
+      }
     } catch (error) {
       console.error('WebSocket connection error:', error)
     }
@@ -109,6 +124,10 @@ class WebSocketClient {
     this.socket.on('realtimeUpdate', (update: RealtimeUpdate) => {
       this.handleRealtimeUpdate(update)
     })
+
+    this.socket.on('seatUpdate', (update: SeatMapUpdate) => {
+      this.handleSeatUpdate(update)
+    })
   }
 
   private handleNewNotification(notification: Notification) {
@@ -132,6 +151,13 @@ class WebSocketClient {
   private handleRealtimeUpdate(update: RealtimeUpdate) {
     if (typeof window !== 'undefined') {
       const event = new CustomEvent('realtimeUpdate', { detail: update })
+      window.dispatchEvent(event)
+    }
+  }
+
+  private handleSeatUpdate(update: SeatMapUpdate) {
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('seatUpdate', { detail: update })
       window.dispatchEvent(event)
     }
   }
@@ -177,6 +203,25 @@ class WebSocketClient {
     }
   }
 
+  // Funciones para reserva de asientos
+  reserveSeats(seatIds: string[], userId: string) {
+    if (this.socket?.connected) {
+      this.socket.emit('reserveSeats', { seatIds, userId })
+    }
+  }
+
+  releaseSeats(seatIds: string[], userId: string) {
+    if (this.socket?.connected) {
+      this.socket.emit('releaseSeats', { seatIds, userId })
+    }
+  }
+
+  occupySeats(seatIds: string[], userId: string, transactionId: string) {
+    if (this.socket?.connected) {
+      this.socket.emit('occupySeats', { seatIds, userId, transactionId })
+    }
+  }
+
   isConnectedToServer(): boolean {
     return this.isConnected && this.socket?.connected === true
   }
@@ -206,6 +251,14 @@ class WebSocketClient {
     }
   }
 
+  onSeatUpdate(callback: (update: SeatMapUpdate) => void) {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('seatUpdate', (e: any) => {
+        callback(e.detail)
+      })
+    }
+  }
+
   // Métodos para remover listeners
   offNewNotification(callback: (notification: Notification) => void) {
     if (typeof window !== 'undefined') {
@@ -230,6 +283,14 @@ class WebSocketClient {
       })
     }
   }
+
+  offSeatUpdate(callback: (update: SeatMapUpdate) => void) {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('seatUpdate', (e: any) => {
+        callback(e.detail)
+      })
+    }
+  }
 }
 
 // Exportar singleton
@@ -238,16 +299,27 @@ export const wsClient = new WebSocketClient()
 // Hook para usar WebSocket en componentes React
 export const useWebSocket = () => {
   return {
-    connect: (token?: string) => wsClient.connect(token),
+    connect: (eventId?: string) => wsClient.connect(eventId),
     disconnect: () => wsClient.disconnect(),
     isConnected: () => wsClient.isConnectedToServer(),
     markNotificationAsRead: (id: string) => wsClient.markNotificationAsRead(id),
     markAllNotificationsAsRead: () => wsClient.markAllNotificationsAsRead(),
+    reserveSeats: (seatIds: string[], userId: string) => wsClient.reserveSeats(seatIds, userId),
+    releaseSeats: (seatIds: string[], userId: string) => wsClient.releaseSeats(seatIds, userId),
+    occupySeats: (seatIds: string[], userId: string, transactionId: string) => wsClient.occupySeats(seatIds, userId, transactionId),
     onNewNotification: (callback: (notification: Notification) => void) => wsClient.onNewNotification(callback),
     onUnreadNotifications: (callback: (notifications: Notification[]) => void) => wsClient.onUnreadNotifications(callback),
     onRealtimeUpdate: (callback: (update: RealtimeUpdate) => void) => wsClient.onRealtimeUpdate(callback),
+    onSeatUpdate: (callback: (update: SeatMapUpdate) => void) => wsClient.onSeatUpdate(callback),
     offNewNotification: (callback: (notification: Notification) => void) => wsClient.offNewNotification(callback),
     offUnreadNotifications: (callback: (notifications: Notification[]) => void) => wsClient.offUnreadNotifications(callback),
-    offRealtimeUpdate: (callback: (update: RealtimeUpdate) => void) => wsClient.offRealtimeUpdate(callback)
+    offRealtimeUpdate: (callback: (update: RealtimeUpdate) => void) => wsClient.offRealtimeUpdate(callback),
+    offSeatUpdate: (callback: (update: SeatMapUpdate) => void) => wsClient.offSeatUpdate(callback)
   }
 }
+
+// Función para obtener el cliente WebSocket
+export const getWebSocketClient = () => wsClient
+
+// Exportar tipos
+export type { SeatMapUpdate, Notification, RealtimeUpdate }

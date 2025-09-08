@@ -52,11 +52,17 @@ export function CheckoutPageClient({ items, eventTitle, eventDate, eventLocation
     e.preventDefault()
     setIsProcessing(true)
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
+    alert('La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.')
+    setIsProcessing(false)
+    return
 
-    // Redirect to confirmation page
-    window.location.href = "/checkout/confirmation"
+    // Código original comentado:
+    // // Simulate payment processing
+    // await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    // // Redirect to confirmation page
+    // window.location.href = "/checkout/confirmation"
   }
 
   return (

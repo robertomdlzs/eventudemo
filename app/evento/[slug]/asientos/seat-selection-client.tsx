@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, MapPin, Users, ShoppingCart, Check, ZoomIn, ZoomOut, RotateCcw, Clock, AlertCircle, Star, Crown } from "lucide-react"
+import { ArrowLeft, MapPin, Users, ShoppingCart, Check, ZoomIn, ZoomOut, RotateCcw, Clock, AlertCircle, Star, Crown, Wheelchair } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api-client"
@@ -37,7 +37,6 @@ interface Seat {
 export default function SeatSelectionClient({ event, selectedTickets }: SeatSelectionClientProps) {
   const router = useRouter()
   const { addToCart, updateCartItem, cart } = useCart()
-  const { reserveSeat, releaseSeat, isSeatReserved, getUserReservations, getTimeLeft, extendReservation } = useSeatReservation()
   
   const [seats, setSeats] = useState<Seat[]>([])
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
@@ -47,9 +46,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [reservationTimer, setReservationTimer] = useState<{ [key: string]: number }>({})
-  const [showReservationWarning, setShowReservationWarning] = useState(false)
-  const [currentUserId] = useState('user_' + Math.random().toString(36).substr(2, 9)) // Simular usuario
 
   // Calcular el total de boletas necesarias
   const totalTicketsNeeded = Object.values(selectedTickets).reduce((total, quantity) => total + quantity, 0)
@@ -69,25 +65,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
     }
   }, [seats])
 
-  // Timer para actualizar tiempos de reserva
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newTimers: { [key: string]: number } = {}
-      selectedSeats.forEach(seat => {
-        const timeLeft = getTimeLeft(seat.id)
-        if (timeLeft > 0) {
-          newTimers[seat.id] = timeLeft
-        }
-      })
-      setReservationTimer(newTimers)
-      
-      // Mostrar advertencia si quedan menos de 2 minutos
-      const hasLowTime = Object.values(newTimers).some(time => time < 120000) // 2 minutos
-      setShowReservationWarning(hasLowTime)
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [selectedSeats, getTimeLeft])
 
   const loadSeats = async () => {
     try {
@@ -165,65 +142,43 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
   }
 
   const handleSeatClick = useCallback((seat: Seat) => {
-    if (seat.status !== 'available') return
-
-    // Verificar si el asiento está reservado por otro usuario
-    if (isSeatReserved(seat.id)) {
-      // Usar setTimeout para evitar llamar toast durante el renderizado
-      setTimeout(() => {
-        toast({
-          title: "Asiento no disponible",
-          description: "Este asiento está siendo reservado por otro usuario",
-          variant: "destructive"
-        })
-      }, 0)
+    if (seat.status !== 'available') {
+      toast({
+        title: "Asiento no disponible",
+        description: "Este asiento no está disponible para selección",
+        variant: "destructive"
+      })
       return
     }
 
     setSelectedSeats(prev => {
       const isSelected = prev.find(s => s.id === seat.id)
       if (isSelected) {
-        // Deseleccionar asiento y liberar reserva
-        releaseSeat(seat.id, currentUserId)
+        // Deseleccionar asiento
+        toast({
+          title: "Asiento deseleccionado",
+          description: `Asiento ${seat.section}-${seat.row}-${seat.number} deseleccionado`,
+        })
         return prev.filter(s => s.id !== seat.id)
       } else {
         // Seleccionar asiento (si no excede la cantidad necesaria)
         if (prev.length < maxSeatsToSelect) {
-          // Intentar reservar el asiento
-          if (reserveSeat(seat.id, currentUserId, event.id)) {
-            // Usar setTimeout para evitar llamar toast durante el renderizado
-            setTimeout(() => {
-              toast({
-                title: "Asiento reservado",
-                description: "Tienes 15 minutos para completar tu compra",
-              })
-            }, 0)
-            return [...prev, seat]
-          } else {
-            // Usar setTimeout para evitar llamar toast durante el renderizado
-            setTimeout(() => {
-              toast({
-                title: "Error",
-                description: "No se pudo reservar el asiento",
-                variant: "destructive"
-              })
-            }, 0)
-            return prev
-          }
+          toast({
+            title: "Asiento seleccionado",
+            description: `Asiento ${seat.section}-${seat.row}-${seat.number} seleccionado`,
+          })
+          return [...prev, seat]
         } else {
-          // Usar setTimeout para evitar llamar toast durante el renderizado
-          setTimeout(() => {
-            toast({
-              title: "Límite alcanzado",
-              description: `Puedes seleccionar máximo ${maxSeatsToSelect} asientos`,
-              variant: "destructive"
-            })
-          }, 0)
+          toast({
+            title: "Límite alcanzado",
+            description: `Puedes seleccionar máximo ${maxSeatsToSelect} asientos`,
+            variant: "destructive"
+          })
           return prev
         }
       }
     })
-  }, [maxSeatsToSelect, currentUserId, event.id, isSeatReserved, releaseSeat, reserveSeat])
+  }, [maxSeatsToSelect, toast])
 
   const getSeatColor = (seat: Seat) => {
     if (selectedSeats.find(s => s.id === seat.id)) {
@@ -252,23 +207,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
     return null
   }
 
-  const formatTimeLeft = (milliseconds: number) => {
-    const minutes = Math.floor(milliseconds / 60000)
-    const seconds = Math.floor((milliseconds % 60000) / 1000)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
 
-  const handleExtendReservation = (seatId: string) => {
-    if (extendReservation(seatId, currentUserId, 5)) {
-      // Usar setTimeout para evitar llamar toast durante el renderizado
-      setTimeout(() => {
-        toast({
-          title: "Reserva extendida",
-          description: "Se agregaron 5 minutos más a tu reserva",
-        })
-      }, 0)
-    }
-  }
 
   const calculateTotalPrice = () => {
     const ticketPrice = Object.entries(selectedTickets).reduce((total, [ticketTypeId, quantity]) => {
@@ -284,21 +223,27 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
   const handleContinue = () => {
     if (selectedSeats.length === 0) return
 
-    // Crear item del carrito con asientos seleccionados
+    // Calcular el precio total de los asientos
+    const seatPrice = selectedSeats.reduce((total, seat) => total + (seat.price || 0), 0)
+    
+    // Calcular el precio total de los tickets
+    const ticketPrice = Object.entries(selectedTickets).reduce((total, [ticketTypeId, quantity]) => {
+      const ticketType = event.ticketTypes?.find(t => t.id === ticketTypeId)
+      return total + (ticketType ? quantity * ticketType.price : 0)
+    }, 0)
+
+    // Crear item del carrito con la estructura correcta
     const cartItem = {
       eventId: event.id,
       eventTitle: event.title,
       eventSlug: event.slug,
       eventImage: event.image_url,
-      ticketTypes: Object.entries(selectedTickets).map(([ticketTypeId, quantity]) => {
-        const ticketType = event.ticketTypes?.find(t => t.id === ticketTypeId)
-        return {
-          id: ticketTypeId,
-          name: ticketType?.name || 'General',
-          price: ticketType?.price || 0,
-          quantity
-        }
-      }),
+      ticketTypeId: 'seat-selection', // ID único para selección de asientos
+      ticketTypeName: 'Selección de Asientos',
+      quantity: selectedSeats.length,
+      price: (seatPrice + ticketPrice) / selectedSeats.length, // Precio promedio por asiento
+      eventDate: event.date,
+      eventLocation: event.location,
       selectedSeats: selectedSeats.map(seat => ({
         id: seat.id,
         section: seat.section,
@@ -308,7 +253,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
         type: seat.type,
         category: seat.category
       })),
-      totalPrice: calculateTotalPrice()
+      totalPrice: seatPrice + ticketPrice
     }
 
     // Buscar si ya existe un item para este evento en el carrito
@@ -407,26 +352,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
         </div>
       </div>
 
-      {/* Advertencia de tiempo de reserva */}
-      {showReservationWarning && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
-            <div className="flex-1">
-              <p className="text-sm text-yellow-700">
-                <strong>¡Atención!</strong> Algunos de tus asientos reservados están por expirar.
-              </p>
-            </div>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => selectedSeats.forEach(seat => handleExtendReservation(seat.id))}
-            >
-              Extender Reservas
-            </Button>
-          </div>
-        </div>
-      )}
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -526,7 +451,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
                             <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
                               {sectionSeats.map(seat => {
                                 const isSelected = selectedSeats.find(s => s.id === seat.id)
-                                const timeLeft = reservationTimer[seat.id]
                                 
                                 return (
                                   <div key={seat.id} className="relative">
@@ -542,13 +466,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
                                       {getSeatIcon(seat)}
                                     </button>
                                     
-                                    {/* Timer de reserva */}
-                                    {isSelected && timeLeft && (
-                                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                                        <Clock className="w-3 h-3 inline mr-1" />
-                                        {formatTimeLeft(timeLeft)}
-                                      </div>
-                                    )}
                                   </div>
                                 )
                               })}
@@ -639,7 +556,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
                       <p className="font-medium mb-2">Asientos seleccionados:</p>
                       <div className="space-y-1">
                         {selectedSeats.map(seat => {
-                          const timeLeft = reservationTimer[seat.id]
                           return (
                             <div key={seat.id} className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
@@ -651,11 +567,6 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
                               </div>
                               <div className="text-right">
                                 <span className="text-gray-500">${seat.price?.toLocaleString()}</span>
-                                {timeLeft && (
-                                  <div className="text-xs text-yellow-600">
-                                    {formatTimeLeft(timeLeft)}
-                                  </div>
-                                )}
                               </div>
                             </div>
                           )

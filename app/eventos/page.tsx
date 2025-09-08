@@ -102,7 +102,7 @@ export default function EventsPage() {
           date="20 DE JUNIO 2025"
           location="PARQUE NORTE - BARRANQUILLA"
           daysLeft={15}
-          imageUrl="/placeholder.svg?height=200&width=1200&text=PANACA+VIAJERO+BARRANQUILLA"
+          imageUrl="/placeholder.jpg"
         />
       </main>
     </div>

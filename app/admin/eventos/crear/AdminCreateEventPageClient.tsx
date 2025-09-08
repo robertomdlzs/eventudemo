@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Save, Eye, Calendar, MapPin, DollarSign, Settings, ImageIcon, Plus, X, UserCheck } from "lucide-react"
+import { ArrowLeft, Save, Eye, Calendar, MapPin, DollarSign, Settings, ImageIcon, Plus, X, UserCheck, Building2, CreditCard, Smartphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -75,6 +75,18 @@ export default function AdminCreateEventPageClient({ categories }: AdminCreateEv
     pulepCode: "",
     externalFood: false,
     parking: false,
+    // Campos de tarifa de servicio
+    serviceFeeType: "percentage" as "percentage" | "fixed",
+    serviceFeeValue: 5.00,
+    serviceFeeDescription: "Tarifa de servicio",
+    // Campos de métodos de pago
+    paymentMethods: {
+      pse: true,
+      credit_card: true,
+      debit_card: true,
+      daviplata: true,
+      tc_serfinanza: true,
+    },
     // Campos multimedia
     mainImage: "",
     videoUrl: "",
@@ -286,7 +298,7 @@ export default function AdminCreateEventPageClient({ categories }: AdminCreateEv
       </div>
 
       <Tabs defaultValue="basic" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="basic" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Básico
@@ -298,6 +310,10 @@ export default function AdminCreateEventPageClient({ categories }: AdminCreateEv
           <TabsTrigger value="tickets" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
             Boletos
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Pagos
           </TabsTrigger>
           <TabsTrigger value="custom" className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
@@ -660,6 +676,224 @@ export default function AdminCreateEventPageClient({ categories }: AdminCreateEv
                   </div>
                 )}
               </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Tarifa de Servicio</h3>
+                <p className="text-sm text-gray-600">
+                  Configura la tarifa de servicio que se aplicará a las compras de este evento
+                </p>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="serviceFeeType">Tipo de Tarifa</Label>
+                    <Select
+                      value={formData.serviceFeeType}
+                      onValueChange={(value) => handleInputChange("serviceFeeType", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el tipo de tarifa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">Porcentaje (%)</SelectItem>
+                        <SelectItem value="fixed">Valor Fijo (COP)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="serviceFeeValue">
+                      {formData.serviceFeeType === "percentage" ? "Porcentaje (%)" : "Valor Fijo (COP)"}
+                    </Label>
+                    <Input
+                      id="serviceFeeValue"
+                      type="number"
+                      step={formData.serviceFeeType === "percentage" ? "0.01" : "1"}
+                      min="0"
+                      placeholder={formData.serviceFeeType === "percentage" ? "5.00" : "5000"}
+                      value={formData.serviceFeeValue}
+                      onChange={(e) => handleInputChange("serviceFeeValue", parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="serviceFeeDescription">Descripción de la Tarifa</Label>
+                  <Input
+                    id="serviceFeeDescription"
+                    placeholder="Ej: Tarifa de servicio, Comisión de procesamiento, etc."
+                    value={formData.serviceFeeDescription}
+                    onChange={(e) => handleInputChange("serviceFeeDescription", e.target.value)}
+                  />
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-blue-600 mt-0.5">
+                      <DollarSign className="h-4 w-4" />
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Vista previa de la tarifa:</p>
+                      <p>
+                        Si un usuario compra un boleto de $50,000, la tarifa de servicio será:{" "}
+                        <span className="font-semibold">
+                          {formData.serviceFeeType === "percentage" 
+                            ? `$${(50000 * (formData.serviceFeeValue / 100)).toLocaleString()} (${formData.serviceFeeValue}%)`
+                            : `$${formData.serviceFeeValue.toLocaleString()}`
+                          }
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Configuración de Métodos de Pago */}
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Configuración de Métodos de Pago
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                Selecciona qué métodos de pago estarán disponibles para este evento
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              
+              {/* PSE - Pagos Seguros en Línea */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">PSE - Pagos Seguros en Línea</h4>
+                    <p className="text-sm text-gray-600">Transferencia bancaria directa desde tu cuenta</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.paymentMethods.pse}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, pse: checked }
+                    }))
+                  }
+                />
+              </div>
+
+              {/* Tarjetas de Crédito */}
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                    <CreditCard className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">Tarjetas de Crédito</h4>
+                    <p className="text-sm text-gray-600">Visa, Mastercard, Diners Club</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.paymentMethods.credit_card}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, credit_card: checked }
+                    }))
+                  }
+                />
+              </div>
+
+              {/* Tarjetas de Débito */}
+              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-200">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center">
+                    <CreditCard className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">Tarjetas de Débito</h4>
+                    <p className="text-sm text-gray-600">Visa, Mastercard, Diners Club</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.paymentMethods.debit_card}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, debit_card: checked }
+                    }))
+                  }
+                />
+              </div>
+
+              {/* Daviplata */}
+              <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl border border-purple-200">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <Smartphone className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">Daviplata</h4>
+                    <p className="text-sm text-gray-600">Billetera digital de Davivienda</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.paymentMethods.daviplata}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, daviplata: checked }
+                    }))
+                  }
+                />
+              </div>
+
+              {/* TC Serfinanza */}
+              <div className="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-200">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+                    <CreditCard className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">TC Serfinanza</h4>
+                    <p className="text-sm text-gray-600">Tarjeta de crédito Serfinanza</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.paymentMethods.tc_serfinanza}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, tc_serfinanza: checked }
+                    }))
+                  }
+                />
+              </div>
+
+              {/* Información adicional */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-blue-600 mt-0.5">
+                    <DollarSign className="h-4 w-4" />
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    <p className="font-medium mb-1">Información importante:</p>
+                    <ul className="space-y-1 text-xs">
+                      <li>• Los métodos de pago seleccionados aparecerán en el checkout del evento</li>
+                      <li>• Puedes cambiar esta configuración en cualquier momento</li>
+                      <li>• Al menos un método de pago debe estar habilitado</li>
+                      <li>• Los usuarios solo verán los métodos que estén activos</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
             </CardContent>
           </Card>
         </TabsContent>

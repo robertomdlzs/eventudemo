@@ -122,114 +122,23 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      // Verificar disponibilidad de boletos antes de procesar el pago
-      for (const item of cart.items) {
-        const availabilityResponse = await apiClient.checkTicketAvailability({
-          eventId: Number(item.eventId),
-          ticketTypeId: Number(item.ticketTypeId),
-          quantity: item.quantity
-        })
-
-        if (!availabilityResponse.success) {
-          throw new Error(availabilityResponse.message || 'Error al verificar disponibilidad')
-        }
-
-        if (!availabilityResponse.data.isAvailable) {
-          throw new Error(`No hay suficientes boletos disponibles para ${item.eventTitle}. ${availabilityResponse.data.message}`)
-        }
-      }
-
-      // Validar datos según el método de pago seleccionado
-      if (selectedPaymentMethod === 'credit_card' || selectedPaymentMethod === 'debit_card' || selectedPaymentMethod === 'tc_serfinanza') {
-        if (!cardData.number || !cardData.expiry || !cardData.cvv || !cardData.holderName) {
-          throw new Error('Por favor completa toda la información de la tarjeta')
-        }
-      } else if (selectedPaymentMethod === 'pse') {
-        if (!bankData.bank || !bankData.accountType || !bankData.documentType || !bankData.documentNumber) {
-          throw new Error('Por favor completa toda la información bancaria')
-        }
-      } else if (selectedPaymentMethod === 'daviplata') {
-        if (!phoneData.phone) {
-          throw new Error('Por favor ingresa tu número de teléfono de Daviplata')
-        }
-      }
-
-      // Procesar pago según el método seleccionado
-      let paymentResponse
-
-      if (selectedPaymentMethod === 'credit_card' || selectedPaymentMethod === 'debit_card' || selectedPaymentMethod === 'tc_serfinanza') {
-        // Procesar pago con tarjeta
-        const cardPaymentData = {
-          cardNumber: cardData.number.replace(/\s/g, ''),
-          expiryDate: cardData.expiry,
-          cvv: cardData.cvv,
-          holderName: cardData.holderName,
-          amount: calculateTotal(),
-          currency: 'COP',
-          description: `Compra de boletas - ${cart.items.map(item => item.eventTitle).join(', ')}`,
-          customerId: user?.id || 0,
-          eventId: Number(cart.items[0]?.eventId) || 0,
-          ticketTypeId: Number(cart.items[0]?.ticketTypeId) || 0,
-          quantity: cart.items.reduce((total, item) => total + item.quantity, 0)
-        }
-
-        paymentResponse = await apiClient.processCardPayment(cardPaymentData)
-      } else if (selectedPaymentMethod === 'pse') {
-        // Procesar pago PSE
-        const psePaymentData = {
-          bank: bankData.bank,
-          accountType: bankData.accountType,
-          documentType: bankData.documentType,
-          documentNumber: bankData.documentNumber,
-          amount: calculateTotal(),
-          currency: 'COP',
-          description: `Compra de boletas - ${cart.items.map(item => item.eventTitle).join(', ')}`,
-          customerId: user?.id || 0,
-          eventId: Number(cart.items[0]?.eventId) || 0,
-          ticketTypeId: Number(cart.items[0]?.ticketTypeId) || 0,
-          quantity: cart.items.reduce((total, item) => total + item.quantity, 0)
-        }
-
-        paymentResponse = await apiClient.processPSEPayment(psePaymentData)
-      } else if (selectedPaymentMethod === 'daviplata') {
-        // Procesar pago Daviplata
-        const daviplataPaymentData = {
-          phone: phoneData.phone,
-          amount: calculateTotal(),
-          currency: 'COP',
-          description: `Compra de boletas - ${cart.items.map(item => item.eventTitle).join(', ')}`,
-          customerId: user?.id || 0,
-          eventId: Number(cart.items[0]?.eventId) || 0,
-          ticketTypeId: Number(cart.items[0]?.ticketTypeId) || 0,
-          quantity: cart.items.reduce((total, item) => total + item.quantity, 0)
-        }
-
-        paymentResponse = await apiClient.processDaviplataPayment(daviplataPaymentData)
-      }
-
-      if (!paymentResponse?.success) {
-        throw new Error(paymentResponse?.message || 'Error al procesar el pago')
-      }
-
-      // Track successful purchase
-      const transactionId = paymentResponse.data?.transactionId || `TXN-${Date.now()}`
-      const items = cart.items.map(item => ({
-        item_id: item.eventId.toString(),
-        item_name: item.eventTitle || 'Evento',
-        price: item.price,
-        quantity: item.quantity
-      }))
+      // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
+      toast({
+        title: "Pagos temporalmente desactivados",
+        description: "La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.",
+        variant: "destructive",
+      })
       
-      trackPurchase(transactionId, cart.total, 'COP', items)
+      // Simular delay para mostrar el mensaje
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Limpiar carrito después del pago exitoso
-      clearCart()
-      
-      // Redirigir a página de éxito
-      router.push('/checkout/success')
     } catch (error) {
       console.error('Error processing payment:', error)
-      alert(error instanceof Error ? error.message : 'Error al procesar el pago')
+      toast({
+        title: "Error",
+        description: "La funcionalidad de pagos está temporalmente desactivada.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -360,38 +269,31 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Métodos de pago - Cobru */}
-            <CobruTestPayment
-              amount={cart.total}
-              currency="COP"
-              description={`Compra de boletos - ${cart.items.length} item(s)`}
-              reference={`EVENT-${Date.now()}`}
-              customerEmail={personalData.email}
-              customerName={`${personalData.firstName} ${personalData.lastName}`}
-              customerPhone={personalData.phone}
-              onSuccess={(transactionData) => {
-                console.log('Pago exitoso:', transactionData);
-                // Aquí puedes manejar el pago exitoso
-                toast({
-                  title: "Pago exitoso",
-                  description: "Tu pago ha sido procesado correctamente",
-                });
-                // Redirigir a página de éxito
-                router.push('/checkout/success');
-              }}
-              onError={(error) => {
-                console.error('Error en pago:', error);
-                toast({
-                  title: "Error en el pago",
-                  description: error,
-                  variant: "destructive",
-                });
-              }}
-              onCancel={() => {
-                console.log('Pago cancelado');
-                router.push('/carrito');
-              }}
-            />
+            {/* Métodos de pago - DESACTIVADO */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-600">
+                  <Shield className="h-5 w-5" />
+                  Sistema de Pagos Temporalmente Desactivado
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-orange-600 mt-0.5" />
+                    <div className="text-orange-800">
+                      <p className="font-medium mb-2">Pagos temporalmente no disponibles</p>
+                      <p className="text-sm mb-3">
+                        La funcionalidad de pagos está temporalmente desactivada mientras realizamos mejoras al sistema.
+                      </p>
+                      <p className="text-sm">
+                        Para realizar tu compra, por favor contacta directamente con el organizador del evento.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
           </div>
 

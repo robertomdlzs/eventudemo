@@ -82,7 +82,7 @@ try {
             'venue' => $row['venue'],
             'location' => $row['location'],
             'category' => $row['category'],
-            'image_url' => $row['image_url'] ?: "/placeholder.svg?height=300&width=400&query=" . urlencode($row['title']),
+            'image_url' => $row['image_url'] ?: "/placeholder.svg",
             'price_from' => (int)$row['price_from'],
             'price_to' => (int)$row['price_to'],
             'capacity' => (int)$row['capacity'],

@@ -2,9 +2,33 @@
 
 import { LoginForm } from "@/components/login-form"
 import Link from "next/link"
-import { Sparkles, Star } from "lucide-react" // Keep Sparkles for decorative elements if needed
+import { Sparkles, Star } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "@/hooks/use-toast"
 
 export default function LoginPageClient() {
+  const searchParams = useSearchParams()
+  const [showTimeoutMessage, setShowTimeoutMessage] = useState(false)
+
+  useEffect(() => {
+    const reason = searchParams.get('reason')
+    if (reason === 'timeout') {
+      setShowTimeoutMessage(true)
+      toast({
+        title: "Sesión expirada",
+        description: "Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.",
+        variant: "destructive"
+      })
+    } else if (reason === 'session_closed') {
+      setShowTimeoutMessage(true)
+      toast({
+        title: "Sesión cerrada",
+        description: "Tu sesión ha sido cerrada por seguridad. Por favor, inicia sesión nuevamente.",
+        variant: "destructive"
+      })
+    }
+  }, [searchParams])
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 relative overflow-hidden">
       {/* Elementos decorativos de fondo */}
@@ -30,7 +54,7 @@ export default function LoginPageClient() {
           <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
             <div className="max-w-md text-center space-y-6">
               <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto backdrop-blur-sm">
-                <img src="/assets?path=images/eventu-logo.svg" alt="Eventu Logo" className="w-10 h-10" />
+                <img src="/images/eventu-logo.svg" alt="Eventu Logo" className="w-10 h-10" />
               </div>
               <h1 className="text-4xl font-bold">¡Bienvenido de vuelta a Eventu!</h1>
               <p className="text-xl text-white/90 leading-relaxed">
@@ -67,7 +91,7 @@ export default function LoginPageClient() {
             {/* Título móvil */}
             <div className="lg:hidden text-center mb-8">
               <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <img src="/assets?path=images/eventu-logo.svg" alt="Eventu Logo" className="w-8 h-8" />
+                <img src="/images/eventu-logo.svg" alt="Eventu Logo" className="w-8 h-8" />
               </div>
               <h1 className="text-2xl font-bold text-neutral-900 mb-2">¡Hola de nuevo!</h1>
               <p className="text-neutral-600">Inicia sesión para continuar</p>

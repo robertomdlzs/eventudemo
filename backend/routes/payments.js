@@ -62,246 +62,270 @@ async function updateTicketInventory(ticketTypeId, eventId, quantity) {
   }
 }
 
-// Procesar pago con tarjeta de crédito/débito
+// Procesar pago con tarjeta de crédito/débito - DESACTIVADO
 router.post("/process-card", auth, async (req, res) => {
-  try {
-    const {
-      cardNumber,
-      expiryDate,
-      cvv,
-      holderName,
-      amount,
-      currency = "COP",
-      description,
-      customerId,
-      eventId,
-      ticketTypeId,
-      quantity
-    } = req.body
+  // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
+  return res.status(503).json({
+    success: false,
+    message: "La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.",
+    code: "PAYMENTS_DISABLED"
+  })
+  
+  // Código original comentado:
+  // try {
+  //   const {
+  //     cardNumber,
+  //     expiryDate,
+  //     cvv,
+  //     holderName,
+  //     amount,
+  //     currency = "COP",
+  //     description,
+  //     customerId,
+  //     eventId,
+  //     ticketTypeId,
+  //     quantity
+  //   } = req.body
 
-    // Validar datos de entrada
-    if (!cardNumber || !expiryDate || !cvv || !holderName || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: "Datos de tarjeta incompletos"
-      })
-    }
+  //   // Validar datos de entrada
+  //   if (!cardNumber || !expiryDate || !cvv || !holderName || !amount) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: "Datos de tarjeta incompletos"
+  //     })
+  //   }
 
-    // Simular procesamiento de pago con gateway
-    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    const paymentStatus = "approved" // Simular aprobación exitosa
+  //   // Simular procesamiento de pago con gateway
+  //   const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  //   const paymentStatus = "approved" // Simular aprobación exitosa
 
-    // Registrar transacción en la base de datos
-    const insertQuery = `
-      INSERT INTO sales (
-        transaction_id, customer_id, event_id, ticket_type_id, quantity,
-        unit_price, total_amount, payment_method, payment_status, card_last_four,
-        created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-      RETURNING *
-    `
+  //   // Registrar transacción en la base de datos
+  //   const insertQuery = `
+  //     INSERT INTO sales (
+  //       transaction_id, customer_id, event_id, ticket_type_id, quantity,
+  //       unit_price, total_amount, payment_method, payment_status, card_last_four,
+  //       created_at, updated_at
+  //     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+  //     RETURNING *
+  //   `
 
-    const cardLastFour = cardNumber.slice(-4)
-    const unitPrice = amount / quantity
+  //   const cardLastFour = cardNumber.slice(-4)
+  //   const unitPrice = amount / quantity
 
-    const result = await db.query(insertQuery, [
-      transactionId,
-      customerId,
-      eventId,
-      ticketTypeId,
-      quantity,
-      unitPrice,
-      amount,
-      "credit_card",
-      paymentStatus,
-      cardLastFour
-    ])
+  //   const result = await db.query(insertQuery, [
+  //     transactionId,
+  //     customerId,
+  //     eventId,
+  //     ticketTypeId,
+  //     quantity,
+  //     unitPrice,
+  //     amount,
+  //     "credit_card",
+  //     paymentStatus,
+  //     cardLastFour
+  //   ])
 
-    // Actualizar inventario de boletas y capacidad del evento
-    await updateTicketInventory(ticketTypeId, eventId, quantity)
+  //   // Actualizar inventario de boletas y capacidad del evento
+  //   await updateTicketInventory(ticketTypeId, eventId, quantity)
 
-    res.json({
-      success: true,
-      message: "Pago procesado exitosamente",
-      data: {
-        transactionId,
-        status: paymentStatus,
-        amount,
-        currency,
-        saleId: result.rows[0].id
-      }
-    })
+  //   res.json({
+  //     success: true,
+  //     message: "Pago procesado exitosamente",
+  //     data: {
+  //       transactionId,
+  //       status: paymentStatus,
+  //       amount,
+  //       currency,
+  //       saleId: result.rows[0].id
+  //     }
+  //   })
 
-  } catch (error) {
-    console.error("Error processing card payment:", error)
-    res.status(500).json({
-      success: false,
-      message: "Error interno del servidor"
-    })
-  }
+  // } catch (error) {
+  //   console.error("Error processing card payment:", error)
+  //   res.status(500).json({
+  //     success: false,
+  //     message: "Error interno del servidor"
+  //   })
+  // }
 })
 
-// Procesar pago PSE
+// Procesar pago PSE - DESACTIVADO
 router.post("/process-pse", auth, async (req, res) => {
-  try {
-    const {
-      bank,
-      accountType,
-      documentType,
-      documentNumber,
-      amount,
-      currency = "COP",
-      description,
-      customerId,
-      eventId,
-      ticketTypeId,
-      quantity
-    } = req.body
+  // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
+  return res.status(503).json({
+    success: false,
+    message: "La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.",
+    code: "PAYMENTS_DISABLED"
+  })
+  
+  // Código original comentado:
+  // try {
+  //   const {
+  //     bank,
+  //     accountType,
+  //     documentType,
+  //     documentNumber,
+  //     amount,
+  //     currency = "COP",
+  //     description,
+  //     customerId,
+  //     eventId,
+  //     ticketTypeId,
+  //     quantity
+  //   } = req.body
 
-    // Validar datos de entrada
-    if (!bank || !accountType || !documentType || !documentNumber || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: "Datos bancarios incompletos"
-      })
-    }
+  //   // Validar datos de entrada
+  //   if (!bank || !accountType || !documentType || !documentNumber || !amount) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: "Datos bancarios incompletos"
+  //     })
+  //   }
 
-    // Simular procesamiento PSE
-    const transactionId = `PSE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    const paymentStatus = "pending" // PSE requiere confirmación bancaria
+  //   // Simular procesamiento PSE
+  //   const transactionId = `PSE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  //   const paymentStatus = "pending" // PSE requiere confirmación bancaria
 
-    // Registrar transacción
-    const insertQuery = `
-      INSERT INTO sales (
-        transaction_id, customer_id, event_id, ticket_type_id, quantity,
-        unit_price, total_amount, payment_method, payment_status, bank_info,
-        created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-      RETURNING *
-    `
+  //   // Registrar transacción
+  //   const insertQuery = `
+  //     INSERT INTO sales (
+  //       transaction_id, customer_id, event_id, ticket_type_id, quantity,
+  //       unit_price, total_amount, payment_method, payment_status, bank_info,
+  //       created_at, updated_at
+  //     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+  //     RETURNING *
+  //   `
 
-    const bankInfo = JSON.stringify({
-      bank,
-      accountType,
-      documentType,
-      documentNumber: documentNumber.slice(-4) // Solo últimos 4 dígitos por seguridad
-    })
+  //   const bankInfo = JSON.stringify({
+  //     bank,
+  //     accountType,
+  //     documentType,
+  //     documentNumber: documentNumber.slice(-4) // Solo últimos 4 dígitos por seguridad
+  //   })
 
-    const unitPrice = amount / quantity
+  //   const unitPrice = amount / quantity
 
-    const result = await db.query(insertQuery, [
-      transactionId,
-      customerId,
-      eventId,
-      ticketTypeId,
-      quantity,
-      unitPrice,
-      amount,
-      "pse",
-      paymentStatus,
-      bankInfo
-    ])
+  //   const result = await db.query(insertQuery, [
+  //     transactionId,
+  //     customerId,
+  //     eventId,
+  //     ticketTypeId,
+  //     quantity,
+  //     unitPrice,
+  //     amount,
+  //     "pse",
+  //     paymentStatus,
+  //     bankInfo
+  //   ])
 
-    // Para PSE, no actualizamos el inventario inmediatamente ya que el pago está pendiente
-    // El inventario se actualizará cuando se confirme el pago via webhook
+  //   // Para PSE, no actualizamos el inventario inmediatamente ya que el pago está pendiente
+  //   // El inventario se actualizará cuando se confirme el pago via webhook
 
-    res.json({
-      success: true,
-      message: "Transacción PSE iniciada",
-      data: {
-        transactionId,
-        status: paymentStatus,
-        amount,
-        currency,
-        saleId: result.rows[0].id,
-        redirectUrl: `https://pse.example.com/payment/${transactionId}` // URL simulada
-      }
-    })
+  //   res.json({
+  //     success: true,
+  //     message: "Transacción PSE iniciada",
+  //     data: {
+  //       transactionId,
+  //       status: paymentStatus,
+  //       amount,
+  //       currency,
+  //       saleId: result.rows[0].id,
+  //       redirectUrl: `https://pse.example.com/payment/${transactionId}` // URL simulada
+  //     }
+  //   })
 
-  } catch (error) {
-    console.error("Error processing PSE payment:", error)
-    res.status(500).json({
-      success: false,
-      message: "Error interno del servidor"
-    })
-  }
+  // } catch (error) {
+  //   console.error("Error processing PSE payment:", error)
+  //   res.status(500).json({
+  //     success: false,
+  //     message: "Error interno del servidor"
+  //   })
+  // }
 })
 
-// Procesar pago Daviplata
+// Procesar pago Daviplata - DESACTIVADO
 router.post("/process-daviplata", auth, async (req, res) => {
-  try {
-    const {
-      phone,
-      amount,
-      currency = "COP",
-      description,
-      customerId,
-      eventId,
-      ticketTypeId,
-      quantity
-    } = req.body
+  // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
+  return res.status(503).json({
+    success: false,
+    message: "La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.",
+    code: "PAYMENTS_DISABLED"
+  })
+  
+  // Código original comentado:
+  // try {
+  //   const {
+  //     phone,
+  //     amount,
+  //     currency = "COP",
+  //     description,
+  //     customerId,
+  //     eventId,
+  //     ticketTypeId,
+  //     quantity
+  //   } = req.body
 
-    // Validar datos de entrada
-    if (!phone || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: "Número de teléfono requerido"
-      })
-    }
+  //   // Validar datos de entrada
+  //   if (!phone || !amount) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: "Número de teléfono requerido"
+  //     })
+  //   }
 
-    // Simular procesamiento Daviplata
-    const transactionId = `DVP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    const paymentStatus = "pending" // Requiere confirmación en app
+  //   // Simular procesamiento Daviplata
+  //   const transactionId = `DVP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  //   const paymentStatus = "pending" // Requiere confirmación en app
 
-    // Registrar transacción
-    const insertQuery = `
-      INSERT INTO sales (
-        transaction_id, customer_id, event_id, ticket_type_id, quantity,
-        unit_price, total_amount, payment_method, payment_status, phone_number,
-        created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-      RETURNING *
-    `
+  //   // Registrar transacción
+  //   const insertQuery = `
+  //     INSERT INTO sales (
+  //       transaction_id, customer_id, event_id, ticket_type_id, quantity,
+  //       unit_price, total_amount, payment_method, payment_status, phone_number,
+  //       created_at, updated_at
+  //     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+  //     RETURNING *
+  //   `
 
-    const unitPrice = amount / quantity
+  //   const unitPrice = amount / quantity
 
-    const result = await db.query(insertQuery, [
-      transactionId,
-      customerId,
-      eventId,
-      ticketTypeId,
-      quantity,
-      unitPrice,
-      amount,
-      "daviplata",
-      paymentStatus,
-      phone
-    ])
+  //   const result = await db.query(insertQuery, [
+  //     transactionId,
+  //     customerId,
+  //     eventId,
+  //     ticketTypeId,
+  //     quantity,
+  //     unitPrice,
+  //     amount,
+  //     "daviplata",
+  //     paymentStatus,
+  //     phone
+  //   ])
 
-    // Para Daviplata, no actualizamos el inventario inmediatamente ya que el pago está pendiente
-    // El inventario se actualizará cuando se confirme el pago via webhook
+  //   // Para Daviplata, no actualizamos el inventario inmediatamente ya que el pago está pendiente
+  //   // El inventario se actualizará cuando se confirme el pago via webhook
 
-    res.json({
-      success: true,
-      message: "Transacción Daviplata iniciada",
-      data: {
-        transactionId,
-        status: paymentStatus,
-        amount,
-        currency,
-        saleId: result.rows[0].id,
-        phone: phone.slice(-4), // Solo últimos 4 dígitos por seguridad
-        instructions: "Confirma el pago en tu aplicación Daviplata"
-      }
-    })
+  //   res.json({
+  //     success: true,
+  //     message: "Transacción Daviplata iniciada",
+  //     data: {
+  //       transactionId,
+  //       status: paymentStatus,
+  //       amount,
+  //       currency,
+  //       saleId: result.rows[0].id,
+  //       phone: phone.slice(-4), // Solo últimos 4 dígitos por seguridad
+  //       instructions: "Confirma el pago en tu aplicación Daviplata"
+  //     }
+  //   })
 
-  } catch (error) {
-    console.error("Error processing Daviplata payment:", error)
-    res.status(500).json({
-      success: false,
-      message: "Error interno del servidor"
-    })
-  }
+  // } catch (error) {
+  //   console.error("Error processing Daviplata payment:", error)
+  //   res.status(500).json({
+  //     success: false,
+  //     message: "Error interno del servidor"
+  //   })
+  // }
 })
 
 // Verificar estado de transacción

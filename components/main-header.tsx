@@ -143,8 +143,7 @@ export default function MainHeader() {
           <div className="flex justify-between items-center h-20">
             <Link href="/" className="flex items-center group">
               <img
-                src="/assets?path=ima
-                ges/eventu-logo.svg"
+                src="/images/eventu-logo.svg"
                 alt="Eventu"
                 className="h-8 md:h-10 w-auto group-hover:scale-105 transition-transform"
               />

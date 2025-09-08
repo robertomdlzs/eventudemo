@@ -1,6 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useCart } from "@/hooks/use-cart"
+import { useServiceFee } from "@/hooks/use-service-fee"
+import { useEventPaymentMethods } from "@/hooks/use-event-payment-methods"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,9 +14,69 @@ import { useRouter } from "next/navigation"
 
 export default function CarritoPage() {
   const { cart, removeFromCart, updateCartItem, clearCart } = useCart()
+  const { getCartServiceFee, isLoading: isServiceFeeLoading } = useServiceFee()
   const router = useRouter()
+  const [serviceFeeData, setServiceFeeData] = useState<{
+    total: number
+    breakdown: Array<{
+      eventId: string
+      eventTitle: string
+      amount: number
+      serviceFee: number
+      config: any
+    }>
+  } | null>(null)
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([])
   
   console.log('CarritoPage - Estado del carrito:', cart)
+
+  // Calcular tarifa de servicio cuando cambie el carrito
+  useEffect(() => {
+    if (cart.items.length > 0) {
+      getCartServiceFee().then(setServiceFeeData)
+    } else {
+      setServiceFeeData(null)
+    }
+  }, [cart.items, getCartServiceFee])
+
+  // Cargar métodos de pago disponibles para los eventos en el carrito
+  useEffect(() => {
+    if (cart.items.length > 0) {
+      loadAvailablePaymentMethods()
+    } else {
+      setAvailablePaymentMethods([])
+    }
+  }, [cart.items])
+
+  const loadAvailablePaymentMethods = async () => {
+    try {
+      const eventIds = [...new Set(cart.items.map(item => item.eventId))]
+      const allMethods: any[] = []
+
+      for (const eventId of eventIds) {
+        const { getAvailablePaymentMethodsForCart } = useEventPaymentMethods(eventId)
+        const methods = getAvailablePaymentMethodsForCart()
+        allMethods.push(...methods)
+      }
+
+      // Eliminar duplicados
+      const uniqueMethods = allMethods.filter((method, index, self) => 
+        index === self.findIndex(m => m.id === method.id)
+      )
+
+      setAvailablePaymentMethods(uniqueMethods)
+    } catch (error) {
+      console.error('Error cargando métodos de pago:', error)
+      // Métodos por defecto si hay error
+      setAvailablePaymentMethods([
+        { id: 'pse', name: 'PSE - Pagos Seguros en Línea', description: 'Transferencia bancaria directa', enabled: true },
+        { id: 'credit_card', name: 'Tarjetas de Crédito', description: 'Visa, Mastercard, Diners Club', enabled: true },
+        { id: 'debit_card', name: 'Tarjetas de Débito', description: 'Visa, Mastercard, Diners Club', enabled: true },
+        { id: 'daviplata', name: 'Daviplata', description: 'Billetera digital de Davivienda', enabled: true },
+        { id: 'tc_serfinanza', name: 'TC Serfinanza', description: 'Tarjeta de crédito Serfinanza', enabled: true }
+      ])
+    }
+  }
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -25,17 +88,22 @@ export default function CarritoPage() {
 
   const handleCheckout = () => {
     if (cart.items.length > 0) {
-      // Verificar autenticación
-      const token = localStorage.getItem("auth_token")
-      const userStr = localStorage.getItem("current_user")
+      // FUNCIONALIDAD DE PAGOS DESACTIVADA
+      alert('La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.')
+      return
       
-      if (token && userStr) {
-        // Usuario autenticado, ir al checkout
-        router.push('/checkout')
-      } else {
-        // Usuario no autenticado, redirigir al login con redirect
-        router.push('/login?redirect=/checkout')
-      }
+      // Código original comentado:
+      // // Verificar autenticación
+      // const token = localStorage.getItem("auth_token")
+      // const userStr = localStorage.getItem("current_user")
+      // 
+      // if (token && userStr) {
+      //   // Usuario autenticado, ir al checkout
+      //   router.push('/checkout')
+      // } else {
+      //   // Usuario no autenticado, redirigir al login con redirect
+      //   router.push('/login?redirect=/checkout')
+      // }
     }
   }
 
@@ -129,7 +197,7 @@ export default function CarritoPage() {
                               <div className="flex flex-wrap gap-1">
                                 {item.selectedSeats.map((seat, index) => (
                                   <Badge key={index} variant="outline" className="text-xs">
-                                    {seat}
+                                    {typeof seat === 'string' ? seat : `${seat.section}-${seat.row}-${seat.number}`}
                                   </Badge>
                                 ))}
                               </div>
@@ -142,10 +210,10 @@ export default function CarritoPage() {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-lg font-semibold text-gray-900">
-                          ${(item.price * item.quantity).toLocaleString()}
+                          ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}
                         </p>
                         <p className="text-sm text-gray-500">
-                          ${item.price.toLocaleString()} c/u
+                          ${(item.price || 0).toLocaleString()} c/u
                         </p>
                       </div>
 
@@ -204,14 +272,32 @@ export default function CarritoPage() {
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span>${cart.total.toLocaleString()}</span>
+                  <span>${(cart.total || 0).toLocaleString()}</span>
                 </div>
 
                 {/* Servicio */}
                 <div className="flex justify-between text-sm">
                   <span>Servicio:</span>
-                  <span>${Math.round(cart.total * 0.05).toLocaleString()}</span>
+                  <span>
+                    {isServiceFeeLoading ? (
+                      <span className="text-gray-400">Calculando...</span>
+                    ) : (
+                      `$${Math.round(serviceFeeData?.total || 0).toLocaleString()}`
+                    )}
+                  </span>
                 </div>
+
+                {/* Desglose de tarifas de servicio por evento */}
+                {serviceFeeData && serviceFeeData.breakdown.length > 1 && (
+                  <div className="text-xs text-gray-500 space-y-1">
+                    {serviceFeeData.breakdown.map((item, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span>{item.eventTitle}:</span>
+                        <span>${Math.round(item.serviceFee).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <Separator />
 
@@ -219,9 +305,30 @@ export default function CarritoPage() {
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
                   <span className="text-green-600">
-                    ${(cart.total + Math.round(cart.total * 0.05)).toLocaleString()}
+                    ${((cart.total || 0) + Math.round(serviceFeeData?.total || 0)).toLocaleString()}
                   </span>
                 </div>
+
+                {/* Métodos de Pago Disponibles */}
+                {availablePaymentMethods.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-700">Métodos de Pago Disponibles</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {availablePaymentMethods.map((method) => (
+                        <div key={method.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+                          <div className={`w-3 h-3 rounded-full ${
+                            method.id === 'pse' ? 'bg-blue-500' :
+                            method.id === 'credit_card' ? 'bg-green-500' :
+                            method.id === 'debit_card' ? 'bg-orange-500' :
+                            method.id === 'daviplata' ? 'bg-purple-500' :
+                            method.id === 'tc_serfinanza' ? 'bg-red-500' : 'bg-gray-500'
+                          }`}></div>
+                          <span className="text-xs text-gray-600">{method.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Botones de acción */}
                 <div className="space-y-3">
@@ -239,8 +346,10 @@ export default function CarritoPage() {
                     className="w-full" 
                     size="lg"
                     onClick={handleCheckout}
+                    variant="outline"
+                    disabled
                   >
-                    Proceder al Pago
+                    Pagos Temporalmente Desactivados
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>

@@ -8,6 +8,7 @@ import MainHeader from "@/components/main-header"
 import { Footer } from "@/components/footer"
 import GoogleAnalytics from "@/components/GoogleAnalytics"
 import CookieConsent from "@/components/CookieConsent"
+import { BrowserSessionProvider } from "@/components/browser-session-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,11 +27,14 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <GoogleAnalytics />
-          <MainHeader />
-          <main className="min-h-screen">{children}</main>
-          <Toaster />
-          <CookieConsent />
+          <BrowserSessionProvider>
+            <GoogleAnalytics />
+            <MainHeader />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+            <Toaster />
+            <CookieConsent />
+          </BrowserSessionProvider>
         </ThemeProvider>
       </body>
     </html>

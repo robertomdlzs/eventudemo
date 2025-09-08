@@ -61,12 +61,18 @@ export default function CheckoutClient({ event, checkoutData }: CheckoutClientPr
     setLoading(true)
 
     try {
-      // Aquí iría la lógica de procesamiento del pago
-      // Por ahora simulamos un delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
+      alert('La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.')
+      setLoading(false)
+      return
       
-      // Redirigir a la página de éxito
-      router.push(`/evento/${event.slug}/checkout/success`)
+      // Código original comentado:
+      // // Aquí iría la lógica de procesamiento del pago
+      // // Por ahora simulamos un delay
+      // await new Promise(resolve => setTimeout(resolve, 2000))
+      // 
+      // // Redirigir a la página de éxito
+      // router.push(`/evento/${event.slug}/checkout/success`)
     } catch (error) {
       console.error('Error processing payment:', error)
     } finally {

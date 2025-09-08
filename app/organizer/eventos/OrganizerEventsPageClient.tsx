@@ -304,7 +304,7 @@ export default function OrganizerEventsPageClient() {
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = `/assets?path=placeholders/placeholder.svg?height=200&width=300&text=${encodeURIComponent(event.title)}`
+                  target.src = `/placeholder.svg`
                 }}
               />
               <div className="absolute top-2 right-2">

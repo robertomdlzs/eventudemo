@@ -34,17 +34,69 @@ export interface PaymentMethod {
 
 const paymentMethods: PaymentMethod[] = [
   {
-    id: 'cobru',
-    name: 'Cobru - Pagos en Colombia',
+    id: 'pse',
+    name: 'PSE - Pagos Seguros en Línea',
     type: 'gateway',
-    description: 'Pagos seguros con Nequi, Daviplata, Bancolombia, PSE, Efecty y más',
-    icon: <Zap className="h-5 w-5" />,
+    description: 'Transferencia bancaria directa desde tu cuenta',
+    icon: <Building2 className="h-5 w-5" />,
     requiresCardInfo: false,
+    requiresBankInfo: true,
+    requiresPhoneInfo: false,
+    processingTime: 'Inmediato',
+    fees: 'Sin comisión adicional',
+    gateway: 'pse'
+  },
+  {
+    id: 'credit_card',
+    name: 'Tarjeta de Crédito',
+    type: 'card',
+    description: 'Visa, Mastercard, Diners Club',
+    icon: <CreditCard className="h-5 w-5" />,
+    requiresCardInfo: true,
     requiresBankInfo: false,
     requiresPhoneInfo: false,
     processingTime: 'Inmediato',
     fees: 'Sin comisión adicional',
-    gateway: 'cobru'
+    gateway: 'stripe'
+  },
+  {
+    id: 'debit_card',
+    name: 'Tarjeta de Débito',
+    type: 'card',
+    description: 'Visa, Mastercard, Diners Club',
+    icon: <CreditCard className="h-5 w-5" />,
+    requiresCardInfo: true,
+    requiresBankInfo: false,
+    requiresPhoneInfo: false,
+    processingTime: 'Inmediato',
+    fees: 'Sin comisión adicional',
+    gateway: 'stripe'
+  },
+  {
+    id: 'daviplata',
+    name: 'Daviplata',
+    type: 'digital_wallet',
+    description: 'Billetera digital de Davivienda',
+    icon: <Smartphone className="h-5 w-5" />,
+    requiresCardInfo: false,
+    requiresBankInfo: false,
+    requiresPhoneInfo: true,
+    processingTime: 'Inmediato',
+    fees: 'Sin comisión adicional',
+    gateway: 'daviplata'
+  },
+  {
+    id: 'tc_serfinanza',
+    name: 'TC Serfinanza',
+    type: 'card',
+    description: 'Tarjeta de crédito Serfinanza',
+    icon: <CreditCard className="h-5 w-5" />,
+    requiresCardInfo: true,
+    requiresBankInfo: false,
+    requiresPhoneInfo: false,
+    processingTime: 'Inmediato',
+    fees: 'Sin comisión adicional',
+    gateway: 'serfinanza'
   }
 ]
 
@@ -72,15 +124,15 @@ interface PaymentMethodsProps {
 }
 
 const banks = [
+  { id: 'bancolombia', name: 'Bancolombia' },
+  { id: 'davivienda', name: 'Davivienda' },
   { id: 'banco_bogota', name: 'Banco de Bogotá' },
+  { id: 'bbva', name: 'BBVA Colombia' },
   { id: 'banco_popular', name: 'Banco Popular' },
   { id: 'banco_occidente', name: 'Banco de Occidente' },
   { id: 'banco_av_villas', name: 'Banco AV Villas' },
   { id: 'banco_colpatria', name: 'Banco Colpatria' },
   { id: 'banco_caja_social', name: 'Banco Caja Social' },
-  { id: 'banco_bbva', name: 'BBVA Colombia' },
-  { id: 'banco_bancolombia', name: 'Bancolombia' },
-  { id: 'banco_davivienda', name: 'Davivienda' },
   { id: 'banco_coltejer', name: 'Banco Coltejer' },
   { id: 'banco_agrario', name: 'Banco Agrario' },
   { id: 'banco_bancoomeva', name: 'Bancoomeva' },

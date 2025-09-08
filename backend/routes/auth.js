@@ -58,9 +58,14 @@ router.post("/register", async (req, res) => {
     // Create user
     const user = await User.create({ email, password, name, phone })
 
-    // Generate token
+    // Generate token with activity timestamp
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        lastActivity: Date.now()
+      },
       process.env.JWT_SECRET || "fallback_secret",
       { expiresIn: "7d" },
     )
@@ -121,9 +126,14 @@ router.post("/login", async (req, res) => {
       })
     }
 
-    // Generate token
+    // Generate token with activity timestamp
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        lastActivity: Date.now()
+      },
       process.env.JWT_SECRET || "fallback_secret",
       { expiresIn: "7d" },
     )
@@ -250,7 +260,12 @@ router.post("/refresh", auth, async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        lastActivity: Date.now()
+      },
       process.env.JWT_SECRET || "fallback_secret",
       { expiresIn: "7d" },
     )
@@ -398,6 +413,73 @@ router.post("/logout", auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    })
+  }
+})
+
+// Update activity timestamp
+router.post("/update-activity", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      })
+    }
+
+    // Generate new token with updated activity timestamp
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        lastActivity: Date.now()
+      },
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "7d" },
+    )
+
+    res.json({
+      success: true,
+      message: "Activity updated successfully",
+      data: {
+        token,
+        lastActivity: Date.now()
+      },
+    })
+  } catch (error) {
+    console.error("Update activity error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
+// Invalidate session (for browser/tab close)
+router.post("/invalidate-session", auth, async (req, res) => {
+  try {
+    const { action, timestamp } = req.body
+    
+    // Log the session invalidation
+    console.log(`Session invalidated for user ${req.user.userId}: ${action} at ${new Date(timestamp).toISOString()}`)
+    
+    // Aquí podrías agregar lógica adicional como:
+    // - Registrar en base de datos
+    // - Notificar otros dispositivos
+    // - Limpiar datos temporales
+    
+    res.json({
+      success: true,
+      message: "Session invalidated successfully"
+    })
+  } catch (error) {
+    console.error("Invalidate session error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
     })
   }
 })

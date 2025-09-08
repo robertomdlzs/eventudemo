@@ -1280,6 +1280,10 @@ export async function createAdminEvent(formData: FormData): Promise<boolean> {
     const socialLinks = formData.get('socialLinks') as string
     const ticketTypes = formData.get('ticketTypes') as string
     const customFields = formData.get('customFields') as string
+    const serviceFeeType = formData.get('serviceFeeType') as string
+    const serviceFeeValue = formData.get('serviceFeeValue') as string
+    const serviceFeeDescription = formData.get('serviceFeeDescription') as string
+    const paymentMethods = formData.get('paymentMethods') as string
 
     console.log('📋 Datos recibidos del formulario:')
     console.log('   - title:', title)
@@ -1371,6 +1375,18 @@ export async function createAdminEvent(formData: FormData): Promise<boolean> {
       video_url: videoUrl || '',
       gallery_images: galleryImages ? JSON.parse(galleryImages) : [],
       social_links: socialLinks ? JSON.parse(socialLinks) : {},
+      // Campos de tarifa de servicio
+      service_fee_type: serviceFeeType || 'percentage',
+      service_fee_value: parseFloat(serviceFeeValue) || 5.00,
+      service_fee_description: serviceFeeDescription || 'Tarifa de servicio',
+      // Campos de métodos de pago
+      payment_methods: paymentMethods ? JSON.parse(paymentMethods) : {
+        pse: true,
+        credit_card: true,
+        debit_card: true,
+        daviplata: true,
+        tc_serfinanza: true,
+      },
     }
 
     console.log('📤 Datos a enviar al backend:')

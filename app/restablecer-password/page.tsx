@@ -200,7 +200,7 @@ export default function RestablecerPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <img src="/assets?path=images/eventu-logo.svg" alt="Eventu" className="w-10 h-10" />
+            <img src="/images/eventu-logo.svg" alt="Eventu" className="w-10 h-10" />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
             Restablecer Contraseña
