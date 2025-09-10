@@ -18,11 +18,13 @@ const auth = async (req, res, next) => {
 
 
     // Verificar timeout de sesión si existe timestamp de actividad
+    // Solo verificar timeout si el token tiene lastActivity y ha pasado más de 15 minutos
     if (decoded.lastActivity) {
       const now = Date.now()
       const lastActivity = decoded.lastActivity
       const timeoutMs = 15 * 60 * 1000 // 15 minutos
       
+      // Solo rechazar si ha pasado más de 15 minutos de inactividad
       if (now - lastActivity > timeoutMs) {
         return res.status(401).json({
           success: false,

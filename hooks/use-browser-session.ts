@@ -33,12 +33,12 @@ export function useBrowserSession({
       
       if (navigator.sendBeacon) {
         navigator.sendBeacon(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/invalidate-session`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/auth/invalidate-session`,
           data
         )
       } else {
         // Fallback para navegadores que no soportan sendBeacon
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/invalidate-session`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/auth/invalidate-session`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

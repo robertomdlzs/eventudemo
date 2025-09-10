@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
-import { BarChart3, Calendar, ChevronDown, Home, Settings, Ticket, Users, ImageIcon, Clock } from "lucide-react"
+import { BarChart3, Calendar, ChevronDown, Home, Settings, Ticket, Users, ImageIcon, Clock, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -54,6 +54,11 @@ const menuItems = [
     title: "Reportes",
     href: "/admin/reportes",
     icon: BarChart3,
+  },
+  {
+    title: "Registro de Actividad",
+    href: "/admin/auditoria",
+    icon: Shield,
   },
   {
     title: "Configuración",

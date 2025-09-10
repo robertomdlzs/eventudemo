@@ -1,5 +1,6 @@
 const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
+const adminSharedState = require('./services/adminSharedState')
 
 class WebSocketServer {
   constructor(server) {
@@ -41,6 +42,10 @@ class WebSocketServer {
     this.io.on('connection', (socket) => {
       console.log(`User ${socket.userId} connected`)
       
+      // Agregar información adicional al socket
+      socket.connectedAt = new Date()
+      socket.userEmail = socket.handshake.auth.email || 'unknown@eventu.co'
+      
       // Agregar usuario a la lista de conectados
       this.connectedUsers.set(socket.userId, socket)
       
@@ -48,6 +53,17 @@ class WebSocketServer {
       const room = this.getRoomByRole(socket.userRole)
       socket.join(room)
       this.userRooms.set(socket.userId, room)
+      
+      // Si es administrador, agregarlo al estado compartido
+      if (socket.userRole === 'admin') {
+        adminSharedState.addSubscriber(socket)
+        
+        // Enviar datos actuales del dashboard
+        this.sendDashboardData(socket)
+        
+        // Enviar lista de administradores conectados
+        this.sendConnectedAdmins()
+      }
       
       // Enviar notificaciones no leídas
       this.sendUnreadNotifications(socket)
@@ -57,6 +73,12 @@ class WebSocketServer {
         console.log(`User ${socket.userId} disconnected`)
         this.connectedUsers.delete(socket.userId)
         this.userRooms.delete(socket.userId)
+        
+        // Si era administrador, removerlo del estado compartido
+        if (socket.userRole === 'admin') {
+          adminSharedState.removeSubscriber(socket)
+          this.sendConnectedAdmins()
+        }
       })
       
       // Marcar notificación como leída
@@ -68,6 +90,20 @@ class WebSocketServer {
       socket.on('markAllNotificationsRead', () => {
         this.markAllNotificationsAsRead(socket.userId)
       })
+      
+      // Eventos específicos para administradores
+      if (socket.userRole === 'admin') {
+        // Solicitar actualización del dashboard
+        socket.on('request_dashboard_update', async () => {
+          await this.sendDashboardData(socket)
+        })
+        
+        // Forzar actualización del cache
+        socket.on('force_dashboard_refresh', async () => {
+          const freshData = await adminSharedState.invalidateCache()
+          socket.emit('dashboard_updated', freshData)
+        })
+      }
     })
   }
 
@@ -171,6 +207,38 @@ class WebSocketServer {
   // Enviar actualización específica por rol
   sendRoleUpdate(role, type, data) {
     this.io.to(role).emit('realtimeUpdate', { type, data, timestamp: new Date().toISOString() })
+  }
+
+  // Enviar datos del dashboard a un administrador específico
+  async sendDashboardData(socket) {
+    try {
+      const dashboardData = await adminSharedState.getDashboardStats()
+      socket.emit('dashboard_data', dashboardData)
+    } catch (error) {
+      console.error('Error sending dashboard data:', error)
+      socket.emit('dashboard_error', { message: 'Error al cargar datos del dashboard' })
+    }
+  }
+
+  // Enviar lista de administradores conectados a todos los admins
+  sendConnectedAdmins() {
+    const connectedAdmins = adminSharedState.getConnectedAdmins()
+    this.io.to('admins').emit('connected_admins', connectedAdmins)
+  }
+
+  // Notificar a todos los administradores sobre cambios
+  async notifyAdminsOfChange(changeType, data) {
+    console.log(`Notificando a administradores sobre cambio: ${changeType}`)
+    
+    // Invalidar cache y obtener datos frescos
+    const freshData = await adminSharedState.invalidateCache()
+    
+    // Enviar notificación específica del cambio
+    this.io.to('admins').emit('admin_change', {
+      type: changeType,
+      data: data,
+      timestamp: new Date().toISOString()
+    })
   }
 
   // Obtener estadísticas de conexiones

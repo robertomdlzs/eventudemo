@@ -105,18 +105,50 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
         const isAuthenticated = localStorage.getItem("eventu_authenticated") === "true"
         const currentUser = localStorage.getItem("current_user")
         const userRole = localStorage.getItem("userRole")
+        const token = localStorage.getItem("auth_token")
 
-        if (isAuthenticated && currentUser) {
-          setUser(JSON.parse(currentUser))
-          setRole(userRole)
+        if (isAuthenticated && currentUser && token) {
+          // Verificar si el token es válido con el backend
+          try {
+            const response = await fetch('http://localhost:3002/api/auth/verify-token', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            })
+
+            if (response.ok) {
+              setUser(JSON.parse(currentUser))
+              setRole(userRole)
+            } else {
+              // Token inválido, limpiar localStorage
+              localStorage.removeItem("eventu_authenticated")
+              localStorage.removeItem("current_user")
+              localStorage.removeItem("userRole")
+              localStorage.removeItem("auth_token")
+              setUser(null)
+              setRole(null)
+            }
+          } catch (error) {
+            console.error("Error verifying token:", error)
+            // En caso de error de red, mantener la sesión local
+            setUser(JSON.parse(currentUser))
+            setRole(userRole)
+          }
+        } else {
+          setUser(null)
+          setRole(null)
         }
       } catch (error) {
         console.error("useAuth error:", error)
+        setUser(null)
+        setRole(null)
       } finally {
         setIsLoading(false)
       }

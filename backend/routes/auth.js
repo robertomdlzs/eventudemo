@@ -2,6 +2,7 @@ const express = require("express")
 const jwt = require("jsonwebtoken")
 const User = require("../models/User")
 const { auth } = require("../middleware/auth")
+const { auditAuth, auditLogout, auditCRUD } = require("../middleware/auditMiddleware")
 const { Pool } = require("pg")
 require("dotenv").config()
 
@@ -27,7 +28,7 @@ async function userHasEvents(userId) {
 }
 
 // Register
-router.post("/register", async (req, res) => {
+router.post("/register", auditCRUD('USER', { action: 'REGISTER', severity: 'medium' }), async (req, res) => {
   try {
     const { email, password, name, phone } = req.body
 
@@ -88,7 +89,7 @@ router.post("/register", async (req, res) => {
 })
 
 // Login
-router.post("/login", async (req, res) => {
+router.post("/login", auditAuth(), async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -400,7 +401,7 @@ router.post("/change-password", auth, async (req, res) => {
 })
 
 // Logout (client-side token removal, optional endpoint for logging)
-router.post("/logout", auth, async (req, res) => {
+router.post("/logout", auth, auditLogout(), async (req, res) => {
   try {
     // In a real app, you might want to blacklist the token
     // For now, we'll just acknowledge the logout
@@ -477,6 +478,28 @@ router.post("/invalidate-session", auth, async (req, res) => {
     })
   } catch (error) {
     console.error("Invalidate session error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    })
+  }
+})
+
+// Verify token endpoint
+router.get("/verify-token", auth, async (req, res) => {
+  try {
+    // Si llegamos aquí, el token es válido (el middleware auth ya lo verificó)
+    res.json({
+      success: true,
+      message: "Token is valid",
+      user: {
+        id: req.user.userId,
+        email: req.user.email,
+        role: req.user.role
+      }
+    })
+  } catch (error) {
+    console.error("Verify token error:", error)
     res.status(500).json({
       success: false,
       message: "Internal server error"

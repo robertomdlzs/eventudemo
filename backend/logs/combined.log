@@ -4410,3 +4410,222 @@
 {"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-08T17:17:32.835Z"}
 {"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-08T17:20:13.113Z"}
 {"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-08T17:20:13.141Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:03:53.360Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:03:53.361Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:03:53.361Z"}
+{"code":"28P01","file":"auth.c","length":104,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"postgres\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"postgres\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:03:53.381Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:05:25.344Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:05:25.345Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:05:25.345Z"}
+{"code":"28P01","file":"auth.c","length":104,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"postgres\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"postgres\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:05:25.356Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:05:45.926Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:09:44.849Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:09:44.850Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:09:44.851Z"}
+{"code":"28P01","file":"auth.c","length":104,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"postgres\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"postgres\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:09:44.862Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:16:27.691Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:16:27.693Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:16:27.694Z"}
+{"code":"28P01","file":"auth.c","length":105,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"eventudev\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"eventudev\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:16:27.706Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:16:48.984Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:17:25.267Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:17:25.268Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:17:25.268Z"}
+{"code":"28P01","file":"auth.c","length":105,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"eventudev\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"eventudev\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:17:25.278Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:17:39.705Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:19:57.836Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:19:57.837Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:19:57.837Z"}
+{"code":"28P01","file":"auth.c","length":104,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"postgres\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"postgres\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:19:57.848Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:20:13.698Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:20:48.938Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:20:49.635Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:20:50.148Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:20:50.548Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:21:06.646Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:21:09.296Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:27:07.904Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:27:07.905Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:27:07.905Z"}
+{"code":"28P01","file":"auth.c","length":104,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"postgres\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"postgres\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:27:07.923Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:27:13.400Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T16:38:44.197Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T16:38:44.198Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T16:38:44.198Z"}
+{"code":"28P01","file":"auth.c","length":104,"level":"error","line":"324","message":"postgresql connection failed: password authentication failed for user \"postgres\"","name":"error","routine":"auth_failed","service":"eventu-backend","severity":"FATAL","stack":"error: password authentication failed for user \"postgres\"\n    at /Users/eventudev/Documents/demo/my-appdemo/backend/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.query (/Users/eventudev/Documents/demo/my-appdemo/backend/config/database-postgres.js:29:20)","timestamp":"2025-09-10T16:38:44.209Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T16:38:56.167Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T17:02:33.698Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T17:02:33.699Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T17:02:33.699Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T17:02:33.723Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:02:41.168Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T17:17:17.366Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T17:17:17.367Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T17:17:17.368Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T17:17:17.385Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:17:24.968Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:17:33.334Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:17:34.813Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:17:34.838Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:27:31.935Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:27:45.202Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:27:45.654Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:27:45.678Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:27:51.045Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T17:30:18.655Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T17:30:18.657Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T17:30:18.657Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T17:30:18.676Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:31:02.063Z"}
+{"level":"info","message":"GET /api/audit/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:31:23.037Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:33:24.936Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:33:25.453Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:33:25.480Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:33:34.672Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:33:57.743Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:38:45.355Z"}
+{"level":"info","message":"GET /api/audit/logs - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:40:36.158Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:40:50.063Z"}
+{"level":"info","message":"GET /api/audit/logs - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:40:56.531Z"}
+{"level":"info","message":"GET /api/audit/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:41:03.111Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:41:05.666Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:41:17.634Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:41:18.101Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T17:41:18.135Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:00:37.869Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T18:05:29.038Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T18:05:29.039Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T18:05:29.040Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T18:05:29.068Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:05:36.101Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:05:46.146Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:05:53.706Z"}
+{"level":"info","message":"GET /api/admin/connected-admins - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:06:03.996Z"}
+{"level":"info","message":"POST /api/admin/dashboard/refresh - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:07:09.426Z"}
+{"level":"info","message":"GET /api/events/featured - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:08:53.478Z"}
+{"level":"info","message":"GET /api/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:08:53.479Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:09:40.894Z"}
+{"level":"info","message":"GET /api/categories - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:09:53.327Z"}
+{"level":"info","message":"GET /api/categories - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:27.822Z"}
+{"level":"info","message":"GET /api/categories - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:27.867Z"}
+{"level":"info","message":"GET /api/seat-maps - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:28.897Z"}
+{"level":"info","message":"GET /api/seat-maps - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:28.898Z"}
+{"level":"info","message":"GET /api/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:28.899Z"}
+{"level":"info","message":"GET /api/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:28.900Z"}
+{"level":"info","message":"GET /api/admin/users - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:35.306Z"}
+{"level":"info","message":"GET /api/admin/users - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:35.337Z"}
+{"level":"info","message":"GET /api/admin/users - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:35.777Z"}
+{"level":"info","message":"GET /api/ticket-types - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:38.971Z"}
+{"level":"info","message":"GET /api/ticket-types - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:38.991Z"}
+{"level":"info","message":"GET /api/sales - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:39.987Z"}
+{"level":"info","message":"GET /api/sales/stats/overview - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:40.002Z"}
+{"level":"info","message":"GET /api/sales - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:40.019Z"}
+{"level":"info","message":"GET /api/sales/stats/overview - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:40.030Z"}
+{"level":"info","message":"GET /api/admin/physical-tickets - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:41.449Z"}
+{"level":"info","message":"GET /api/admin/sales-points - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:41.468Z"}
+{"level":"info","message":"GET /api/admin/physical-tickets - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:41.484Z"}
+{"level":"info","message":"GET /api/admin/sales-points - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:41.497Z"}
+{"level":"info","message":"GET /api/sales - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:43.570Z"}
+{"level":"info","message":"GET /api/sales/stats/overview - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:43.584Z"}
+{"level":"info","message":"GET /api/sales - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:43.597Z"}
+{"level":"info","message":"GET /api/sales/stats/overview - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:43.608Z"}
+{"level":"info","message":"GET /api/sales - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:44.047Z"}
+{"level":"info","message":"GET /api/sales/stats/overview - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:44.061Z"}
+{"level":"info","message":"GET /api/admin/media - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:47.096Z"}
+{"level":"info","message":"GET /api/admin/media/folders - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:47.115Z"}
+{"level":"info","message":"GET /api/admin/media - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:47.130Z"}
+{"level":"info","message":"GET /api/admin/media/folders - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:47.144Z"}
+{"level":"info","message":"GET /api/reports/sales - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:51.859Z"}
+{"level":"info","message":"GET /api/reports/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:51.865Z"}
+{"level":"info","message":"GET /api/reports/users - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:51.867Z"}
+{"level":"info","message":"GET /api/reports/financial - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:51.870Z"}
+{"level":"info","message":"GET /api/analytics/sales-patterns - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:52.643Z"}
+{"level":"info","message":"GET /api/admin/activity-data - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:52.721Z"}
+{"level":"info","message":"GET /api/admin/transaction-distribution - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:52.779Z"}
+{"level":"info","message":"GET /api/admin/hourly-activity - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:53.205Z"}
+{"level":"info","message":"GET /api/analytics/sales-patterns - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:53.246Z"}
+{"level":"info","message":"GET /api/admin/activity-data - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:53.285Z"}
+{"level":"info","message":"GET /api/admin/transaction-distribution - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:53.335Z"}
+{"level":"info","message":"GET /api/admin/hourly-activity - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:10:53.357Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:11:02.692Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:22:37.674Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:23:52.199Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:24:40.496Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:25:09.968Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:25:21.753Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:31:12.654Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:33:07.193Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:33:18.956Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:33:37.630Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:33:44.198Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:34:36.912Z"}
+{"level":"info","message":"POST /api/admin/dashboard/refresh - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:35:09.530Z"}
+{"level":"info","message":"POST /api/admin/dashboard/refresh - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:35:38.902Z"}
+{"level":"info","message":"POST /api/admin/dashboard/refresh - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:36:25.690Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T18:39:13.588Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T18:39:13.590Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T18:39:13.590Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T18:39:13.607Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:39:24.796Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:39:31.827Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:39:55.946Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:40:07.549Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:42:07.296Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:42:25.259Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:44:28.732Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:47:18.967Z"}
+{"level":"info","message":"GET /api/admin/dashboard/stats - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:47:28.382Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:50:34.481Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:51:19.778Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T18:54:42.478Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:00:35.070Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T19:02:57.771Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T19:02:57.773Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T19:02:57.773Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T19:02:57.798Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:03:29.791Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:05:30.344Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:05:57.246Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:07:33.557Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T19:08:50.621Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T19:08:50.623Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T19:08:50.623Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T19:08:50.645Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:08:57.314Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:09:07.114Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:21:38.486Z"}
+{"level":"info","message":"GET /api/api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:21:39.981Z"}
+{"level":"info","message":"GET /api/api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:21:39.987Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T19:24:07.383Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T19:24:07.385Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T19:24:07.385Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T19:24:07.409Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:24:14.093Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:24:22.390Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:29:50.323Z"}
+{"level":"info","message":"GET /api/api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:29:50.794Z"}
+{"level":"info","message":"GET /api/api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:29:50.797Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T19:31:28.204Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T19:31:28.205Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T19:31:28.205Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T19:31:28.222Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:32:07.671Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:32:43.415Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:35:59.185Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:36:05.028Z"}
+{"level":"info","message":"GET /api/api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:36:05.392Z"}
+{"level":"info","message":"GET /api/api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:36:05.396Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-10T19:43:03.402Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-10T19:43:03.404Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-10T19:43:03.404Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-10T19:43:03.420Z"}
+{"level":"info","message":"GET /api/health - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:43:52.325Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:43:59.086Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:11.827Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:14.466Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:14.472Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:16.675Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:41.253Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:41.677Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T19:45:41.681Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-10T20:00:33.890Z"}

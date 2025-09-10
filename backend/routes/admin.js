@@ -4,6 +4,7 @@ const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 const { Pool } = require('pg')
+const { auditAdmin, auditCRUD, auditTransaction } = require('../middleware/auditMiddleware')
 require('dotenv').config()
 
 // Database connection
@@ -60,110 +61,15 @@ const requireAdmin = (req, res, next) => {
   next()
 }
 
-// Dashboard stats
+// Dashboard stats - Usando estado compartido
 router.get('/dashboard/stats', auth, requireAdmin, async (req, res) => {
   try {
-    // Estadísticas de usuarios
-    const usersStats = await db.query(`
-      SELECT 
-        COUNT(*) as totalUsers,
-        COUNT(CASE WHEN role = 'admin' THEN 1 END) as adminUsers,
-        COUNT(CASE WHEN role = 'organizer' THEN 1 END) as organizerUsers,
-        COUNT(CASE WHEN role = 'user' THEN 1 END) as regularUsers,
-        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as newUsers30Days
-      FROM users
-    `)
-
-    // Estadísticas de eventos
-    const eventsStats = await db.query(`
-      SELECT 
-        COUNT(*) as totalEvents,
-        COUNT(CASE WHEN status = 'published' THEN 1 END) as publishedEvents,
-        COUNT(CASE WHEN status = 'draft' THEN 1 END) as draftEvents,
-        COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelledEvents,
-        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as newEvents30Days
-      FROM events
-    `)
-
-    // Estadísticas de ventas (simuladas por ahora)
-    const salesStats = {
-      totalSales: 1250,
-      totalRevenue: 45000000,
-      salesLast30Days: 89,
-      revenueLast30Days: 3200000,
-      newSales30Days: 12,
-      newRevenue30Days: 450000
-    }
-
-    // Eventos recientes
-    const recentEvents = await db.query(`
-      SELECT e.id, e.title, e.status, e.created_at, u.first_name, u.last_name
-      FROM events e
-      LEFT JOIN users u ON e.organizer_id = u.id
-      ORDER BY e.created_at DESC
-      LIMIT 5
-    `)
-
-    // Usuarios recientes
-    const recentUsers = await db.query(`
-      SELECT id, first_name, last_name, email, role, created_at
-      FROM users
-      ORDER BY created_at DESC
-      LIMIT 5
-    `)
-
-    // Ventas recientes (simuladas)
-    const recentSales = [
-      {
-        id: 1,
-        event_title: "Concierto de Rock",
-        customer_email: "cliente1@email.com",
-        total_amount: 150000,
-        status: "completed"
-      },
-      {
-        id: 2,
-        event_title: "Conferencia Tech",
-        customer_email: "cliente2@email.com",
-        total_amount: 89000,
-        status: "completed"
-      },
-      {
-        id: 3,
-        event_title: "Festival de Música",
-        customer_email: "cliente3@email.com",
-        total_amount: 250000,
-        status: "pending"
-      }
-    ]
-
+    const adminSharedState = require('../services/adminSharedState')
+    const dashboardData = await adminSharedState.getDashboardStats()
+    
     res.json({
       success: true,
-      data: {
-        stats: {
-          totalUsers: usersStats.rows[0].totalusers,
-          adminUsers: usersStats.rows[0].adminusers,
-          organizerUsers: usersStats.rows[0].organizerusers,
-          regularUsers: usersStats.rows[0].regularusers,
-          totalEvents: eventsStats.rows[0].totalevents,
-          publishedEvents: eventsStats.rows[0].publishedevents,
-          draftEvents: eventsStats.rows[0].draftevents,
-          cancelledEvents: eventsStats.rows[0].cancelledevents,
-          totalSales: salesStats.totalSales,
-          totalRevenue: salesStats.totalRevenue,
-          salesLast30Days: salesStats.salesLast30Days,
-          revenueLast30Days: salesStats.revenueLast30Days
-        },
-        growth: {
-          newUsers30Days: usersStats.rows[0].newusers30days,
-          newEvents30Days: eventsStats.rows[0].newevents30days,
-          newSales30Days: salesStats.newSales30Days,
-          newRevenue30Days: salesStats.newRevenue30Days
-        },
-        recentEvents: recentEvents.rows,
-        recentSales: recentSales,
-        recentUsers: recentUsers.rows
-      }
+      data: dashboardData
     })
 
   } catch (error) {
@@ -172,8 +78,54 @@ router.get('/dashboard/stats', auth, requireAdmin, async (req, res) => {
   }
 })
 
+// Forzar actualización del dashboard y notificar a todos los admins
+router.post('/dashboard/refresh', auth, requireAdmin, async (req, res) => {
+  try {
+    const adminSharedState = require('../services/adminSharedState')
+    const wsServer = global.wsServer
+    
+    // Invalidar cache y obtener datos frescos
+    const freshData = await adminSharedState.invalidateCache()
+    
+    // Notificar a todos los administradores conectados
+    if (wsServer) {
+      await wsServer.notifyAdminsOfChange('dashboard_refresh', {
+        refreshedBy: req.user.email,
+        refreshedAt: new Date().toISOString()
+      })
+    }
+    
+    res.json({
+      success: true,
+      message: 'Dashboard actualizado y notificado a todos los administradores',
+      data: freshData
+    })
+
+  } catch (error) {
+    console.error('Error refreshing dashboard:', error)
+    res.status(500).json({ success: false, error: 'Error interno del servidor' })
+  }
+})
+
+// Obtener administradores conectados
+router.get('/connected-admins', auth, requireAdmin, async (req, res) => {
+  try {
+    const adminSharedState = require('../services/adminSharedState')
+    const connectedAdmins = adminSharedState.getConnectedAdmins()
+    
+    res.json({
+      success: true,
+      data: connectedAdmins
+    })
+
+  } catch (error) {
+    console.error('Error getting connected admins:', error)
+    res.status(500).json({ success: false, error: 'Error interno del servidor' })
+  }
+})
+
 // Get all users (with auth for production, without auth for development)
-router.get('/users', async (req, res) => {
+router.get('/users', auditAdmin('USER', { action: 'READ' }), async (req, res) => {
   // Skip auth check for development
   if (process.env.NODE_ENV === 'production') {
     // Apply auth middleware for production
@@ -248,7 +200,7 @@ async function handleGetUsers(req, res) {
 }
 
 // Create new user
-router.post('/users', auth, requireAdmin, async (req, res) => {
+router.post('/users', auth, requireAdmin, auditAdmin('USER', { action: 'CREATE' }), async (req, res) => {
   try {
     const { firstName, lastName, email, password, role, phone, status = 'active' } = req.body
 
@@ -328,7 +280,7 @@ router.post('/users', auth, requireAdmin, async (req, res) => {
 })
 
 // Update user
-router.put('/users/:id', auth, requireAdmin, async (req, res) => {
+router.put('/users/:id', auth, requireAdmin, auditAdmin('USER', { action: 'UPDATE' }), async (req, res) => {
   try {
     const { id } = req.params
     const { firstName, lastName, email, password, role, phone, status } = req.body
@@ -454,7 +406,7 @@ router.put('/users/:id', auth, requireAdmin, async (req, res) => {
 })
 
 // Delete user
-router.delete('/users/:id', auth, requireAdmin, async (req, res) => {
+router.delete('/users/:id', auth, requireAdmin, auditAdmin('USER', { action: 'DELETE', severity: 'high' }), async (req, res) => {
   try {
     const { id } = req.params
 

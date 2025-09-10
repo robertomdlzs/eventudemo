@@ -30,6 +30,8 @@ const cobruRoutes = require("./routes/cobru")
 const ticketRoutes = require("./routes/tickets")
 const salesRoutes = require("./routes/sales")
 const passwordResetRoutes = require("./routes/passwordReset")
+const auditRoutes = require("./routes/audit")
+const { sessionTimeout, updateActivity } = require("./middleware/session-timeout")
 
 const app = express()
 const server = http.createServer(app)
@@ -91,6 +93,10 @@ app.get("/api/health", (req, res) => {
   })
 })
 
+// Session timeout middleware
+app.use(sessionTimeout(15)) // 15 minutos de timeout
+app.use(updateActivity) // Actualizar timestamp de actividad
+
 // Routes
 app.use("/api/auth", authRoutes)
 app.use("/api/password-reset", passwordResetRoutes)
@@ -111,6 +117,7 @@ app.use("/api/payments/epayco", epaycoRoutes)
 app.use("/api/payments/cobru", cobruRoutes)
 app.use("/api/tickets", ticketRoutes)
 app.use("/api/sales", salesRoutes)
+app.use("/api/audit", auditRoutes)
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))

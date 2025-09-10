@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test de Corrección de Login</h1>
+        
+        <div class="test-section info">
+            <h3>Estado Actual del localStorage</h3>
+            <pre id="currentState"></pre>
+        </div>
+
+        <div class="test-section">
+            <h3>Simular Login de Admin</h3>
+            <button onclick="simulateAdminLogin()">Login como Admin</button>
+            <button onclick="simulateUserLogin()">Login como Usuario</button>
+            <button onclick="clearAuth()">Limpiar Sesión</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Verificar Autenticación</h3>
+            <button onclick="checkAuth()">Verificar Auth</button>
+            <div id="authResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test de Redirección</h3>
+            <button onclick="testRedirect()">Probar Redirección</button>
+            <div id="redirectResult"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateCurrentState() {
+            const state = {
+                eventu_authenticated: localStorage.getItem("eventu_authenticated"),
+                auth_token: localStorage.getItem("auth_token"),
+                current_user: localStorage.getItem("current_user"),
+                userRole: localStorage.getItem("userRole"),
+                eventu_user_id: localStorage.getItem("eventu_user_id"),
+                eventu_user_email: localStorage.getItem("eventu_user_email")
+            };
+            document.getElementById('currentState').textContent = JSON.stringify(state, null, 2);
+        }
+
+        function simulateAdminLogin() {
+            // Simular respuesta del servidor para admin
+            const adminUser = {
+                id: 23,
+                email: "admin@eventu.co",
+                name: "Administrador",
+                role: "admin",
+                first_name: "Admin",
+                last_name: "Eventu"
+            };
+
+            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIzLCJlbWFpbCI6ImFkbWluQGV2ZW50dS5jbyIsInJvbGUiOiJhZG1pbiIsImxhc3RBY3Rpdml0eSI6MTc1NzUyOTE4NzQ2OCwiaWF0IjoxNzU3NTI5MTg3LCJleHAiOjE3NTgxMzM5ODd9.puFQD98YitFlJjhWMBL0YvA3yJExZa95wi88iroNzVw";
+
+            // Simular el proceso de login corregido
+            localStorage.setItem("eventu_user_id", adminUser.id.toString());
+            localStorage.setItem("eventu_user_email", adminUser.email);
+            localStorage.setItem("eventu_authenticated", "true");
+            localStorage.setItem("auth_token", token);
+            localStorage.setItem("current_user", JSON.stringify(adminUser));
+            localStorage.setItem("userRole", adminUser.role);
+
+            updateCurrentState();
+            alert("Login de admin simulado correctamente");
+        }
+
+        function simulateUserLogin() {
+            // Simular respuesta del servidor para usuario normal
+            const normalUser = {
+                id: 1,
+                email: "user@eventu.co",
+                name: "Usuario Normal",
+                role: "user",
+                first_name: "Usuario",
+                last_name: "Normal"
+            };
+
+            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidXNlckBldmVudHUuY28iLCJyb2xlIjoidXNlciIsImlhdCI6MTc1NzUyOTE4NywiZXhwIjoxNzU4MTMzOTg3fQ.test-token";
+
+            // Simular el proceso de login corregido
+            localStorage.setItem("eventu_user_id", normalUser.id.toString());
+            localStorage.setItem("eventu_user_email", normalUser.email);
+            localStorage.setItem("eventu_authenticated", "true");
+            localStorage.setItem("auth_token", token);
+            localStorage.setItem("current_user", JSON.stringify(normalUser));
+            localStorage.setItem("userRole", normalUser.role);
+
+            updateCurrentState();
+            alert("Login de usuario simulado correctamente");
+        }
+
+        function clearAuth() {
+            localStorage.removeItem("eventu_authenticated");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("current_user");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("eventu_user_id");
+            localStorage.removeItem("eventu_user_email");
+            updateCurrentState();
+            alert("Sesión limpiada");
+        }
+
+        function checkAuth() {
+            const isAuthenticated = localStorage.getItem("eventu_authenticated") === "true";
+            const currentUser = localStorage.getItem("current_user");
+            const userRole = localStorage.getItem("userRole");
+
+            let result = "";
+            if (isAuthenticated && currentUser && userRole) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    result = `
+                        <div class="success">
+                            <h4>✅ Autenticación Válida</h4>
+                            <p><strong>Usuario:</strong> ${user.name}</p>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                            <p><strong>Rol:</strong> ${userRole}</p>
+                            <p><strong>ID:</strong> ${user.id}</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    result = `
+                        <div class="error">
+                            <h4>❌ Error al parsear usuario</h4>
+                            <p>${error.message}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                result = `
+                    <div class="error">
+                        <h4>❌ No autenticado</h4>
+                        <p>Faltan datos de autenticación</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('authResult').innerHTML = result;
+        }
+
+        function getRedirectUrlByRole(role) {
+            switch (role) {
+                case "admin":
+                    return "/admin";
+                case "organizer":
+                    return "/organizer";
+                case "user":
+                default:
+                    return "/mi-cuenta";
+            }
+        }
+
+        function testRedirect() {
+            const userRole = localStorage.getItem("userRole");
+            const redirectUrl = getRedirectUrlByRole(userRole);
+
+            let result = `
+                <div class="info">
+                    <h4>🔄 Test de Redirección</h4>
+                    <p><strong>Rol actual:</strong> ${userRole || 'No definido'}</p>
+                    <p><strong>URL de redirección:</strong> ${redirectUrl}</p>
+                    <p><strong>Estado:</strong> ${userRole ? '✅ Correcto' : '❌ Sin rol'}</p>
+                </div>
+            `;
+
+            document.getElementById('redirectResult').innerHTML = result;
+        }
+
+        // Inicializar estado
+        updateCurrentState();
+    </script>
+</body>
+</html>

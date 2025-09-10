@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Persistencia de Sesión</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .logout { background-color: #dc3545; }
+        .logout:hover { background-color: #c82333; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Persistencia de Sesión</h1>
+        
+        <div id="status" class="status info">
+            Verificando estado de la sesión...
+        </div>
+
+        <div id="sessionInfo" style="display: none;">
+            <h3>📊 Información de la Sesión</h3>
+            <pre id="sessionData"></pre>
+        </div>
+
+        <div id="actions" style="display: none;">
+            <h3>🔧 Acciones de Prueba</h3>
+            <button onclick="testTokenVerification()">Verificar Token con Backend</button>
+            <button onclick="simulatePageReload()">Simular Recarga de Página</button>
+            <button onclick="clearSession()" class="logout">Limpiar Sesión</button>
+        </div>
+
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3002';
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function showSessionInfo() {
+            const sessionData = {
+                isAuthenticated: localStorage.getItem("eventu_authenticated"),
+                token: localStorage.getItem("auth_token") ? 'Presente' : 'Ausente',
+                user: localStorage.getItem("current_user"),
+                userRole: localStorage.getItem("userRole")
+            };
+
+            document.getElementById('sessionData').textContent = JSON.stringify(sessionData, null, 2);
+            document.getElementById('sessionInfo').style.display = 'block';
+            document.getElementById('actions').style.display = 'block';
+        }
+
+        async function testTokenVerification() {
+            const token = localStorage.getItem("auth_token");
+            
+            if (!token) {
+                updateStatus('❌ No hay token en localStorage', 'error');
+                return;
+            }
+
+            updateStatus('🔄 Verificando token con el backend...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/verify-token`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateStatus('✅ Token válido - Sesión activa', 'success');
+                    addTestResult('✅ Verificación de Token', 'Token válido y verificado con el backend', 'success');
+                } else {
+                    updateStatus('❌ Token inválido - Sesión expirada', 'error');
+                    addTestResult('❌ Verificación de Token', `Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('❌ Error de conexión con el backend', 'error');
+                addTestResult('❌ Verificación de Token', `Error de red: ${error.message}`, 'error');
+            }
+        }
+
+        function simulatePageReload() {
+            addTestResult('🔄 Simulación de Recarga', 'Recargando página para probar persistencia...', 'info');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        function clearSession() {
+            localStorage.removeItem("eventu_authenticated");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("current_user");
+            localStorage.removeItem("userRole");
+            
+            updateStatus('🧹 Sesión limpiada', 'info');
+            addTestResult('🧹 Limpieza de Sesión', 'Todos los datos de sesión han sido eliminados', 'info');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        function addTestResult(title, message, type) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = `<strong>${title}:</strong> ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        // Verificar estado inicial
+        function checkInitialState() {
+            const isAuthenticated = localStorage.getItem("eventu_authenticated") === "true";
+            const token = localStorage.getItem("auth_token");
+            const user = localStorage.getItem("current_user");
+
+            if (isAuthenticated && token && user) {
+                updateStatus('✅ Sesión encontrada en localStorage', 'success');
+                showSessionInfo();
+                
+                // Verificar automáticamente el token
+                setTimeout(() => {
+                    testTokenVerification();
+                }, 1000);
+            } else {
+                updateStatus('❌ No hay sesión activa - Inicia sesión primero', 'error');
+                addTestResult('ℹ️ Estado Inicial', 'Para probar la persistencia, primero inicia sesión en la aplicación', 'info');
+            }
+        }
+
+        // Inicializar
+        checkInitialState();
+    </script>
+</body>
+</html>

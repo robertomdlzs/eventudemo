@@ -84,7 +84,7 @@ export function useSessionTimeout({
       const token = localStorage.getItem("auth_token")
       if (!token) return
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/update-activity`, {
+      const response = await fetch('http://localhost:3002/api/auth/update-activity', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

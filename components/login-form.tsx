@@ -101,11 +101,12 @@ export function LoginForm() {
           localStorage.setItem("eventu_authenticated", "true")
           localStorage.setItem("auth_token", response.token)
           localStorage.setItem("current_user", JSON.stringify(response.user))
+          localStorage.setItem("userRole", response.user.role || "user")
 
           // Get redirect URL based on user role
           const redirectUrl = localStorage.getItem("redirectUrl") || "/mi-cuenta"
           const welcomeMessage = localStorage.getItem("welcomeMessage") || `Bienvenido de nuevo, ${response.user.name}.`
-          const userRole = localStorage.getItem("userRole") || "user"
+          const userRole = response.user.role || "user"
 
           toast({
             title: "Inicio de sesión exitoso",
@@ -114,7 +115,7 @@ export function LoginForm() {
           })
 
           // Redirect based on role or use search params
-          const redirectTo = searchParams.get("redirect") || redirectUrl
+          const redirectTo = searchParams.get("redirect") || getRedirectUrlByRole(userRole)
           router.push(redirectTo)
         } else {
           // Track failed login
@@ -168,6 +169,18 @@ export function LoginForm() {
     if (hasError) return <AlertCircle className="h-4 w-4 text-red-500" />
     if (hasValue && !hasError) return <CheckCircle2 className="h-4 w-4 text-green-500" />
     return null
+  }
+
+  const getRedirectUrlByRole = (role: string): string => {
+    switch (role) {
+      case "admin":
+        return "/admin"
+      case "organizer":
+        return "/organizer"
+      case "user":
+      default:
+        return "/mi-cuenta"
+    }
   }
 
   if (authStep === "2fa_verify" && userIdFor2FA) {
