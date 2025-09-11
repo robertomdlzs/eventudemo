@@ -2621,7 +2621,7 @@ export async function getAdminUsersReport(filters?: UsersReportFilters): Promise
 // Función para generar reporte personalizado
 export async function generateAdminReport(reportType: string, filters?: any): Promise<AdminReport> {
   try {
-    const response = await apiClient.generateReport(reportType, filters)
+    const response = await apiClient.generateReport({ type: reportType, filters })
     if (response.success && response.data) {
       return {
         id: response.data.id,
