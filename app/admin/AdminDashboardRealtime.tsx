@@ -124,6 +124,16 @@ export default function AdminDashboardRealtime() {
     )
   }
 
+  // Verificar que tenemos datos del dashboard antes de renderizar
+  if (!dashboardData) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-500">Cargando datos del dashboard...</p>
+      </div>
+    )
+  }
+
   const data = dashboardData as DashboardData
 
   return (

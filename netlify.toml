@@ -3,7 +3,7 @@
   command = "npm run build"
   
   # Directorio donde se encuentra el proyecto construido
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
   # Variables de entorno para el build

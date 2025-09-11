@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, MapPin, Users, ShoppingCart, Check, ZoomIn, ZoomOut, RotateCcw, Clock, AlertCircle, Star, Crown, Wheelchair } from "lucide-react"
+import { ArrowLeft, MapPin, Users, ShoppingCart, Check, ZoomIn, ZoomOut, RotateCcw, Clock, AlertCircle, Star, Crown, Accessibility } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api-client"
@@ -563,7 +563,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
                                 <span>{seat.section}{seat.row}-{seat.number}</span>
                                 {seat.type === 'vip' && <Crown className="w-3 h-3 text-purple-500" />}
                                 {seat.type === 'premium' && <Star className="w-3 h-3 text-yellow-500" />}
-                                {seat.isWheelchairAccessible && <Wheelchair className="w-3 h-3 text-orange-500" />}
+                                {seat.isWheelchairAccessible && <Accessibility className="w-3 h-3 text-orange-500" />}
                               </div>
                               <div className="text-right">
                                 <span className="text-gray-500">${seat.price?.toLocaleString()}</span>
