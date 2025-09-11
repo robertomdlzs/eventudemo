@@ -2653,7 +2653,7 @@ export async function generateAdminReport(reportType: string, filters?: any): Pr
 // Función para exportar reporte
 export async function exportAdminReport(reportId: string, format: 'pdf' | 'excel' | 'csv'): Promise<string> {
   try {
-    const response = await apiClient.exportReport(reportId, format)
+    const response = await apiClient.exportReport(parseInt(reportId), format)
     if (response.success && response.data) {
       return response.data.download_url
     }
