@@ -67,6 +67,11 @@ interface AdminChange {
   timestamp: string | Date
 }
 
+interface ConnectedAdmin {
+  userEmail: string
+  connectedAt: string | Date
+}
+
 export default function AdminDashboardRealtime() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const { user, role, isLoading: authLoading } = useAuth()
@@ -87,6 +92,9 @@ export default function AdminDashboardRealtime() {
   
   // Asegurar que adminChanges tenga el tipo correcto
   const typedAdminChanges: AdminChange[] = adminChanges || []
+  
+  // Asegurar que connectedAdmins tenga el tipo correcto
+  const typedConnectedAdmins: ConnectedAdmin[] = connectedAdmins || []
 
   // Actualizar timestamp cuando se reciben datos
   useEffect(() => {
@@ -176,7 +184,7 @@ export default function AdminDashboardRealtime() {
           <div className="flex items-center space-x-2">
             <Users2 className="h-4 w-4 text-blue-500" />
             <span className="text-sm text-gray-600">
-              {connectedAdmins.length} admin{connectedAdmins.length !== 1 ? 's' : ''} conectado{connectedAdmins.length !== 1 ? 's' : ''}
+              {typedConnectedAdmins.length} admin{typedConnectedAdmins.length !== 1 ? 's' : ''} conectado{typedConnectedAdmins.length !== 1 ? 's' : ''}
             </span>
           </div>
 
@@ -348,9 +356,9 @@ export default function AdminDashboardRealtime() {
             <CardTitle className="text-lg">Administradores Conectados</CardTitle>
           </CardHeader>
           <CardContent>
-            {connectedAdmins.length > 0 ? (
+            {typedConnectedAdmins.length > 0 ? (
               <div className="space-y-2">
-                {connectedAdmins.map((admin, index) => (
+                {typedConnectedAdmins.map((admin, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
