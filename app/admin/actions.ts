@@ -131,12 +131,6 @@ export interface AuditLog {
   created_at: string
 }
 
-export interface AuditLogsResponse {
-  success: boolean
-  data: {
-    auditLogs: AuditLog[]
-  }
-}
 
 export interface AdminMedia {
   id: string
@@ -1984,9 +1978,10 @@ export async function getAuditLogs(params?: {
   end_date?: string
 }): Promise<any[]> {
   try {
-    const response = await apiClient.getAuditLogs(params) as AuditLogsResponse
+    const response = await apiClient.getAuditLogs(params)
     if (response.success && response.data) {
-      return response.data.auditLogs.map((log: AuditLog) => ({
+      // El API devuelve directamente un array de logs, no un objeto con auditLogs
+      return (response.data as any[]).map((log: any) => ({
         id: log.id.toString(),
         userId: log.user_id,
         userName: `${log.first_name} ${log.last_name}`,
