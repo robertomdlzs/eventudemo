@@ -117,6 +117,27 @@ export interface AdminSeatMap {
   updatedAt: string
 }
 
+export interface AuditLog {
+  id: number
+  user_id: number
+  first_name: string
+  last_name: string
+  email: string
+  action: string
+  module: string
+  description: string
+  ip_address: string
+  user_agent: string
+  created_at: string
+}
+
+export interface AuditLogsResponse {
+  success: boolean
+  data: {
+    auditLogs: AuditLog[]
+  }
+}
+
 export interface AdminMedia {
   id: string
   name: string
@@ -1963,9 +1984,9 @@ export async function getAuditLogs(params?: {
   end_date?: string
 }): Promise<any[]> {
   try {
-    const response = await apiClient.getAuditLogs(params)
+    const response = await apiClient.getAuditLogs(params) as AuditLogsResponse
     if (response.success && response.data) {
-      return response.data.auditLogs.map((log: any) => ({
+      return response.data.auditLogs.map((log: AuditLog) => ({
         id: log.id.toString(),
         userId: log.user_id,
         userName: `${log.first_name} ${log.last_name}`,
