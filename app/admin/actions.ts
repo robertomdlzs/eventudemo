@@ -2038,7 +2038,8 @@ export async function getBackups(): Promise<any[]> {
   try {
     const response = await apiClient.getBackups()
     if (response.success && response.data) {
-      return response.data.backups.map((backup: any) => ({
+      // El API devuelve directamente un array de backups, no un objeto con backups
+      return (response.data as any[]).map((backup: any) => ({
         id: backup.id.toString(),
         filename: backup.filename,
         size: backup.size,
