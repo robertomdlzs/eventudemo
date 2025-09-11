@@ -1,0 +1,82 @@
+[build]
+  # Comando para construir el proyecto
+  command = "npm run build"
+  
+  # Directorio donde se encuentra el proyecto construido
+  publish = ".next"
+
+[build.environment]
+  # Variables de entorno para el build
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# Configuración de redirecciones para SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de seguridad
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Headers específicos para archivos estáticos
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Headers para imágenes
+[[headers]]
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.jpeg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# Configuración de funciones serverless (si es necesario)
+[functions]
+  directory = "netlify/functions"
+
+# Configuración de plugins
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Configuración de formularios (si se usan)
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true

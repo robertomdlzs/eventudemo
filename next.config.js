@@ -3,14 +3,13 @@ const nextConfig = {
   experimental: {
     appDir: true,
   },
-  // Deshabilitar la generación estática para evitar errores de prerender
-  output: 'standalone',
-  // Configurar para desarrollo
-  trailingSlash: false,
-  // Evitar errores de prerender
+  // Configuración para Netlify
+  output: 'export',
+  trailingSlash: true,
   skipTrailingSlashRedirect: true,
-  // Configurar imágenes externas permitidas
+  // Deshabilitar optimizaciones que no funcionan con export estático
   images: {
+    unoptimized: true,
     domains: [
       'images.unsplash.com',
       'via.placeholder.com',

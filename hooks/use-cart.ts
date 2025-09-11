@@ -21,13 +21,18 @@ export interface Cart {
 }
 
 const CART_STORAGE_KEY = 'eventu_cart'
+const CART_USER_KEY = 'eventu_cart_user_id'
 
 export function useCart() {
   const [cart, setCart] = useState<Cart>(() => {
     // Inicializar el estado con datos del localStorage si están disponibles
     if (typeof window !== 'undefined') {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY)
-      if (savedCart) {
+      const savedUserId = localStorage.getItem(CART_USER_KEY)
+      const currentUserId = localStorage.getItem("eventu_user_id")
+      
+      // Solo cargar el carrito si pertenece al usuario actual
+      if (savedCart && savedUserId === currentUserId) {
         try {
           const parsedCart = JSON.parse(savedCart)
           console.log('Carrito cargado desde localStorage:', parsedCart)
@@ -39,7 +44,13 @@ export function useCart() {
         } catch (error) {
           console.error('Error loading cart from localStorage:', error)
           localStorage.removeItem(CART_STORAGE_KEY)
+          localStorage.removeItem(CART_USER_KEY)
         }
+      } else if (savedCart && savedUserId !== currentUserId) {
+        // El carrito pertenece a otro usuario, limpiarlo
+        console.log('Carrito de otro usuario detectado, limpiando...')
+        localStorage.removeItem(CART_STORAGE_KEY)
+        localStorage.removeItem(CART_USER_KEY)
       }
     }
     return { items: [], total: 0 }
@@ -56,12 +67,52 @@ export function useCart() {
   // Guardar carrito en localStorage cuando cambie
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('Guardando carrito en localStorage:', cart)
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
-      // Disparar evento para notificar otros componentes
-      window.dispatchEvent(new Event('cartUpdated'))
+      const currentUserId = localStorage.getItem("eventu_user_id")
+      if (currentUserId) {
+        console.log('Guardando carrito en localStorage:', cart)
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
+        localStorage.setItem(CART_USER_KEY, currentUserId)
+        // Disparar evento para notificar otros componentes
+        window.dispatchEvent(new Event('cartUpdated'))
+      }
     }
   }, [cart])
+
+  // Escuchar cambios de autenticación para limpiar el carrito
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleAuthChange = () => {
+      const isAuthenticated = localStorage.getItem("eventu_authenticated") === "true"
+      const currentUser = localStorage.getItem("current_user")
+      const currentUserId = localStorage.getItem("eventu_user_id")
+      const savedUserId = localStorage.getItem(CART_USER_KEY)
+      
+      // Si no hay usuario autenticado, limpiar el carrito
+      if (!isAuthenticated || !currentUser || !currentUserId) {
+        console.log('Usuario no autenticado, limpiando carrito')
+        setCart({ items: [], total: 0 })
+        localStorage.removeItem(CART_STORAGE_KEY)
+        localStorage.removeItem(CART_USER_KEY)
+      } else if (savedUserId && savedUserId !== currentUserId) {
+        // El usuario cambió, limpiar el carrito del usuario anterior
+        console.log('Usuario cambió, limpiando carrito del usuario anterior')
+        setCart({ items: [], total: 0 })
+        localStorage.removeItem(CART_STORAGE_KEY)
+        localStorage.removeItem(CART_USER_KEY)
+      }
+    }
+
+    // Escuchar eventos de cambio de autenticación
+    window.addEventListener("authStateChanged", handleAuthChange)
+    
+    // Verificar estado inicial
+    handleAuthChange()
+
+    return () => {
+      window.removeEventListener("authStateChanged", handleAuthChange)
+    }
+  }, [])
 
   const addToCart = (item: Omit<CartItem, 'id'>) => {
     console.log('addToCart llamado con:', item)
@@ -148,6 +199,7 @@ export function useCart() {
   const clearCart = () => {
     setCart({ items: [], total: 0 })
     localStorage.removeItem(CART_STORAGE_KEY)
+    localStorage.removeItem(CART_USER_KEY)
   }
 
   // Función para recalcular el total del carrito

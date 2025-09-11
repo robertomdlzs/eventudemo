@@ -113,33 +113,53 @@ export function useAuth() {
         const token = localStorage.getItem("auth_token")
 
         if (isAuthenticated && currentUser && token) {
-          // Verificar si el token es válido con el backend
           try {
-            const response = await fetch('http://localhost:3002/api/auth/verify-token', {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            })
+            const userData = JSON.parse(currentUser)
+            setUser(userData)
+            setRole(userRole)
+            
+            // Verificar si el token es válido con el backend (en segundo plano)
+            try {
+              const response = await fetch('http://localhost:3002/api/auth/verify-token', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                signal: AbortSignal.timeout(3000) // 3 segundos timeout
+              })
 
-            if (response.ok) {
-              setUser(JSON.parse(currentUser))
-              setRole(userRole)
-            } else {
-              // Token inválido, limpiar localStorage
-              localStorage.removeItem("eventu_authenticated")
-              localStorage.removeItem("current_user")
-              localStorage.removeItem("userRole")
-              localStorage.removeItem("auth_token")
-              setUser(null)
-              setRole(null)
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                if (errorData.code === 'SESSION_TIMEOUT') {
+                  console.log('Sesión expirada por inactividad, redirigiendo al login')
+                  // Solo cerrar sesión si es realmente por timeout
+                  localStorage.removeItem("eventu_authenticated")
+                  localStorage.removeItem("current_user")
+                  localStorage.removeItem("userRole")
+                  localStorage.removeItem("auth_token")
+                  localStorage.removeItem("eventu_user_id")
+                  localStorage.removeItem("redirectUrl")
+                  localStorage.removeItem("welcomeMessage")
+                  localStorage.removeItem("eventu_cart")
+                  localStorage.removeItem("eventu_cart_user_id")
+                  setUser(null)
+                  setRole(null)
+                  window.dispatchEvent(new Event("authStateChanged"))
+                  router.push("/login")
+                  return
+                }
+                // Para otros errores, mantener la sesión local
+                console.warn('Error verificando token, manteniendo sesión local')
+              }
+            } catch (error) {
+              console.warn("Error de conectividad verificando token, manteniendo sesión local:", error)
+              // En caso de error de red, mantener la sesión local
             }
           } catch (error) {
-            console.error("Error verifying token:", error)
-            // En caso de error de red, mantener la sesión local
-            setUser(JSON.parse(currentUser))
-            setRole(userRole)
+            console.error("Error parsing user data:", error)
+            setUser(null)
+            setRole(null)
           }
         } else {
           setUser(null)

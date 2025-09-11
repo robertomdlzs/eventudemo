@@ -26,10 +26,16 @@ const auth = async (req, res, next) => {
       
       // Solo rechazar si ha pasado más de 15 minutos de inactividad
       if (now - lastActivity > timeoutMs) {
+        console.log(`Session timeout for user ${decoded.userId}: ${Math.round((now - lastActivity) / 1000 / 60)} minutes of inactivity`)
         return res.status(401).json({
           success: false,
           message: "Session expired due to inactivity.",
-          code: "SESSION_TIMEOUT"
+          code: "SESSION_TIMEOUT",
+          details: {
+            lastActivity: new Date(lastActivity).toISOString(),
+            timeoutMinutes: 15,
+            inactiveMinutes: Math.round((now - lastActivity) / 1000 / 60)
+          }
         })
       }
     }

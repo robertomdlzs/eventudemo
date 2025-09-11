@@ -68,6 +68,13 @@ export class ApiClient {
       localStorage.removeItem("auth_token")
       localStorage.removeItem("current_user")
       localStorage.removeItem("eventu_authenticated")
+      localStorage.removeItem("eventu_user_id")
+      localStorage.removeItem("userRole")
+      localStorage.removeItem("redirectUrl")
+      localStorage.removeItem("welcomeMessage")
+      // Limpiar carrito al hacer logout
+      localStorage.removeItem("eventu_cart")
+      localStorage.removeItem("eventu_cart_user_id")
     }
   }
 

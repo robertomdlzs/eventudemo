@@ -69,6 +69,10 @@ export default function MiCuentaPage() {
     localStorage.removeItem("userRole")
     localStorage.removeItem("redirectUrl")
     localStorage.removeItem("welcomeMessage")
+    localStorage.removeItem("eventu_user_id")
+    // Limpiar carrito al hacer logout
+    localStorage.removeItem("eventu_cart")
+    localStorage.removeItem("eventu_cart_user_id")
     
     apiClient.logout()
     window.dispatchEvent(new Event("authStateChanged"))

@@ -34,7 +34,7 @@ export function useAuth(): AuthState & AuthActions {
   })
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       if (typeof window === 'undefined') {
         setAuthState(prev => ({ ...prev, isLoading: false }))
         return
@@ -47,12 +47,70 @@ export function useAuth(): AuthState & AuthActions {
       if (isAuth && token && userStr) {
         try {
           const user = JSON.parse(userStr)
-          setAuthState({
-            isAuthenticated: true,
-            user,
-            token,
-            isLoading: false
-          })
+          
+          // Verificar si el token es válido con el backend (con manejo de errores robusto)
+          try {
+            const response = await fetch('http://localhost:3002/api/auth/verify-token', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              // Agregar timeout para evitar que se cuelgue
+              signal: AbortSignal.timeout(5000) // 5 segundos timeout
+            })
+
+            if (response.ok) {
+              // Token válido, mantener la sesión
+              setAuthState({
+                isAuthenticated: true,
+                user,
+                token,
+                isLoading: false
+              })
+            } else {
+              // Token inválido, verificar si es por timeout de sesión
+              const errorData = await response.json().catch(() => ({}))
+              if (errorData.code === 'SESSION_TIMEOUT') {
+                console.log('Sesión expirada por inactividad')
+                // Limpiar localStorage y cerrar sesión
+                localStorage.removeItem("eventu_authenticated")
+                localStorage.removeItem("auth_token")
+                localStorage.removeItem("current_user")
+                localStorage.removeItem("userRole")
+                localStorage.removeItem("eventu_user_id")
+                localStorage.removeItem("redirectUrl")
+                localStorage.removeItem("welcomeMessage")
+                localStorage.removeItem("eventu_cart")
+                localStorage.removeItem("eventu_cart_user_id")
+                
+                setAuthState({
+                  isAuthenticated: false,
+                  user: null,
+                  token: null,
+                  isLoading: false
+                })
+              } else {
+                // Otro error, mantener la sesión local por seguridad
+                console.warn('Error verificando token, manteniendo sesión local:', errorData.message)
+                setAuthState({
+                  isAuthenticated: true,
+                  user,
+                  token,
+                  isLoading: false
+                })
+              }
+            }
+          } catch (error) {
+            console.warn('Error de conectividad verificando token, manteniendo sesión local:', error)
+            // En caso de error de red, mantener la sesión local
+            setAuthState({
+              isAuthenticated: true,
+              user,
+              token,
+              isLoading: false
+            })
+          }
         } catch (error) {
           console.error('Error parsing user data:', error)
           setAuthState({
@@ -108,6 +166,13 @@ export function useAuth(): AuthState & AuthActions {
     localStorage.removeItem("eventu_authenticated")
     localStorage.removeItem("auth_token")
     localStorage.removeItem("current_user")
+    localStorage.removeItem("eventu_user_id")
+    localStorage.removeItem("userRole")
+    localStorage.removeItem("redirectUrl")
+    localStorage.removeItem("welcomeMessage")
+    // Limpiar carrito al hacer logout
+    localStorage.removeItem("eventu_cart")
+    localStorage.removeItem("eventu_cart_user_id")
     
     setAuthState({
       isAuthenticated: false,
