@@ -197,7 +197,7 @@ export default function CarritoPage() {
                               <div className="flex flex-wrap gap-1">
                                 {item.selectedSeats.map((seat, index) => (
                                   <Badge key={index} variant="outline" className="text-xs">
-                                    {typeof seat === 'string' ? seat : `${seat.section}-${seat.row}-${seat.number}`}
+                                    {seat}
                                   </Badge>
                                 ))}
                               </div>

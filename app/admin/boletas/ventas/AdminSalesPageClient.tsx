@@ -25,13 +25,7 @@ interface AdminSale {
   totalAmount: number
   paymentMethod: string
   status: string
-  transactionType: string
-  failureReason?: string
-  abandonmentReason?: string
-  sessionId?: string
-  ipAddress?: string
-  userAgent?: string
-  transactionDate: string
+  purchaseDate: string
   eventDate: string
   abandonedAt?: string
 }
@@ -70,7 +64,7 @@ export default function AdminSalesPageClient() {
     setLoading(true)
     try {
       const [salesData, statsData] = await Promise.all([
-        getSales(searchParams),
+        getSales(),
         getSalesStats()
       ])
       setSales(salesData)
@@ -190,7 +184,7 @@ export default function AdminSalesPageClient() {
           Gestión de Transacciones
         </h1>
         <div className="flex gap-2">
-          <Button onClick={fetchSales} variant="outline" size="sm">
+          <Button onClick={() => fetchSales()} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualizar
           </Button>
@@ -360,11 +354,11 @@ export default function AdminSalesPageClient() {
                         )}
                       </TableCell>
                       <TableCell>{getStatusBadge(sale.status)}</TableCell>
-                      <TableCell>{getTransactionTypeBadge(sale.transactionType)}</TableCell>
-                      <TableCell>{formatDate(sale.transactionDate)}</TableCell>
+                      <TableCell>{getTransactionTypeBadge(sale.paymentMethod)}</TableCell>
+                      <TableCell>{formatDate(sale.purchaseDate)}</TableCell>
                       <TableCell>
                         <div className="text-xs text-gray-500">
-                          {sale.ipAddress || 'N/A'}
+                          N/A
                         </div>
                       </TableCell>
                     </TableRow>

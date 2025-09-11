@@ -124,7 +124,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
           const cartItem = {
             eventId: event.id,
             eventTitle: event.title,
-            eventSlug: event.slug,
+            eventSlug: event.id,
             ticketTypeId: ticketType.id,
             ticketTypeName: ticketType.name,
             quantity: quantity,

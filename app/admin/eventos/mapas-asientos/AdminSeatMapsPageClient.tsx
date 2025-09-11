@@ -83,8 +83,14 @@ export default function AdminSeatMapsPageClient() {
 
     const newMapData = {
       name: newMapName,
-      venue_name: "Nuevo Venue",
-      total_capacity: 0,
+      eventId: selectedEventId,
+      sections: [],
+      metadata: {
+        capacity: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isPublished: false
+      },
       map_data: { sections: [] }
     }
 
@@ -121,7 +127,7 @@ export default function AdminSeatMapsPageClient() {
       try {
         const updateData = {
           name: editingMapData.name,
-          total_capacity: editingMapData.total_capacity || 0,
+          total_capacity: editingMapData.metadata.capacity || 0,
         }
 
         const response = await apiClient.updateSeatMap(editingMapData.id, updateData)
@@ -314,11 +320,11 @@ export default function AdminSeatMapsPageClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground">
-                  <p>Capacidad Total: {map.total_capacity || 0}</p>
-                  <p>Secciones: {map.total_sections || 0}</p>
-                  <p>Evento: {map.event_title || 'Sin evento asignado'}</p>
-                  <p>Venue: {map.venue_name || 'No especificado'}</p>
-                  <p>Última Actualización: {new Date(map.updated_at).toLocaleDateString()}</p>
+                  <p>Capacidad Total: {map.metadata.capacity || 0}</p>
+                  <p>Secciones: {map.sections.length || 0}</p>
+                  <p>Evento: {map.eventId || 'Sin evento asignado'}</p>
+                  <p>Venue: {'No especificado'}</p>
+                  <p>Última Actualización: {new Date(map.metadata.updatedAt).toLocaleDateString()}</p>
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button

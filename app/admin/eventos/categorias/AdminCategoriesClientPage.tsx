@@ -62,7 +62,14 @@ function CreateCategoryDialog({ onCreate }: CreateCategoryDialogProps) {
     // Generar slug automáticamente si no se proporciona
     const categoryData = {
       ...formData,
-      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      description: formData.description || "",
+      icon: formData.icon || "",
+      color: formData.color || "",
+      status: formData.status || "active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      eventCount: 0
     }
     onCreate(categoryData)
     setOpen(false)

@@ -724,7 +724,7 @@ export default function AdvancedSecuritySettings({
                               onCheckedChange={(checked) => {
                                 const channels = checked
                                   ? [...advancedSettings.notificationChannels, channel]
-                                  : advancedSettings.notificationChannels.filter(c => c !== channel)
+                                  : advancedSettings.notificationChannels.filter((c: any) => c !== channel)
                                 setAdvancedSettings({
                                   ...advancedSettings,
                                   notificationChannels: channels

@@ -4,25 +4,25 @@ import { apiClient } from "../../lib/api-client"
 
 export interface AdminUser {
   id: string
-  name: string
+  first_name: string
+  last_name: string
   email: string
+  phone?: string
   role: string
   status: string
-  createdAt: string
+  created_at: string
   lastLogin: string
-  eventsCreated: number
-  ticketsSold: number
-  twoFactorAuthEnabled: boolean
 }
 
 export interface AdminEvent {
   id: string
   title: string
+  slug: string
   description: string
   date: string
   time: string
   venue: string
-  location?: string
+  location: string
   locationDisplay?: string
   category: string
   categoryDisplay?: string
@@ -53,6 +53,7 @@ export interface AdminTicketType {
   eventId: string
   eventName: string
   createdAt: string
+  isDefault: boolean
 }
 
 export interface AdminSale {
@@ -67,7 +68,14 @@ export interface AdminSale {
   totalAmount: number
   paymentMethod: string
   status: string
+  transactionType: string
+  failureReason?: string
+  abandonmentReason?: string
+  sessionId?: string
+  ipAddress?: string
+  userAgent?: string
   purchaseDate: string
+  transactionDate: string
   eventDate: string
 }
 

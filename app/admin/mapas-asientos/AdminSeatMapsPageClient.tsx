@@ -103,7 +103,13 @@ export default function AdminSeatMapsPageClient({ initialSeatMaps }: AdminSeatMa
         sectionType: generatorConfig.sectionType,
         hasAisles: generatorConfig.hasAisles,
         aislePositions: generatorConfig.aislePositions,
-        seats: []
+        seats: [] as Array<{
+          id: string
+          row: number
+          seat: number
+          status: string
+          price: number
+        }>
       }
 
       // Generar datos de asientos

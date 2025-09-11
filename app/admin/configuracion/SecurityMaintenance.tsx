@@ -26,9 +26,7 @@ import {
   Wrench,
   Zap,
   History,
-  FileText,
-  Backup,
-  Restore
+  FileText
 } from "lucide-react"
 
 interface SecurityUpdate {
@@ -125,7 +123,7 @@ export default function SecurityMaintenance() {
         releaseDate: "2024-01-05",
         priority: "medium",
         status: "available",
-        type: "optimization",
+        type: "maintenance",
         changelog: [
           "Optimizada consulta de logs de actividad",
           "Mejorado tiempo de respuesta de la API",
@@ -293,11 +291,11 @@ export default function SecurityMaintenance() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleBackupSettings} disabled={loading}>
-            <Backup className="h-4 w-4 mr-2" />
+            <Database className="h-4 w-4 mr-2" />
             Backup
           </Button>
           <Button variant="outline" onClick={handleRestoreSettings} disabled={loading}>
-            <Restore className="h-4 w-4 mr-2" />
+            <RotateCcw className="h-4 w-4 mr-2" />
             Restaurar
           </Button>
         </div>

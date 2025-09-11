@@ -8,12 +8,7 @@
     "lint": "next lint",
     "start": "next start",
     "build:production": "npm run build && cd backend && npm install --production",
-    "start:production": "cd backend && node server.js",
-    "netlify:build": "next build",
-    "netlify:dev": "next dev",
-    "netlify:preview": "next build && next start",
-    "postbuild": "next export",
-    "export": "next export"
+    "start:production": "cd backend && node server.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -92,9 +87,5 @@
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
-  },
-  "engines": {
-    "node": ">=18.18.2",
-    "npm": ">=10.0.0"
   }
 }

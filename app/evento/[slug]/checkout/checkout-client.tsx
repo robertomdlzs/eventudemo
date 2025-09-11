@@ -86,7 +86,7 @@ export default function CheckoutClient({ event, checkoutData }: CheckoutClientPr
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link href={`/evento/${event.slug}`}>
+            <Link href={`/evento/${event.id}`}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver

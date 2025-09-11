@@ -61,7 +61,7 @@ export default function DebugAuthPage() {
                   <span className="text-sm bg-gray-100 p-1 rounded">
                     {typeof value === 'string' && value.length > 50 
                       ? value.substring(0, 50) + '...' 
-                      : value || 'null'}
+                      : String(value || 'null')}
                   </span>
                 </div>
               ))}

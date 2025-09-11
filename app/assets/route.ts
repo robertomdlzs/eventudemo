@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
     const fileBuffer = await readFile(filePath)
     const contentType = getContentType(path)
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(fileBuffer as any, {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",

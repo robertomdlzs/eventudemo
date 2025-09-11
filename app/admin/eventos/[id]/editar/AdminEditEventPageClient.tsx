@@ -42,7 +42,14 @@ export default function AdminEditEventPageClient({ params }: AdminEditEventPageP
   const handleSubmit = async (eventData: Partial<AdminEvent>) => {
     setIsSubmitting(true)
     try {
-      await updateAdminEvent(params.id, eventData)
+      const formData = new FormData()
+      formData.append('id', params.id)
+      Object.entries(eventData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, String(value))
+        }
+      })
+      await updateAdminEvent(formData)
       toast({
         title: "Evento Actualizado",
         description: `El evento "${eventData.title || event?.title}" ha sido actualizado exitosamente.`,

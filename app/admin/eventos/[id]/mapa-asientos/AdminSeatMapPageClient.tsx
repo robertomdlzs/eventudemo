@@ -78,6 +78,10 @@ type Tool =
   | "zoom-out"
   | "pan"
   | "draw-aisle"
+  | "draw-curve"
+  | "draw-pattern"
+  | "draw-seats"
+  | "draw-section"
 
 type DrawingMode = "rectangle" | "circle" | "freehand" | "grid" | "curve" | "stadium" | "theater" | "arena"
 
@@ -153,7 +157,7 @@ export default function AdminSeatMapPageClient({ eventId }: AdminSeatMapPageClie
     currentPoint: { x: 0, y: 0 },
     previewShape: null
   })
-  const [seatMapManager] = useState(() => new SeatMapManager())
+  const [seatMapManager] = useState(() => new SeatMapManager(eventId))
   const [seatMapStorage] = useState(() => new SeatMapStorage())
   const [savedMaps, setSavedMaps] = useState<SeatMapData[]>([])
   const [templates, setTemplates] = useState<SavedTemplate[]>([])
@@ -813,7 +817,7 @@ export default function AdminSeatMapPageClient({ eventId }: AdminSeatMapPageClie
       if (generalSection) {
         return prev.map(s => 
           s.id === "general" 
-            ? { ...s, aisles: [...(s.aisles || []), newAisle] }
+            ? { ...s, aisles: [...(s as any).aisles || [], newAisle] }
             : s
         )
       }

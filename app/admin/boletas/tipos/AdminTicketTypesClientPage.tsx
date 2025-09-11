@@ -349,8 +349,14 @@ function AdminTicketTypesClientPage() {
 
 interface TicketTypeFormValues {
   name: string
-  description?: string
-  isDefault: boolean
+  description: string
+  price: number
+  quantity: number
+  sold: number
+  remaining: number
+  status: string
+  eventId: string
+  eventName: string
 }
 
 interface CreateTicketTypeDialogProps {
@@ -362,14 +368,20 @@ function CreateTicketTypeDialog({ onCreate }: CreateTicketTypeDialogProps) {
   const [formData, setFormData] = useState<TicketTypeFormValues>({
     name: "",
     description: "",
-    isDefault: false,
+    price: 0,
+    quantity: 0,
+    sold: 0,
+    remaining: 0,
+    status: "active",
+    eventId: "",
+    eventName: "",
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onCreate(formData)
     setOpen(false)
-    setFormData({ name: "", description: "", isDefault: false }) // Reset form
+    setFormData({ name: "", description: "", price: 0, quantity: 0, sold: 0, remaining: 0, status: "active", eventId: "", eventName: "" }) // Reset form
   }
 
   return (
@@ -409,14 +421,6 @@ function CreateTicketTypeDialog({ onCreate }: CreateTicketTypeDialogProps) {
               className="col-span-3"
             />
           </div>
-          <div className="flex items-center space-x-2 col-span-4">
-            <Checkbox
-              id="isDefault"
-              checked={formData.isDefault}
-              onCheckedChange={(checked) => setFormData({ ...formData, isDefault: Boolean(checked) })}
-            />
-            <Label htmlFor="isDefault">Establecer como predeterminado</Label>
-          </div>
           <DialogFooter>
             <Button type="submit">Crear Tipo de Boleta</Button>
           </DialogFooter>
@@ -436,7 +440,13 @@ function EditTicketTypeDialog({ ticketType, onUpdate }: EditTicketTypeDialogProp
   const [formData, setFormData] = useState<TicketTypeFormValues>({
     name: ticketType.name,
     description: ticketType.description,
-    isDefault: ticketType.isDefault,
+    price: ticketType.price,
+    quantity: ticketType.quantity,
+    sold: ticketType.sold,
+    remaining: ticketType.remaining,
+    status: ticketType.status,
+    eventId: ticketType.eventId,
+    eventName: ticketType.eventName,
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -481,14 +491,6 @@ function EditTicketTypeDialog({ ticketType, onUpdate }: EditTicketTypeDialogProp
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="col-span-3"
             />
-          </div>
-          <div className="flex items-center space-x-2 col-span-4">
-            <Checkbox
-              id="isDefault"
-              checked={formData.isDefault}
-              onCheckedChange={(checked) => setFormData({ ...formData, isDefault: Boolean(checked) })}
-            />
-            <Label htmlFor="isDefault">Establecer como predeterminado</Label>
           </div>
           <DialogFooter>
             <Button type="submit">Guardar Cambios</Button>

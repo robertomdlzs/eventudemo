@@ -60,9 +60,16 @@ export interface AdminEvent {
 export interface AdminTicketType {
   id: string
   name: string
-  description?: string
-  isDefault: boolean
+  description: string
+  price: number
+  quantity: number
+  sold: number
+  remaining: number
+  status: string
+  eventId: string
+  eventName: string
   createdAt: string
+  isDefault: boolean
 }
 
 export interface AdminSale {
@@ -83,6 +90,7 @@ export interface AdminSale {
 export interface Event {
   id: string
   title: string
+  slug: string
   description: string
   long_description?: string
   category?: {
@@ -130,6 +138,7 @@ export interface TicketType {
   quantity: number
   sold: number
   status: "active" | "inactive"
+  benefits?: string[]
 }
 
 export interface Category {

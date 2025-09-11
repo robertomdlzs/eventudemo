@@ -1,0 +1,18 @@
+{
+  "build": {
+    "command": "npm run build",
+    "publish": ".next",
+    "environment": {
+      "NODE_VERSION": "18.x",
+      "NPM_VERSION": "9.x"
+    }
+  },
+  "deploy": {
+    "autoDeploy": true,
+    "branch": "main"
+  },
+  "framework": {
+    "name": "nextjs",
+    "version": "14.x"
+  }
+}

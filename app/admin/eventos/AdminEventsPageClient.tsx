@@ -224,7 +224,7 @@ function TableWrapper({ events, onDelete, onStatusChange }: TableWrapperProps) {
               <TableRow key={event.id}>
                 <TableCell className="font-medium">{event.title}</TableCell>
                 <TableCell>{format(new Date(event.date), "dd MMM yyyy", { locale: es })}</TableCell>
-                <TableCell>{typeof event.category === 'object' ? event.category.name : event.category}</TableCell>
+                <TableCell>{typeof event.category === 'object' ? (event.category as any).name : event.category}</TableCell>
                 <TableCell>
                   <Badge
                     className={cn(

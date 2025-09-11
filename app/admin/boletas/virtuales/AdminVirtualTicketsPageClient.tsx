@@ -84,8 +84,24 @@ export default function AdminVirtualTicketsPageClient() {
       ])
       
       if (salesData) {
-        setTickets(salesData)
-        setFilteredTickets(salesData)
+        // Mapear AdminSale a VirtualTicket
+        const virtualTickets: VirtualTicket[] = salesData.map(sale => ({
+          id: sale.id,
+          ticketNumber: sale.ticketNumber,
+          eventName: sale.eventName,
+          customerName: sale.customerName,
+          customerEmail: sale.customerEmail,
+          ticketType: sale.ticketType,
+          price: sale.unitPrice,
+          quantity: sale.quantity,
+          totalAmount: sale.totalAmount,
+          status: sale.status as "completed" | "cancelled" | "pending",
+          purchaseDate: sale.purchaseDate,
+          eventDate: sale.eventDate,
+          paymentMethod: sale.paymentMethod,
+        }))
+        setTickets(virtualTickets)
+        setFilteredTickets(virtualTickets)
       }
 
       if (statsData) {
@@ -439,8 +455,8 @@ export default function AdminVirtualTicketsPageClient() {
                 </div>
               </div>
 
-              {/* Tickets List */}
-              {selectedTicket.tickets && selectedTicket.tickets.length > 0 && (
+              {/* Tickets List - Comentado temporalmente hasta definir estructura correcta */}
+              {/* selectedTicket.tickets && selectedTicket.tickets.length > 0 && (
                 <div>
                   <Label className="text-sm font-medium">Boletas Generadas</Label>
                   <div className="mt-2 space-y-2">
@@ -457,7 +473,7 @@ export default function AdminVirtualTicketsPageClient() {
                     ))}
                   </div>
                 </div>
-              )}
+              ) */}
             </div>
           )}
         </DialogContent>

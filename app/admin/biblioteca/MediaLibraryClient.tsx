@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { getAdminMedia, getAdminMediaFolders, updateAdminMedia, deleteAdminMedia, createAdminMediaFolder, deleteAdminMediaFolder } from "@/app/admin/actions"
+import { getAdminMedia, getAdminMediaFolders, updateAdminMedia, deleteAdminMedia, createAdminMedia, createAdminMediaFolder, deleteAdminMediaFolder } from "@/app/admin/actions"
 import { apiClient } from "@/lib/api-client"
 import {
   Upload,
@@ -225,7 +225,7 @@ export function MediaLibraryClient() {
           }))
           
           // Track file uploads
-          uploadedFiles.forEach(file => {
+          uploadedFiles.forEach((file: any) => {
             trackFileUpload(file.type, file.size)
           })
           trackAdminAction('upload', 'media_files')
@@ -369,8 +369,8 @@ export function MediaLibraryClient() {
         usageCount: 0,
       }
       
-      const success = await uploadAdminMedia([duplicatedFile as any])
-      if (success && success.length > 0) {
+      const success = await createAdminMedia(duplicatedFile as any)
+      if (success) {
         setMediaFiles((prev) => [duplicatedFile, ...prev])
         toast({
           title: "Archivo duplicado",

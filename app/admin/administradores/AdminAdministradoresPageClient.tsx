@@ -24,14 +24,12 @@ import { useToast } from "@/hooks/use-toast"
 
 interface AdminUser {
   id: string
-  first_name: string
-  last_name: string
+  name: string
   email: string
-  phone?: string
   role: string
   status: string
-  created_at: string
-  last_login?: string
+  createdAt: string
+  lastLogin: string
 }
 
 interface AdminAdministradoresPageClientProps {
@@ -76,8 +74,7 @@ export default function AdminAdministradoresPageClient({ adminsData }: AdminAdmi
 
   const filteredAdmins = adminsData.users.filter(admin => {
     const matchesSearch = 
-      admin.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      admin.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       admin.email.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || admin.status === statusFilter
@@ -158,7 +155,7 @@ export default function AdminAdministradoresPageClient({ adminsData }: AdminAdmi
           <CardContent>
             <div className="text-2xl font-bold">
               {adminsData.users.filter(admin => {
-                const createdDate = new Date(admin.created_at)
+                const createdDate = new Date(admin.createdAt)
                 const thirtyDaysAgo = new Date()
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
                 return createdDate >= thirtyDaysAgo
@@ -236,33 +233,27 @@ export default function AdminAdministradoresPageClient({ adminsData }: AdminAdmi
               <div key={admin.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {admin.first_name.charAt(0)}{admin.last_name.charAt(0)}
+                    {admin.name.split(' ').map(n => n.charAt(0)).join('').slice(0, 2)}
                   </div>
                   <div>
                     <div className="font-medium">
-                      {admin.first_name} {admin.last_name}
+                      {admin.name}
                     </div>
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <Mail className="h-3 w-3" />
                       {admin.email}
                     </div>
-                    {admin.phone && (
-                      <div className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Phone className="h-3 w-3" />
-                        {admin.phone}
-                      </div>
-                    )}
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
                     <div className="text-sm text-muted-foreground">
-                      Registrado: {formatDate(admin.created_at)}
+                      Registrado: {formatDate(admin.createdAt)}
                     </div>
-                    {admin.last_login && (
+                    {admin.lastLogin && (
                       <div className="text-sm text-muted-foreground">
-                        Último acceso: {formatDate(admin.last_login)}
+                        Último acceso: {formatDate(admin.lastLogin)}
                       </div>
                     )}
                   </div>
@@ -285,7 +276,7 @@ export default function AdminAdministradoresPageClient({ adminsData }: AdminAdmi
                         </button>
                         <button 
                           className="w-full text-left px-3 py-1 text-sm hover:bg-muted flex items-center gap-2 text-red-600"
-                          onClick={() => handleDeleteAdmin(admin.id, `${admin.first_name} ${admin.last_name}`)}
+                          onClick={() => handleDeleteAdmin(admin.id, admin.name)}
                         >
                           <Trash2 className="h-3 w-3" />
                           Eliminar

@@ -73,8 +73,9 @@ export default function AdminScheduledReportsClient() {
     name: "",
     description: "",
     type: "",
-    schedule: { frequency: "daily", time: "09:00" },
-    recipients: []
+    format: "pdf",
+    frequency: "daily",
+    recipients: [] as string[]
   })
   const { toast } = useToast()
 
@@ -118,7 +119,8 @@ export default function AdminScheduledReportsClient() {
           name: "",
           description: "",
           type: "",
-          schedule: { frequency: "daily", time: "09:00" },
+          format: "pdf",
+          frequency: "daily",
           recipients: []
         })
         loadScheduledReports()
@@ -142,7 +144,7 @@ export default function AdminScheduledReportsClient() {
     if (!editingReport) return
 
     try {
-      const success = await updateScheduledReport(editingReport.id, {
+      const success = await updateScheduledReport(parseInt(editingReport.id), {
         name: editingReport.name,
         description: editingReport.description,
         schedule: editingReport.schedule,
@@ -177,7 +179,7 @@ export default function AdminScheduledReportsClient() {
     if (!confirm("¿Estás seguro de que quieres eliminar este reporte programado?")) return
 
     try {
-      const success = await deleteScheduledReport(id)
+      const success = await deleteScheduledReport(parseInt(id))
       if (success) {
         toast({
           title: "Éxito",
@@ -202,7 +204,9 @@ export default function AdminScheduledReportsClient() {
 
   const handleToggleStatus = async (id: string) => {
     try {
-      const success = await toggleScheduledReport(id)
+      const report = scheduledReports.find(r => r.id === id)
+      if (!report) return
+      const success = await toggleScheduledReport(id, report.status !== "active")
       if (success) {
         toast({
           title: "Éxito",
@@ -329,10 +333,10 @@ export default function AdminScheduledReportsClient() {
               <div className="grid gap-2">
                 <Label htmlFor="frequency">Frecuencia</Label>
                 <Select 
-                  value={newReport.schedule.frequency} 
+                  value={newReport.frequency} 
                   onValueChange={(value) => setNewReport({ 
                     ...newReport, 
-                    schedule: { ...newReport.schedule, frequency: value }
+                    frequency: value
                   })}
                 >
                   <SelectTrigger>
@@ -350,10 +354,9 @@ export default function AdminScheduledReportsClient() {
                 <Input
                   id="time"
                   type="time"
-                  value={newReport.schedule.time}
+                  value="09:00"
                   onChange={(e) => setNewReport({ 
-                    ...newReport, 
-                    schedule: { ...newReport.schedule, time: e.target.value }
+                    ...newReport
                   })}
                 />
               </div>

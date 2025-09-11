@@ -315,7 +315,12 @@ export default function AdminRolesClientPage() {
 
   const handleUpdate = async (id: string, data: Partial<Omit<AdminRole, "id" | "createdAt">>) => {
     try {
-      await updateAdminRole(id, data)
+      const updateData = {
+        name: data.name || "",
+        description: data.description || "",
+        permissions: data.permissions || []
+      }
+      await updateAdminRole(id, updateData)
       toast({
         title: "Rol Actualizado",
         description: `El rol "${data.name}" ha sido actualizado exitosamente.`,

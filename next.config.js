@@ -1,13 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuración para Netlify
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
+  experimental: {
+    appDir: true,
+  },
   
-  // Deshabilitar optimizaciones que no funcionan con export estático
   images: {
-    unoptimized: true,
     domains: [
       'images.unsplash.com',
       'via.placeholder.com',
@@ -36,8 +33,27 @@ const nextConfig = {
     ],
   },
 
-  // Configurar para manejar errores de useSearchParams
-  // Nota: Los headers no funcionan con export estático, se manejan en netlify.toml
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

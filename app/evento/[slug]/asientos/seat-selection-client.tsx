@@ -211,7 +211,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
 
   const calculateTotalPrice = () => {
     const ticketPrice = Object.entries(selectedTickets).reduce((total, [ticketTypeId, quantity]) => {
-      const ticketType = event.ticketTypes?.find(t => t.id === ticketTypeId)
+      const ticketType = event.ticketTypes?.find((t: any) => t.id === ticketTypeId)
       return total + (ticketType ? quantity * ticketType.price : 0)
     }, 0)
     
@@ -228,7 +228,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
     
     // Calcular el precio total de los tickets
     const ticketPrice = Object.entries(selectedTickets).reduce((total, [ticketTypeId, quantity]) => {
-      const ticketType = event.ticketTypes?.find(t => t.id === ticketTypeId)
+      const ticketType = event.ticketTypes?.find((t: any) => t.id === ticketTypeId)
       return total + (ticketType ? quantity * ticketType.price : 0)
     }, 0)
 
@@ -244,15 +244,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
       price: (seatPrice + ticketPrice) / selectedSeats.length, // Precio promedio por asiento
       eventDate: event.date,
       eventLocation: event.location,
-      selectedSeats: selectedSeats.map(seat => ({
-        id: seat.id,
-        section: seat.section,
-        row: seat.row,
-        number: seat.number,
-        price: seat.price || 0,
-        type: seat.type,
-        category: seat.category
-      })),
+      selectedSeats: selectedSeats.map(seat => `${seat.section}-${seat.row}-${seat.number}`),
       totalPrice: seatPrice + ticketPrice
     }
 
@@ -261,7 +253,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
     
     if (existingItemIndex >= 0) {
       // Actualizar item existente
-      updateCartItem(existingItemIndex, cartItem)
+      updateCartItem(existingItemIndex.toString(), cartItem)
     } else {
       // Agregar nuevo item
       addToCart(cartItem)
@@ -530,7 +522,7 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
                 <div className="space-y-3">
                   {Object.entries(selectedTickets).map(([ticketTypeId, quantity]) => {
                     if (quantity === 0) return null
-                    const ticketType = event.ticketTypes?.find(t => t.id === ticketTypeId)
+                    const ticketType = event.ticketTypes?.find((t: any) => t.id === ticketTypeId)
                     if (!ticketType) return null
                     
                     return (
