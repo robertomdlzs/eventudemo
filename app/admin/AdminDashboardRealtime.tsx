@@ -60,6 +60,13 @@ interface DashboardData {
   lastUpdated: string
 }
 
+interface AdminChange {
+  user: string
+  action: string
+  resource: string
+  timestamp: string | Date
+}
+
 export default function AdminDashboardRealtime() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const { user, role, isLoading: authLoading } = useAuth()
@@ -77,6 +84,9 @@ export default function AdminDashboardRealtime() {
     refreshDashboard,
     requestDashboardUpdate
   } = useAdminWebSocket(token)
+  
+  // Asegurar que adminChanges tenga el tipo correcto
+  const typedAdminChanges: AdminChange[] = adminChanges || []
 
   // Actualizar timestamp cuando se reciben datos
   useEffect(() => {
@@ -183,7 +193,7 @@ export default function AdminDashboardRealtime() {
       </div>
 
       {/* Notificaciones de cambios recientes */}
-      {adminChanges.length > 0 && (
+      {typedAdminChanges.length > 0 && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center">
@@ -193,7 +203,7 @@ export default function AdminDashboardRealtime() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {adminChanges.slice(0, 3).map((change, index) => (
+              {typedAdminChanges.slice(0, 3).map((change, index) => (
                 <div key={index} className="text-sm">
                   <span className="font-medium">{change.user}</span> realizó{' '}
                   <span className="font-medium">{change.action}</span> en{' '}
