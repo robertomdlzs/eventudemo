@@ -2115,8 +2115,10 @@ export async function getNotifications(params?: {
   try {
     const response = await apiClient.getNotifications(params)
     if (response.success && response.data) {
+      // El API devuelve un objeto con propiedades, no un array
+      const data = response.data as any
       return {
-        notifications: response.data.notifications.map((notification: any) => ({
+        notifications: (data.notifications || []).map((notification: any) => ({
           id: notification.id.toString(),
           title: notification.title,
           message: notification.message,
@@ -2126,8 +2128,8 @@ export async function getNotifications(params?: {
           createdAt: notification.created_at,
           updatedAt: notification.updated_at
         })),
-        unreadCount: response.data.unreadCount,
-        pagination: response.data.pagination
+        unreadCount: data.unreadCount || 0,
+        pagination: data.pagination || {}
       }
     }
   } catch (error) {
