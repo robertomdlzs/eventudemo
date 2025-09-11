@@ -2361,7 +2361,7 @@ export async function createAdminMedia(mediaData: Partial<AdminMedia>): Promise<
 // Función para actualizar un medio
 export async function updateAdminMedia(mediaId: string, mediaData: Partial<AdminMedia>): Promise<boolean> {
   try {
-    const response = await apiClient.updateMedia(parseInt(mediaId), mediaData)
+    const response = await apiClient.updateMedia(mediaId, mediaData)
     return response.success
   } catch (error) {
     console.error('Error updating media:', error)
@@ -2372,7 +2372,7 @@ export async function updateAdminMedia(mediaId: string, mediaData: Partial<Admin
 // Función para eliminar un medio
 export async function deleteAdminMedia(mediaId: string): Promise<boolean> {
   try {
-    const response = await apiClient.deleteMedia(parseInt(mediaId))
+    const response = await apiClient.deleteMedia(mediaId)
     return response.success
   } catch (error) {
     console.error('Error deleting media:', error)
