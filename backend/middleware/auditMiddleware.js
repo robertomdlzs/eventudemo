@@ -1,232 +1,342 @@
 const AuditService = require('../services/auditService')
 
 /**
- * Middleware para registrar actividades de auditoría
- * @param {Object} options - Opciones de configuración
- * @param {string} options.action - Acción a registrar
- * @param {string} options.resource - Tipo de recurso
- * @param {string} options.severity - Nivel de severidad (low, medium, high, critical)
- * @param {boolean} options.logRequest - Si registrar el request completo
- * @param {boolean} options.logResponse - Si registrar la respuesta
- * @param {Function} options.getResourceId - Función para extraer el ID del recurso
- * @param {Function} options.getResourceName - Función para extraer el nombre del recurso
+ * Middleware de auditoría que registra automáticamente las acciones
  */
 const auditMiddleware = (options = {}) => {
-  return async (req, res, next) => {
-    const startTime = Date.now()
+  return (req, res, next) => {
+    // Interceptar la respuesta para registrar la actividad
     const originalSend = res.send
-
-    // Configuración por defecto
-    const config = {
-      action: options.action || getActionFromMethod(req.method),
-      resource: options.resource || getResourceFromPath(req.path),
-      severity: options.severity || 'low',
-      logRequest: options.logRequest || false,
-      logResponse: options.logResponse || false,
-      getResourceId: options.getResourceId || ((req) => req.params.id || req.body.id),
-      getResourceName: options.getResourceName || ((req) => req.body.name || req.body.title || req.body.email)
-    }
-
-    // Capturar respuesta
-    let responseBody = null
-    res.send = function(body) {
-      responseBody = body
-      return originalSend.call(this, body)
-    }
-
+    const originalJson = res.json
+    
     // Función para registrar la actividad
-    const logActivity = async (status = 'success', errorMessage = null) => {
+    const logActivity = async (status) => {
       try {
-        const duration = Date.now() - startTime
-        const resourceId = config.getResourceId(req)
-        const resourceName = config.getResourceName(req)
-
-        const details = {
-          method: req.method,
-          path: req.path,
-          query: req.query,
-          duration: `${duration}ms`,
-          statusCode: res.statusCode
-        }
-
-        // Agregar request body si está configurado
-        if (config.logRequest && req.body) {
-          details.requestBody = sanitizeRequestBody(req.body)
-        }
-
-        // Agregar response body si está configurado
-        if (config.logResponse && responseBody) {
-          details.responseBody = sanitizeResponseBody(responseBody)
-        }
-
-        // Agregar mensaje de error si existe
-        if (errorMessage) {
-          details.errorMessage = errorMessage
-        }
-
-        await AuditService.logActivity({
-          userId: req.user?.userId || 'anonymous',
-          userName: req.user?.name || 'Usuario Anónimo',
-          userEmail: req.user?.email || 'anonymous@eventu.com',
-          action: config.action,
-          resource: config.resource,
-          resourceId: resourceId,
-          details: details,
-          ipAddress: getClientIP(req),
-          userAgent: req.get('User-Agent'),
-          severity: config.severity,
-          status: status
-        })
-
-        // Notificar a administradores sobre cambios importantes
-        if (config.severity === 'high' || config.severity === 'critical' || 
-            ['CREATE', 'UPDATE', 'DELETE'].includes(config.action)) {
-          try {
-            const wsServer = global.wsServer
-            if (wsServer) {
-              await wsServer.notifyAdminsOfChange('important_change', {
-                action: config.action,
-                resource: config.resource,
-                resourceId: resourceId,
-                resourceName: resourceName,
-                user: req.user?.email || 'Usuario Anónimo',
-                timestamp: new Date().toISOString(),
-                severity: config.severity
-              })
+        // Solo registrar ciertas rutas importantes
+        const importantRoutes = [
+          '/api/auth/login',
+          '/api/auth/logout',
+          '/api/auth/register',
+          '/api/users',
+          '/api/events',
+          '/api/tickets',
+          '/api/payments',
+          '/api/admin',
+          '/api/organizer',
+          '/api/audit',
+          '/api/settings',
+          '/api/media',
+          '/api/reports',
+          '/api/sales',
+          '/api/promoters',
+          '/api/categories',
+          '/api/venues'
+        ]
+        
+        const shouldLog = importantRoutes.some(route => req.path.startsWith(route))
+        
+        if (!shouldLog) return
+        
+        // Determinar la acción basada en el método HTTP y la ruta
+        let action = 'UNKNOWN'
+        let resource = 'UNKNOWN'
+        let resourceId = null
+        let severity = 'low'
+        
+        // Mapear métodos HTTP a acciones
+        switch (req.method) {
+          case 'POST':
+            if (req.path.includes('/login')) {
+              action = 'LOGIN'
+              resource = 'AUTH'
+              severity = 'medium'
+            } else if (req.path.includes('/register')) {
+              action = 'REGISTER'
+              resource = 'USER'
+              severity = 'medium'
+            } else if (req.path.includes('/logout')) {
+              action = 'LOGOUT'
+              resource = 'AUTH'
+              severity = 'low'
+            } else if (req.path.includes('/events')) {
+              action = 'CREATE_EVENT'
+              resource = 'EVENT'
+              severity = 'medium'
+            } else if (req.path.includes('/tickets')) {
+              action = 'CREATE_TICKET'
+              resource = 'TICKET'
+              severity = 'medium'
+            } else if (req.path.includes('/payments')) {
+              action = 'CREATE_PAYMENT'
+              resource = 'PAYMENT'
+              severity = 'high'
+            } else if (req.path.includes('/users')) {
+              action = 'CREATE_USER'
+              resource = 'USER'
+              severity = 'high'
+            } else if (req.path.includes('/settings')) {
+              action = 'CREATE_SETTINGS'
+              resource = 'SETTINGS'
+              severity = 'high'
+            } else if (req.path.includes('/media')) {
+              action = 'CREATE_MEDIA'
+              resource = 'MEDIA'
+              severity = 'medium'
+            } else if (req.path.includes('/reports')) {
+              action = 'CREATE_REPORT'
+              resource = 'REPORT'
+              severity = 'medium'
+            } else if (req.path.includes('/sales')) {
+              action = 'CREATE_SALE'
+              resource = 'SALE'
+              severity = 'high'
+            } else if (req.path.includes('/promoters')) {
+              action = 'CREATE_PROMOTER'
+              resource = 'PROMOTER'
+              severity = 'high'
+            } else if (req.path.includes('/categories')) {
+              action = 'CREATE_CATEGORY'
+              resource = 'CATEGORY'
+              severity = 'medium'
+            } else if (req.path.includes('/venues')) {
+              action = 'CREATE_VENUE'
+              resource = 'VENUE'
+              severity = 'medium'
+            } else {
+              action = 'CREATE'
+              resource = getResourceFromPath(req.path)
+              severity = 'medium'
             }
-          } catch (wsError) {
-            console.error('Error notifying admins:', wsError)
+            break
+            
+          case 'PUT':
+          case 'PATCH':
+            if (req.path.includes('/events')) {
+              action = 'UPDATE_EVENT'
+              resource = 'EVENT'
+              resourceId = req.params.id || req.body.id
+              severity = 'medium'
+            } else if (req.path.includes('/users')) {
+              action = 'UPDATE_USER'
+              resource = 'USER'
+              resourceId = req.params.id || req.body.id
+              severity = 'high'
+            } else if (req.path.includes('/tickets')) {
+              action = 'UPDATE_TICKET'
+              resource = 'TICKET'
+              resourceId = req.params.id || req.body.id
+              severity = 'medium'
+            } else if (req.path.includes('/admin')) {
+              action = 'ADMIN_UPDATE'
+              resource = 'ADMIN'
+              severity = 'high'
+            } else if (req.path.includes('/settings')) {
+              action = 'UPDATE_SETTINGS'
+              resource = 'SETTINGS'
+              severity = 'high'
+            } else if (req.path.includes('/media')) {
+              action = 'UPLOAD_MEDIA'
+              resource = 'MEDIA'
+              severity = 'medium'
+            } else if (req.path.includes('/reports')) {
+              action = 'GENERATE_REPORT'
+              resource = 'REPORT'
+              severity = 'medium'
+            } else if (req.path.includes('/sales')) {
+              action = 'UPDATE_SALE'
+              resource = 'SALE'
+              severity = 'high'
+            } else if (req.path.includes('/promoters')) {
+              action = 'UPDATE_PROMOTER'
+              resource = 'PROMOTER'
+              severity = 'high'
+            } else if (req.path.includes('/categories')) {
+              action = 'UPDATE_CATEGORY'
+              resource = 'CATEGORY'
+              severity = 'medium'
+            } else if (req.path.includes('/venues')) {
+              action = 'UPDATE_VENUE'
+              resource = 'VENUE'
+              severity = 'medium'
+            } else {
+              action = 'UPDATE'
+              resource = getResourceFromPath(req.path)
+              resourceId = req.params.id || req.body.id
+              severity = 'medium'
+            }
+            break
+            
+          case 'DELETE':
+            if (req.path.includes('/events')) {
+              action = 'DELETE_EVENT'
+              resource = 'EVENT'
+              resourceId = req.params.id
+              severity = 'high'
+            } else if (req.path.includes('/users')) {
+              action = 'DELETE_USER'
+              resource = 'USER'
+              resourceId = req.params.id
+              severity = 'critical'
+            } else if (req.path.includes('/tickets')) {
+              action = 'DELETE_TICKET'
+              resource = 'TICKET'
+              resourceId = req.params.id
+              severity = 'high'
+            } else if (req.path.includes('/admin')) {
+              action = 'ADMIN_DELETE'
+              resource = 'ADMIN'
+              severity = 'critical'
+            } else if (req.path.includes('/settings')) {
+              action = 'DELETE_SETTINGS'
+              resource = 'SETTINGS'
+              severity = 'critical'
+            } else if (req.path.includes('/media')) {
+              action = 'DELETE_MEDIA'
+              resource = 'MEDIA'
+              resourceId = req.params.id
+              severity = 'medium'
+            } else if (req.path.includes('/reports')) {
+              action = 'DELETE_REPORT'
+              resource = 'REPORT'
+              resourceId = req.params.id
+              severity = 'high'
+            } else if (req.path.includes('/sales')) {
+              action = 'DELETE_SALE'
+              resource = 'SALE'
+              resourceId = req.params.id
+              severity = 'critical'
+            } else if (req.path.includes('/promoters')) {
+              action = 'DELETE_PROMOTER'
+              resource = 'PROMOTER'
+              resourceId = req.params.id
+              severity = 'critical'
+            } else if (req.path.includes('/categories')) {
+              action = 'DELETE_CATEGORY'
+              resource = 'CATEGORY'
+              resourceId = req.params.id
+              severity = 'high'
+            } else if (req.path.includes('/venues')) {
+              action = 'DELETE_VENUE'
+              resource = 'VENUE'
+              resourceId = req.params.id
+              severity = 'high'
+            } else {
+              action = 'DELETE'
+              resource = getResourceFromPath(req.path)
+              resourceId = req.params.id
+              severity = 'high'
+            }
+            break
+            
+          case 'GET':
+            // Solo registrar GET para acciones importantes
+            if (req.path.includes('/admin') && req.user?.role === 'admin') {
+              action = 'ADMIN_ACCESS'
+              resource = 'ADMIN'
+              severity = 'medium'
+            } else if (req.path.includes('/organizer') && req.user?.role === 'organizer') {
+              action = 'ORGANIZER_ACCESS'
+              resource = 'ORGANIZER'
+              severity = 'low'
+            } else {
+              return // No registrar GETs normales
+            }
+            break
+        }
+        
+        // Determinar el estado basado en el código de respuesta
+        let logStatus = 'success'
+        if (status >= 400) {
+          logStatus = 'failure'
+          if (status >= 500) {
+            severity = 'high'
           }
         }
+        
+        // Obtener información del usuario
+        const userId = req.user?.userId || req.user?.id || 'anonymous'
+        const userName = req.user?.name || req.user?.userName || 'Usuario Anónimo'
+        const userEmail = req.user?.email || req.user?.userEmail || 'anonymous@eventu.com'
+        
+        // Crear detalles de la actividad
+        const details = {
+          path: req.path,
+          method: req.method,
+          query: req.query,
+          body: sanitizeBody(req.body),
+          duration: Date.now() - req.startTime,
+          statusCode: status,
+          userAgent: req.get('User-Agent'),
+          ip: req.ip || req.connection.remoteAddress
+        }
+        
+        // Registrar la actividad
+        await AuditService.logActivity({
+          userId,
+          userName,
+          userEmail,
+          action,
+          resource,
+          resourceId,
+          details,
+          ipAddress: req.ip || req.connection.remoteAddress,
+          userAgent: req.get('User-Agent'),
+          severity,
+          status: logStatus
+        })
+        
       } catch (error) {
         console.error('Error in audit middleware:', error)
+        // No interrumpir el flujo principal
       }
     }
-
-    // Registrar inicio de la actividad
-    if (config.action === 'LOGIN' || config.action === 'REGISTER') {
-      await logActivity('success')
+    
+    // Interceptar res.send
+    res.send = function(body) {
+      logActivity(res.statusCode)
+      return originalSend.call(this, body)
     }
-
-    // Interceptar errores
-    const originalNext = next
-    next = function(error) {
-      if (error) {
-        logActivity('failure', error.message)
-      }
-      return originalNext.call(this, error)
+    
+    // Interceptar res.json
+    res.json = function(body) {
+      logActivity(res.statusCode)
+      return originalJson.call(this, body)
     }
-
-    // Interceptar finalización exitosa
-    res.on('finish', () => {
-      const status = res.statusCode >= 400 ? 'failure' : 'success'
-      logActivity(status)
-    })
-
+    
+    // Marcar el tiempo de inicio
+    req.startTime = Date.now()
+    
     next()
   }
 }
 
 /**
- * Middleware específico para autenticación
+ * Obtiene el tipo de recurso basado en la ruta
  */
-const auditAuth = () => {
-  return auditMiddleware({
-    action: 'LOGIN',
-    resource: 'AUTH',
-    severity: 'medium',
-    logRequest: false,
-    getResourceId: (req) => req.body?.email,
-    getResourceName: (req) => req.body?.email
-  })
-}
-
-/**
- * Middleware específico para logout
- */
-const auditLogout = () => {
-  return auditMiddleware({
-    action: 'LOGOUT',
-    resource: 'AUTH',
-    severity: 'low',
-    logRequest: false
-  })
-}
-
-/**
- * Middleware específico para operaciones CRUD
- */
-const auditCRUD = (resource, options = {}) => {
-  return auditMiddleware({
-    action: getActionFromMethod,
-    resource: resource,
-    severity: options.severity || 'medium',
-    logRequest: options.logRequest || true,
-    logResponse: options.logResponse || false,
-    ...options
-  })
-}
-
-/**
- * Middleware específico para transacciones financieras
- */
-const auditTransaction = () => {
-  return auditMiddleware({
-    action: 'TRANSACTION',
-    resource: 'PAYMENT',
-    severity: 'high',
-    logRequest: true,
-    logResponse: false,
-    getResourceId: (req) => req.body?.saleId || req.body?.paymentId,
-    getResourceName: (req) => `Transacción ${req.body?.amount || 'N/A'}`
-  })
-}
-
-/**
- * Middleware específico para administración
- */
-const auditAdmin = (resource, options = {}) => {
-  return auditMiddleware({
-    action: getActionFromMethod,
-    resource: resource,
-    severity: 'high',
-    logRequest: true,
-    logResponse: false,
-    ...options
-  })
-}
-
-// Funciones auxiliares
-function getActionFromMethod(method) {
-  const actions = {
-    'GET': 'READ',
-    'POST': 'CREATE',
-    'PUT': 'UPDATE',
-    'PATCH': 'UPDATE',
-    'DELETE': 'DELETE'
-  }
-  return actions[method] || method
-}
-
 function getResourceFromPath(path) {
-  const segments = path.split('/').filter(Boolean)
-  if (segments.length >= 2) {
-    return segments[1].toUpperCase()
-  }
+  if (path.includes('/users')) return 'USER'
+  if (path.includes('/events')) return 'EVENT'
+  if (path.includes('/tickets')) return 'TICKET'
+  if (path.includes('/payments')) return 'PAYMENT'
+  if (path.includes('/admin')) return 'ADMIN'
+  if (path.includes('/organizer')) return 'ORGANIZER'
+  if (path.includes('/auth')) return 'AUTH'
+  if (path.includes('/audit')) return 'AUDIT'
+  if (path.includes('/settings')) return 'SETTINGS'
+  if (path.includes('/media')) return 'MEDIA'
+  if (path.includes('/reports')) return 'REPORT'
+  if (path.includes('/sales')) return 'SALE'
+  if (path.includes('/promoters')) return 'PROMOTER'
+  if (path.includes('/categories')) return 'CATEGORY'
+  if (path.includes('/venues')) return 'VENUE'
   return 'UNKNOWN'
 }
 
-function getClientIP(req) {
-  return req.ip || 
-         req.connection.remoteAddress || 
-         req.socket.remoteAddress ||
-         (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
-         req.headers['x-forwarded-for']?.split(',')[0] ||
-         '127.0.0.1'
-}
-
-function sanitizeRequestBody(body) {
-  if (!body) return null
+/**
+ * Sanitiza el body para remover información sensible
+ */
+function sanitizeBody(body) {
+  if (!body || typeof body !== 'object') return body
   
   const sanitized = { ...body }
   
@@ -241,32 +351,4 @@ function sanitizeRequestBody(body) {
   return sanitized
 }
 
-function sanitizeResponseBody(body) {
-  if (!body) return null
-  
-  try {
-    const parsed = typeof body === 'string' ? JSON.parse(body) : body
-    const sanitized = { ...parsed }
-    
-    // Remover campos sensibles de la respuesta
-    const sensitiveFields = ['password', 'token', 'secret', 'key']
-    sensitiveFields.forEach(field => {
-      if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]'
-      }
-    })
-    
-    return sanitized
-  } catch (error) {
-    return '[NON_JSON_RESPONSE]'
-  }
-}
-
-module.exports = {
-  auditMiddleware,
-  auditAuth,
-  auditLogout,
-  auditCRUD,
-  auditTransaction,
-  auditAdmin
-}
+module.exports = auditMiddleware

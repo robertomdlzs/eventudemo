@@ -2,7 +2,7 @@ const express = require("express")
 const jwt = require("jsonwebtoken")
 const User = require("../models/User")
 const { auth } = require("../middleware/auth")
-const { auditAuth, auditLogout, auditCRUD } = require("../middleware/auditMiddleware")
+// El middleware de auditoría global ya maneja todas las acciones automáticamente
 const { Pool } = require("pg")
 require("dotenv").config()
 
@@ -28,7 +28,7 @@ async function userHasEvents(userId) {
 }
 
 // Register
-router.post("/register", auditCRUD('USER', { action: 'REGISTER', severity: 'medium' }), async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { email, password, name, phone } = req.body
 
@@ -89,7 +89,7 @@ router.post("/register", auditCRUD('USER', { action: 'REGISTER', severity: 'medi
 })
 
 // Login
-router.post("/login", auditAuth(), async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -400,8 +400,31 @@ router.post("/change-password", auth, async (req, res) => {
   }
 })
 
+// Verify token and update activity
+router.get("/verify-token", auth, async (req, res) => {
+  try {
+    // El middleware auth ya verificó el token
+    res.json({
+      success: true,
+      message: "Token válido",
+      user: {
+        id: req.user.userId,
+        email: req.user.email,
+        role: req.user.role,
+        name: req.user.name
+      }
+    })
+  } catch (error) {
+    console.error("Verify token error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+})
+
 // Logout (client-side token removal, optional endpoint for logging)
-router.post("/logout", auth, auditLogout(), async (req, res) => {
+router.post("/logout", auth, async (req, res) => {
   try {
     // In a real app, you might want to blacklist the token
     // For now, we'll just acknowledge the logout

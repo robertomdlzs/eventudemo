@@ -23,6 +23,7 @@ const auth = async (req, res, next) => {
       const now = Date.now()
       const lastActivity = decoded.lastActivity
       const timeoutMs = 15 * 60 * 1000 // 15 minutos
+      const warningMs = 13 * 60 * 1000 // 13 minutos (advertencia)
       
       // Solo rechazar si ha pasado más de 15 minutos de inactividad
       if (now - lastActivity > timeoutMs) {
@@ -37,6 +38,13 @@ const auth = async (req, res, next) => {
             inactiveMinutes: Math.round((now - lastActivity) / 1000 / 60)
           }
         })
+      }
+      
+      // Agregar header de advertencia si está cerca del timeout
+      if (now - lastActivity > warningMs) {
+        const remainingMinutes = Math.ceil((timeoutMs - (now - lastActivity)) / 1000 / 60)
+        res.setHeader("X-Session-Warning", `Session will expire in ${remainingMinutes} minutes`)
+        res.setHeader("X-Session-Remaining", remainingMinutes.toString())
       }
     }
 

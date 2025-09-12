@@ -4,7 +4,8 @@ const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 const { Pool } = require('pg')
-const { auditAdmin, auditCRUD, auditTransaction } = require('../middleware/auditMiddleware')
+// const { auditCRUD } = require('../middleware/auditMiddleware')
+const AuditService = require('../services/auditService')
 require('dotenv').config()
 
 // Database connection
@@ -125,7 +126,7 @@ router.get('/connected-admins', auth, requireAdmin, async (req, res) => {
 })
 
 // Get all users (with auth for production, without auth for development)
-router.get('/users', auditAdmin('USER', { action: 'READ' }), async (req, res) => {
+router.get('/users', async (req, res) => {
   // Skip auth check for development
   if (process.env.NODE_ENV === 'production') {
     // Apply auth middleware for production
@@ -200,7 +201,7 @@ async function handleGetUsers(req, res) {
 }
 
 // Create new user
-router.post('/users', auth, requireAdmin, auditAdmin('USER', { action: 'CREATE' }), async (req, res) => {
+router.post('/users', auth, requireAdmin, async (req, res) => {
   try {
     const { firstName, lastName, email, password, role, phone, status = 'active' } = req.body
 
@@ -280,7 +281,7 @@ router.post('/users', auth, requireAdmin, auditAdmin('USER', { action: 'CREATE' 
 })
 
 // Update user
-router.put('/users/:id', auth, requireAdmin, auditAdmin('USER', { action: 'UPDATE' }), async (req, res) => {
+router.put('/users/:id', auth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params
     const { firstName, lastName, email, password, role, phone, status } = req.body
@@ -406,7 +407,7 @@ router.put('/users/:id', auth, requireAdmin, auditAdmin('USER', { action: 'UPDAT
 })
 
 // Delete user
-router.delete('/users/:id', auth, requireAdmin, auditAdmin('USER', { action: 'DELETE', severity: 'high' }), async (req, res) => {
+router.delete('/users/:id', auth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params
 

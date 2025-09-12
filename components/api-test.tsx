@@ -115,7 +115,7 @@ export function ApiTest() {
       case "success":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
-            Conectado
+            ✓
           </Badge>
         )
       case "error":

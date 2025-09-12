@@ -1,99 +1,103 @@
 "use client"
 
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useState, useEffect } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Clock, RefreshCw } from 'lucide-react'
-import { useSessionTimeout } from '@/hooks/use-session-timeout'
+import { Clock, AlertTriangle } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
-interface SessionTimeoutWarningProps {
-  isOpen: boolean
-  timeLeft: number
-  onExtend: () => void
-  onClose: () => void
+interface SessionWarning {
+  message: string
+  remainingMinutes: number
 }
 
-export function SessionTimeoutWarning({ 
-  isOpen, 
-  timeLeft, 
-  onExtend, 
-  onClose 
-}: SessionTimeoutWarningProps) {
-  const [isExtending, setIsExtending] = useState(false)
+export function SessionTimeoutWarning() {
+  const [warning, setWarning] = useState<SessionWarning | null>(null)
+  const [countdown, setCountdown] = useState<number>(0)
+  const { isAuthenticated } = useAuth()
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const handleSessionWarning = (event: CustomEvent<SessionWarning>) => {
+      setWarning(event.detail)
+      setCountdown(event.detail.remainingMinutes * 60) // Convertir a segundos
+    }
+
+    // Escuchar eventos de advertencia de sesión
+    window.addEventListener('sessionWarning', handleSessionWarning as EventListener)
+
+    return () => {
+      window.removeEventListener('sessionWarning', handleSessionWarning as EventListener)
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!warning || countdown <= 0) return
+
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          setWarning(null)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [warning, countdown])
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+    const secs = seconds % 60
+    return `${minutes}:${secs.toString().padStart(2, '0')}`
   }
 
-  const handleExtend = async () => {
-    setIsExtending(true)
-    try {
-      onExtend()
-      onClose()
-    } finally {
-      setIsExtending(false)
-    }
+  const handleExtendSession = () => {
+    // Simular actividad del usuario para extender la sesión
+    window.dispatchEvent(new Event('mousedown'))
+    window.dispatchEvent(new Event('keypress'))
+    setWarning(null)
+    setCountdown(0)
   }
+
+  if (!warning || !isAuthenticated) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-orange-600">
-            <AlertTriangle className="h-5 w-5" />
-            Sesión por expirar
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Clock className="h-6 w-6 text-orange-500" />
-              <span className="text-2xl font-bold text-orange-600">
-                {formatTime(timeLeft)}
-              </span>
+    <div className="fixed top-4 right-4 z-50 max-w-md">
+      <Alert className="border-orange-200 bg-orange-50">
+        <AlertTriangle className="h-4 w-4 text-orange-600" />
+        <AlertDescription className="text-orange-800">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="font-medium">Sesión por expirar</p>
+              <p className="text-sm mt-1">
+                Tu sesión expirará en{' '}
+                <span className="font-mono font-bold text-orange-900">
+                  {formatTime(countdown)}
+                </span>
+              </p>
+              <p className="text-xs mt-1 text-orange-700">
+                Haz clic en "Extender sesión" para continuar
+              </p>
             </div>
-            <p className="text-sm text-gray-600">
-              Tu sesión expirará por inactividad en:
-            </p>
+            <div className="ml-4 flex flex-col gap-2">
+              <Button
+                size="sm"
+                onClick={handleExtendSession}
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                Extender sesión
+              </Button>
+              <div className="flex items-center gap-1 text-xs text-orange-600">
+                <Clock className="h-3 w-3" />
+                <span>{formatTime(countdown)}</span>
+              </div>
+            </div>
           </div>
-
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-            <p className="text-sm text-orange-800">
-              Para mantener tu sesión activa, haz clic en "Extender sesión" o realiza alguna actividad en la página.
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              onClick={handleExtend}
-              disabled={isExtending}
-              className="flex-1"
-            >
-              {isExtending ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Extendiendo...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Extender sesión
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={isExtending}
-            >
-              Cerrar
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </AlertDescription>
+      </Alert>
+    </div>
   )
 }

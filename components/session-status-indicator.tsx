@@ -60,43 +60,5 @@ export function SessionStatusIndicator() {
     }
   }
 
-  return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-      {/* Indicador de conexión */}
-      <Badge 
-        variant={isOnline ? "default" : "destructive"}
-        className="flex items-center gap-1 px-2 py-1"
-      >
-        {isOnline ? (
-          <>
-            <Wifi className="h-3 w-3" />
-            <span className="text-xs">Conectado</span>
-          </>
-        ) : (
-          <>
-            <WifiOff className="h-3 w-3" />
-            <span className="text-xs">Sin conexión</span>
-          </>
-        )}
-      </Badge>
-
-      {/* Tiempo de sesión */}
-      <Badge 
-        variant="secondary"
-        className="flex items-center gap-1 px-2 py-1"
-      >
-        <Clock className="h-3 w-3" />
-        <span className="text-xs">{formatTime(sessionTime)}</span>
-      </Badge>
-
-      {/* Advertencia de seguridad */}
-      <Badge 
-        variant="outline"
-        className="flex items-center gap-1 px-2 py-1 border-orange-200 text-orange-700"
-      >
-        <AlertTriangle className="h-3 w-3" />
-        <span className="text-xs">Sesión segura</span>
-      </Badge>
-    </div>
-  )
+  return null
 }

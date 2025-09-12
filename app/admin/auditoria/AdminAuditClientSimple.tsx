@@ -33,14 +33,40 @@ function AdminAuditClientSimple() {
   const [loading, setLoading] = useState(true)
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (retryCount = 0) => {
     try {
       setLoading(true)
-      const response = await fetch('/api/audit/logs?limit=50&offset=0')
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'
+      const token = localStorage.getItem('auth_token')
+      
+      if (!token) {
+        console.error('No auth token found')
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${backendUrl}/api/audit/logs?limit=50&offset=0`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 429 && retryCount < 3) {
+          // Retry después de un delay exponencial
+          const delay = Math.pow(2, retryCount) * 1000
+          console.log(`Rate limited, retrying in ${delay}ms...`)
+          setTimeout(() => fetchLogs(retryCount + 1), delay)
+          return
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
 
       if (data.success) {
-        setLogs(data.data.logs)
+        setLogs(data.data.logs || [])
       }
     } catch (error) {
       console.error('Error fetching logs:', error)
@@ -49,9 +75,34 @@ function AdminAuditClientSimple() {
     }
   }
 
-  const fetchStats = async () => {
+  const fetchStats = async (retryCount = 0) => {
     try {
-      const response = await fetch('/api/audit/stats')
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'
+      const token = localStorage.getItem('auth_token')
+      
+      if (!token) {
+        console.error('No auth token found')
+        return
+      }
+
+      const response = await fetch(`${backendUrl}/api/audit/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 429 && retryCount < 3) {
+          // Retry después de un delay exponencial
+          const delay = Math.pow(2, retryCount) * 1000
+          console.log(`Rate limited, retrying stats in ${delay}ms...`)
+          setTimeout(() => fetchStats(retryCount + 1), delay)
+          return
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -63,8 +114,13 @@ function AdminAuditClientSimple() {
   }
 
   useEffect(() => {
-    fetchLogs()
-    fetchStats()
+    // Agregar un pequeño delay para evitar peticiones simultáneas
+    const timer = setTimeout(() => {
+      fetchLogs()
+      fetchStats()
+    }, 100)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   const getSeverityColor = (severity: string) => {

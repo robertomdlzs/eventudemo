@@ -9,6 +9,8 @@ import { Footer } from "@/components/footer"
 import GoogleAnalytics from "@/components/GoogleAnalytics"
 import CookieConsent from "@/components/CookieConsent"
 import { BrowserSessionProvider } from "@/components/browser-session-provider"
+import { ActivityTracker } from "@/components/activity-tracker"
+import { SessionTimeoutWarning } from "@/components/session-timeout-warning"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -28,6 +30,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <BrowserSessionProvider>
+            <ActivityTracker />
+            <SessionTimeoutWarning />
             <GoogleAnalytics />
             <MainHeader />
             <main className="min-h-screen">{children}</main>

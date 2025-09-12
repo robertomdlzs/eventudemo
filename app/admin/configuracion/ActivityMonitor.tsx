@@ -74,11 +74,92 @@ export default function ActivityMonitor() {
   const [dateRange, setDateRange] = useState("24h")
   const [loading, setLoading] = useState(false)
 
-  // Generar logs de ejemplo
+  // Cargar logs reales
   useEffect(() => {
-    generateMockLogs()
-    generateMockMetrics()
+    loadRealLogs()
+    loadRealMetrics()
   }, [])
+
+  const loadRealLogs = async () => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem("auth_token")
+      console.log('🔍 Token encontrado:', token ? 'Sí' : 'No')
+      
+      if (!token) {
+        console.log('❌ No hay token, usando logs de ejemplo')
+        generateMockLogs()
+        return
+      }
+
+      console.log('📡 Haciendo petición a /api/audit/logs...')
+      const response = await fetch('http://localhost:3002/api/audit/logs?limit=100', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('📊 Respuesta del servidor:', response.status, response.statusText)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('📋 Datos recibidos:', data)
+        
+        if (data.success && data.data && data.data.logs) {
+          console.log('✅ Procesando', data.data.logs.length, 'logs')
+          const realLogs: ActivityLog[] = data.data.logs.map((log: any) => ({
+            id: log.id.toString(),
+            timestamp: log.timestamp,
+            user: log.user_email,
+            action: log.action,
+            category: mapResourceToCategory(log.resource),
+            severity: log.severity,
+            ipAddress: log.ip_address,
+            userAgent: log.user_agent,
+            details: log.details ? (typeof log.details === 'string' ? log.details : JSON.stringify(log.details)) : '',
+            status: log.status
+          }))
+          
+          setLogs(realLogs)
+          setFilteredLogs(realLogs)
+          console.log('✅ Logs cargados exitosamente')
+        } else {
+          console.log('❌ No se encontraron logs en la respuesta')
+          generateMockLogs()
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.log('❌ Error del servidor:', errorData)
+        generateMockLogs()
+      }
+    } catch (error) {
+      console.error('❌ Error loading audit logs:', error)
+      // Fallback a logs de ejemplo si hay error
+      generateMockLogs()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const mapResourceToCategory = (resource: string): 'authentication' | 'security' | 'system' | 'data' | 'admin' => {
+    switch (resource?.toLowerCase()) {
+      case 'auth':
+        return 'authentication'
+      case 'user':
+      case 'event':
+      case 'ticket':
+      case 'payment':
+        return 'data'
+      case 'admin':
+      case 'settings':
+        return 'admin'
+      case 'security':
+        return 'security'
+      default:
+        return 'system'
+    }
+  }
 
   const generateMockLogs = () => {
     const mockLogs: ActivityLog[] = [
@@ -181,6 +262,48 @@ export default function ActivityMonitor() {
     ]
     setLogs(mockLogs)
     setFilteredLogs(mockLogs)
+  }
+
+  const loadRealMetrics = async () => {
+    try {
+      const token = localStorage.getItem("auth_token")
+      if (!token) return
+
+      const response = await fetch('http://localhost:3002/api/audit/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          const stats = data.data
+          
+          // Procesar estadísticas reales
+          const totalLogins = stats.logsByAction?.find((item: any) => item.action === 'LOGIN')?.count || 0
+          const failedLogins = stats.logsByStatus?.find((item: any) => item.status === 'failure')?.count || 0
+          const highSeverity = stats.logsBySeverity?.find((item: any) => item.severity === 'high')?.count || 0
+          const criticalSeverity = stats.logsBySeverity?.find((item: any) => item.severity === 'critical')?.count || 0
+          
+          setMetrics({
+            totalLogins,
+            failedLogins,
+            blockedAttempts: failedLogins,
+            securityAlerts: highSeverity + criticalSeverity,
+            activeSessions: 1, // Esto requeriría un sistema de sesiones activas
+            passwordChanges: stats.logsByAction?.find((item: any) => item.action === 'PASSWORD_CHANGE')?.count || 0,
+            twoFactorActivations: stats.logsByAction?.find((item: any) => item.action === '2FA_ACTIVATION')?.count || 0,
+            suspiciousActivities: highSeverity
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error loading audit stats:', error)
+      // Fallback a métricas de ejemplo
+      generateMockMetrics()
+    }
   }
 
   const generateMockMetrics = () => {

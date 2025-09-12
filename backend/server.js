@@ -31,7 +31,9 @@ const ticketRoutes = require("./routes/tickets")
 const salesRoutes = require("./routes/sales")
 const passwordResetRoutes = require("./routes/passwordReset")
 const auditRoutes = require("./routes/audit")
+const adminDataRoutes = require("./routes/admin-data")
 const { sessionTimeout, updateActivity } = require("./middleware/session-timeout")
+const auditMiddleware = require("./middleware/auditMiddleware")
 
 const app = express()
 const server = http.createServer(app)
@@ -58,8 +60,12 @@ const logger = winston.createLogger({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // limit each IP to 1000 requests per windowMs (increased for testing)
+  max: 5000, // limit each IP to 5000 requests per windowMs (aumentado para desarrollo)
   message: "Too many requests from this IP, please try again later.",
+  skip: (req) => {
+    // Saltar rate limiting para peticiones preflight (OPTIONS)
+    return req.method === 'OPTIONS'
+  }
 })
 
 // Middleware
@@ -70,6 +76,9 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 200 // Para compatibilidad con navegadores legacy
   }),
 )
 
@@ -94,8 +103,11 @@ app.get("/api/health", (req, res) => {
 })
 
 // Session timeout middleware
-app.use(sessionTimeout(15)) // 15 minutos de timeout
-app.use(updateActivity) // Actualizar timestamp de actividad
+app.use(sessionTimeout(15)) // 15 minutos de timeout con advertencia a los 13 minutos
+app.use(updateActivity) // Actualizar timestamp de actividad en cada request
+
+// Audit middleware - registrar todas las actividades
+app.use(auditMiddleware())
 
 // Routes
 app.use("/api/auth", authRoutes)
@@ -118,6 +130,7 @@ app.use("/api/payments/cobru", cobruRoutes)
 app.use("/api/tickets", ticketRoutes)
 app.use("/api/sales", salesRoutes)
 app.use("/api/audit", auditRoutes)
+app.use("/api/admin", adminDataRoutes)
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))

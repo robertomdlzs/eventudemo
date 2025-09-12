@@ -40,9 +40,12 @@ export function useAuth(): AuthState & AuthActions {
         return
       }
 
+      console.log('🔍 [useAuth] Verificando autenticación...')
       const isAuth = localStorage.getItem("eventu_authenticated") === "true"
-      const token = localStorage.getItem("auth_token")
+      let token = localStorage.getItem("auth_token")
       const userStr = localStorage.getItem("current_user")
+      
+      console.log('🔍 [useAuth] Estado localStorage:', { isAuth, hasToken: !!token, hasUser: !!userStr })
 
       if (isAuth && token && userStr) {
         try {
@@ -50,6 +53,21 @@ export function useAuth(): AuthState & AuthActions {
           
           // Verificar si el token es válido con el backend (con manejo de errores robusto)
           try {
+            // Verificar si ya verificamos el token recientemente (evitar spam)
+            const lastVerification = localStorage.getItem('last_token_verification')
+            const now = Date.now()
+            if (lastVerification && (now - parseInt(lastVerification)) < 30000) { // 30 segundos
+              console.log('⏭️ [useAuth] Verificación reciente, usando sesión local')
+              setAuthState({
+                isAuthenticated: true,
+                user,
+                token,
+                isLoading: false
+              })
+              return
+            }
+            
+            console.log('📡 [useAuth] Verificando token con backend...')
             const response = await fetch('http://localhost:3002/api/auth/verify-token', {
               method: 'GET',
               headers: {
@@ -59,9 +77,37 @@ export function useAuth(): AuthState & AuthActions {
               // Agregar timeout para evitar que se cuelgue
               signal: AbortSignal.timeout(5000) // 5 segundos timeout
             })
+            
+            console.log('📊 [useAuth] Respuesta del servidor:', response.status, response.statusText)
 
             if (response.ok) {
+              // Marcar que verificamos el token
+              localStorage.setItem('last_token_verification', now.toString())
+              
               // Token válido, mantener la sesión
+              const newToken = response.headers.get('X-New-Token')
+              if (newToken) {
+                localStorage.setItem("auth_token", newToken)
+                token = newToken
+                console.log('🔄 [useAuth] Token actualizado')
+              }
+              
+              // Verificar advertencia de sesión
+              const sessionWarning = response.headers.get('X-Session-Warning')
+              const sessionRemaining = response.headers.get('X-Session-Remaining')
+              
+              if (sessionWarning && sessionRemaining) {
+                console.log('⚠️ [useAuth] Advertencia de sesión:', sessionWarning)
+                // Disparar evento personalizado para mostrar advertencia
+                window.dispatchEvent(new CustomEvent('sessionWarning', {
+                  detail: {
+                    message: sessionWarning,
+                    remainingMinutes: parseInt(sessionRemaining)
+                  }
+                }))
+              }
+              
+              console.log('✅ [useAuth] Sesión válida, manteniendo autenticación')
               setAuthState({
                 isAuthenticated: true,
                 user,
@@ -72,7 +118,7 @@ export function useAuth(): AuthState & AuthActions {
               // Token inválido, verificar si es por timeout de sesión
               const errorData = await response.json().catch(() => ({}))
               if (errorData.code === 'SESSION_TIMEOUT') {
-                console.log('Sesión expirada por inactividad')
+                console.log('⏰ [useAuth] Sesión expirada por inactividad')
                 // Limpiar localStorage y cerrar sesión
                 localStorage.removeItem("eventu_authenticated")
                 localStorage.removeItem("auth_token")
@@ -83,6 +129,7 @@ export function useAuth(): AuthState & AuthActions {
                 localStorage.removeItem("welcomeMessage")
                 localStorage.removeItem("eventu_cart")
                 localStorage.removeItem("eventu_cart_user_id")
+                localStorage.removeItem('last_token_verification')
                 
                 setAuthState({
                   isAuthenticated: false,
@@ -92,7 +139,7 @@ export function useAuth(): AuthState & AuthActions {
                 })
               } else {
                 // Otro error, mantener la sesión local por seguridad
-                console.warn('Error verificando token, manteniendo sesión local:', errorData.message)
+                console.warn('⚠️ [useAuth] Error verificando token, manteniendo sesión local:', errorData.message)
                 setAuthState({
                   isAuthenticated: true,
                   user,
@@ -170,6 +217,7 @@ export function useAuth(): AuthState & AuthActions {
     localStorage.removeItem("userRole")
     localStorage.removeItem("redirectUrl")
     localStorage.removeItem("welcomeMessage")
+    localStorage.removeItem('last_token_verification')
     // Limpiar carrito al hacer logout
     localStorage.removeItem("eventu_cart")
     localStorage.removeItem("eventu_cart_user_id")

@@ -100,6 +100,27 @@ export class ApiClient {
     try {
       const response = await fetch(url, config)
 
+      // Verificar si hay un nuevo token en la respuesta
+      const newToken = response.headers.get('X-New-Token')
+      if (newToken && typeof window !== "undefined") {
+        localStorage.setItem("auth_token", newToken)
+        this.token = newToken
+      }
+      
+      // Verificar advertencia de sesión
+      const sessionWarning = response.headers.get('X-Session-Warning')
+      const sessionRemaining = response.headers.get('X-Session-Remaining')
+      
+      if (sessionWarning && sessionRemaining && typeof window !== "undefined") {
+        // Disparar evento personalizado para mostrar advertencia
+        window.dispatchEvent(new CustomEvent('sessionWarning', {
+          detail: {
+            message: sessionWarning,
+            remainingMinutes: parseInt(sessionRemaining)
+          }
+        }))
+      }
+
       if (!response.ok) {
         if (response.status === 401) {
           this.clearToken()

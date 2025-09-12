@@ -56,7 +56,7 @@ export default function ConnectionStatusIndicator({
           icon: CheckCircle,
           color: "bg-green-500",
           badgeVariant: "default" as const,
-          text: "Conectado",
+          text: "",
           description: "Actualizaciones en tiempo real",
         }
       case "connecting":
