@@ -102,6 +102,34 @@ app.get("/api/health", (req, res) => {
   })
 })
 
+// Test route
+app.get("/api/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "API funcionando correctamente",
+    timestamp: new Date().toISOString(),
+    database: dbType,
+    port: PORT
+  })
+})
+
+// Root API route
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "Eventu API v1.0",
+    endpoints: [
+      "/api/health",
+      "/api/test",
+      "/api/auth",
+      "/api/events",
+      "/api/users",
+      "/api/organizer",
+      "/api/admin"
+    ]
+  })
+})
+
 // Session timeout middleware
 app.use(sessionTimeout(15)) // 15 minutos de timeout con advertencia a los 13 minutos
 app.use(updateActivity) // Actualizar timestamp de actividad en cada request
