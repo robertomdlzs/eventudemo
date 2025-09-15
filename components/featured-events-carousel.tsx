@@ -89,7 +89,7 @@ function FeaturedEventsCarousel({ events = [] }: FeaturedEventsCarouselProps) {
             {/* Indicadores de precio */}
             <div className="absolute bottom-4 left-4">
               <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2">
-                <span className="text-white font-bold text-lg">Desde {formatPrice(currentEvent.price)}</span>
+                <span className="text-white font-bold text-lg">Desde {formatPrice(currentEvent.price || 0)}</span>
               </div>
             </div>
           </div>

@@ -149,25 +149,30 @@ export function SignupForm() {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const response = await apiClient.register({
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            password: formData.password,
+          })
         })
+        const data = await response.json()
 
-        if (response.success && response.user && response.token) {
+        if (data.success && data.user && data.token) {
           // Track successful registration
           trackSignUp('email')
           trackFormSubmission('signup', true)
 
-          localStorage.setItem("eventu_user_id", response.user.id.toString())
-          localStorage.setItem("eventu_user_email", response.user.email)
+          localStorage.setItem("eventu_user_id", data.user.id.toString())
+          localStorage.setItem("eventu_user_email", data.user.email)
           localStorage.setItem("eventu_authenticated", "true")
 
           toast({
             title: "¡Registro exitoso!",
-            description: `Bienvenido a Eventu, ${response.user.name}. Tu cuenta ha sido creada.`,
+            description: `Bienvenido a Eventu, ${data.user.name}. Tu cuenta ha sido creada.`,
             variant: "default",
           })
 
@@ -178,7 +183,7 @@ export function SignupForm() {
           
           toast({
             title: "Error de registro",
-            description: response.error || "Hubo un problema al crear tu cuenta. Por favor, inténtalo de nuevo.",
+            description: data.error || "Hubo un problema al crear tu cuenta. Por favor, inténtalo de nuevo.",
             variant: "destructive",
           })
         }

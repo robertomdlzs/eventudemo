@@ -33,21 +33,17 @@ export default function ConnectionStatusIndicator({
       setLastUpdate(new Date())
     }
 
-    wsClient.on("connected", () => handleConnectionChange("connected"))
-    wsClient.on("disconnected", () => handleConnectionChange("disconnected"))
-    wsClient.on("error", () => handleConnectionChange("error"))
-    wsClient.on("seatUpdate", handleSeatUpdate)
+    // Conectar y obtener estado inicial
+    wsClient.connect(eventId)
+    setConnectionStatus(wsClient.isConnectedToServer() ? "connected" : "disconnected")
 
-    // Get initial status
-    setConnectionStatus(wsClient.getConnectionStatus())
+    // Escuchar actualizaciones de asientos
+    wsClient.onSeatUpdate(handleSeatUpdate)
 
     return () => {
-      wsClient.off("connected", () => handleConnectionChange("connected"))
-      wsClient.off("disconnected", () => handleConnectionChange("disconnected"))
-      wsClient.off("error", () => handleConnectionChange("error"))
-      wsClient.off("seatUpdate", handleSeatUpdate)
+      wsClient.offSeatUpdate(handleSeatUpdate)
     }
-  }, [])
+  }, [eventId])
 
   const getStatusConfig = () => {
     switch (connectionStatus) {

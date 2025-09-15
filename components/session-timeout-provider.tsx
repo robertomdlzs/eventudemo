@@ -11,19 +11,15 @@ interface SessionTimeoutProviderProps {
 export function SessionTimeoutProvider({ children }: SessionTimeoutProviderProps) {
   const [showWarning, setShowWarning] = useState(false)
   
-  const { timeLeft, isWarningActive, extendSession } = useSessionTimeout({
+  const { updateLastActivity, getMinutesSinceLastActivity } = useSessionTimeout({
     timeoutMinutes: 15,
-    warningMinutes: 2,
-    onWarning: () => {
-      setShowWarning(true)
-    },
     onTimeout: () => {
       setShowWarning(false)
     }
   })
 
   const handleExtendSession = () => {
-    extendSession()
+    updateLastActivity()
     setShowWarning(false)
   }
 
@@ -34,12 +30,7 @@ export function SessionTimeoutProvider({ children }: SessionTimeoutProviderProps
   return (
     <>
       {children}
-      <SessionTimeoutWarning
-        isOpen={showWarning && isWarningActive}
-        timeLeft={timeLeft}
-        onExtend={handleExtendSession}
-        onClose={handleCloseWarning}
-      />
+      {showWarning && <SessionTimeoutWarning />}
     </>
   )
 }

@@ -81,7 +81,7 @@ export function useEventPaymentMethods(eventId?: string) {
     setError(null)
     
     try {
-      const response = await apiClient.getEvent(eventId)
+      const response = await apiClient.getEvent(parseInt(eventId))
       if (response.success && response.data) {
         const event = response.data
         

@@ -22,7 +22,9 @@ export function EventsExplorer({ events = [] }: EventsExplorerProps) {
   // Obtener categorías y ubicaciones únicas
   const categories = useMemo(() => {
     const cats = Array.from(new Set(events.map((event) => 
-      typeof event.category === 'object' ? event.category.name : event.category
+      typeof event.category === 'object' && event.category && 'name' in event.category 
+        ? (event.category as any).name 
+        : event.category
     )))
     return cats.sort()
   }, [events])
@@ -41,7 +43,9 @@ export function EventsExplorer({ events = [] }: EventsExplorerProps) {
         event.organizer?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesCategory = selectedCategory === "all" || 
-        (typeof event.category === 'object' ? event.category.name : event.category) === selectedCategory
+        (typeof event.category === 'object' && event.category && 'name' in event.category 
+          ? (event.category as any).name 
+          : event.category) === selectedCategory
       const matchesLocation = selectedLocation === "all" || event.location === selectedLocation
 
       return matchesSearch && matchesCategory && matchesLocation
@@ -55,7 +59,7 @@ export function EventsExplorer({ events = [] }: EventsExplorerProps) {
           const dateB = new Date(b.startDate || b.date)
           return dateA.getTime() - dateB.getTime()
         case "price":
-          return a.price - b.price
+          return (a.price || 0) - (b.price || 0)
         case "popularity":
           return (b.soldTickets || 0) - (a.soldTickets || 0)
         case "rating":

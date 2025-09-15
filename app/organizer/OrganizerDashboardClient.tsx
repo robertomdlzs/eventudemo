@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Progress } from "../../components/ui/progress"
+import { Badge } from "../../components/ui/badge"
 import { DollarSign, Calendar, Users, RefreshCw, Ticket, Activity } from "lucide-react"
 import { apiClient } from "../../lib/api-client"
 import { useToast } from "../../hooks/use-toast"
@@ -201,7 +202,7 @@ export default function OrganizerDashboardClient() {
     }
 
     // Capacity Utilization
-    const avgOccupancy = topEvents.reduce((sum, event) => sum + event.occupancyRate, 0) / topEvents.length
+    const avgOccupancy = topEvents.reduce((sum: number, event: any) => sum + event.occupancyRate, 0) / topEvents.length
     if (avgOccupancy < 50) {
       insights.push({
         type: 'warning' as const,
@@ -236,7 +237,7 @@ export default function OrganizerDashboardClient() {
     let seasonality = 'No disponible'
     if (monthlyTrend.length >= 12) {
       const monthlyAverages = new Array(12).fill(0)
-      monthlyTrend.forEach(item => {
+      monthlyTrend.forEach((item: any) => {
         const month = parseInt(item.month.split('-')[1]) - 1
         monthlyAverages[month] += item.revenue
       })
@@ -368,6 +369,14 @@ export default function OrganizerDashboardClient() {
         monthlyTrend: [],
         topEvents: [],
         recentActivity: [],
+        aiInsights: [],
+        businessMetrics: {
+          growthRate: 0,
+          customerRetention: 0,
+          marketTrend: 'stable' as const,
+          seasonality: 'No disponible',
+          competitivePosition: 'average' as const
+        }
       })
       setRealtimeData([])
     } finally {

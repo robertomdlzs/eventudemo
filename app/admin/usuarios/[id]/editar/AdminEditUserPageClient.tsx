@@ -5,7 +5,7 @@ import { getAdminUsers, updateAdminUser } from "@/app/admin/actions"
 import { UserForm } from "@/components/admin/user-form"
 import { useToast } from "@/hooks/use-toast"
 import { useEffect, useState } from "react"
-import type { AdminUser } from "@/lib/types"
+import type { AdminUser } from "@/app/admin/actions"
 
 interface AdminEditUserPageProps {
   params: {
@@ -59,7 +59,7 @@ export default function AdminEditUserPageClient({ params }: AdminEditUserPagePro
       await updateAdminUser(params.id, apiUserData)
       toast({
         title: "Usuario Actualizado",
-        description: `El usuario "${user?.name}" ha sido actualizado exitosamente.`,
+        description: `El usuario "${user?.first_name} ${user?.last_name}" ha sido actualizado exitosamente.`,
       })
       router.push("/admin/usuarios")
     } catch (error: any) {

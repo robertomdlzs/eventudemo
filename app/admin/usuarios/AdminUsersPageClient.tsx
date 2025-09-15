@@ -196,7 +196,7 @@ export default function AdminUsersPageClient({ usersData }: AdminUsersPageClient
                   <TableBody>
                     {filteredUsers.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell className="font-medium">{`${user.first_name} ${user.last_name}`}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge
@@ -223,7 +223,7 @@ export default function AdminUsersPageClient({ usersData }: AdminUsersPageClient
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-ES') : "N/A"}
+                          {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : "N/A"}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>

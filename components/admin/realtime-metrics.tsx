@@ -139,7 +139,7 @@ export default function RealtimeMetrics({ data }: RealtimeMetricsProps) {
               <div>
                 <p className="text-sm font-medium text-gray-600">Ingresos Hoy</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {formatCurrency(metrics.todayRevenue)}
+                  {formatCurrency(metrics.todayRevenue || 0)}
                 </p>
                 <p className="text-xs text-gray-500">recaudado</p>
               </div>
@@ -196,7 +196,7 @@ export default function RealtimeMetrics({ data }: RealtimeMetricsProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Tasa de Conversión</p>
-                <p className="text-xl font-bold">{metrics.conversionRate.toFixed(1)}%</p>
+                <p className="text-xl font-bold">{(metrics.conversionRate || 0).toFixed(1)}%</p>
               </div>
               <TrendingUp className="h-5 w-5 text-green-500" />
             </div>

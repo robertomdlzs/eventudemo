@@ -146,7 +146,8 @@ export function useAuth() {
                   setUser(null)
                   setRole(null)
                   window.dispatchEvent(new Event("authStateChanged"))
-                  router.push("/login")
+                  // Usar window.location en lugar de router para evitar problemas de closure
+                  window.location.href = "/login"
                   return
                 }
                 // Para otros errores, mantener la sesión local

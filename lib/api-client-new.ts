@@ -1,6 +1,4 @@
-import { resolveBaseUrl } from "./utils"
-
-const API_BASE_URL = resolveBaseUrl()
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002/api"
 
 export interface ApiResponse<T> {
   success: boolean
@@ -82,7 +80,6 @@ export class ApiClient {
     const url = `${this.baseUrl}${endpoint}`
 
     const config: RequestInit = {
-      headers: this.getAuthHeaders(),
       ...options,
       headers: {
         ...this.getAuthHeaders(),

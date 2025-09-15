@@ -79,14 +79,14 @@ export function PromoterDashboard() {
             const progressToGoal = (analytics.metrics.total_revenue / monthlyGoal) * 100
 
             // Usar datos reales de tendencias
-            const salesTrend = analytics.trends.map(trend => ({
+            const salesTrend = analytics.trends.map((trend: any) => ({
               date: trend.day,
               revenue: trend.daily_revenue,
               tickets: trend.daily_tickets
             }))
 
             // Usar datos reales de tipos de tickets
-            const ticketTypeBreakdown = analytics.ticket_type_sales.map(ticket => ({
+            const ticketTypeBreakdown = analytics.ticket_type_sales.map((ticket: any) => ({
               type: ticket.ticket_type,
               sold: ticket.tickets_sold,
               revenue: ticket.revenue,
@@ -96,7 +96,7 @@ export function PromoterDashboard() {
             }))
 
             // Usar datos reales de actividad reciente
-            const recentActivity = analytics.recent_sales.map(sale => ({
+            const recentActivity = analytics.recent_sales.map((sale: any) => ({
               type: "sale",
               description: `Venta de ${sale.quantity} ${sale.ticket_type} - ${sale.buyer_name}`,
               amount: sale.total_amount,

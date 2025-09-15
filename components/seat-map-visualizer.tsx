@@ -42,7 +42,7 @@ export default function SeatMapVisualizer({
   const loadSeatMap = async () => {
     try {
       setIsLoading(true)
-      const response = await apiClient.getSeatMap(seatMapId)
+      const response = await apiClient.getSeatMap(seatMapId.toString())
       if (response.success && response.data) {
         setSeatMap(response.data)
         // Simular asientos disponibles

@@ -23,22 +23,32 @@ export interface AdminEvent {
   time: string
   venue: string
   location: string
-  locationDisplay?: string
+  locationDisplay: string
   category: string
-  categoryDisplay?: string
-  status: string
+  categoryDisplay: string
+  status: "draft" | "published" | "cancelled"
   ticketsSold: number
   totalCapacity: number
   revenue: number
   createdAt: string
   organizer: string
   seatMapId?: string
-  price?: number
-  capacity?: number
-  views?: number
-  attendees?: number
-  salesStartDate?: string
-  additionalData?: any[]
+  price: number
+  capacity: number
+  views: number
+  attendees: number
+  salesStartDate: string
+  additionalData: { key: string; value: string; }[]
+  paymentMethods?: {
+    pse?: boolean
+    credit_card?: boolean
+    debit_card?: boolean
+    daviplata?: boolean
+    tc_serfinanza?: boolean
+  }
+  serviceFeeType?: "percentage" | "fixed"
+  serviceFeeValue?: number
+  serviceFeeDescription?: string
 }
 
 export interface AdminTicketType {
@@ -494,15 +504,14 @@ export async function getUsers(): Promise<AdminUser[]> {
     if (response.success && response.data) {
       return response.data.map((user: any) => ({
         id: user.id.toString(),
-        name: `${user.first_name} ${user.last_name}`,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
         email: user.email,
+        phone: user.phone || '',
         role: user.role,
         status: user.status,
-        createdAt: user.created_at,
+        created_at: user.created_at,
         lastLogin: user.last_login || "Nunca",
-        eventsCreated: user.events_created || 0,
-        ticketsSold: user.tickets_sold || 0,
-        twoFactorAuthEnabled: user.two_factor_auth_enabled || false,
       }))
     }
   } catch (error) {
@@ -520,11 +529,15 @@ export async function getEvents(): Promise<AdminEvent[]> {
       return response.data.map((event: any) => ({
         id: event.id.toString(),
         title: event.title,
+        slug: event.slug || '',
         description: event.description,
         date: event.date,
         time: event.time,
         venue: event.venue,
+        location: event.location || '',
+        locationDisplay: event.locationDisplay || event.location || 'Ubicación no especificada',
         category: event.category || "General",
+        categoryDisplay: event.categoryDisplay || event.category || "General",
         status: event.status,
         ticketsSold: event.tickets_sold || 0,
         totalCapacity: event.total_capacity,
@@ -532,6 +545,12 @@ export async function getEvents(): Promise<AdminEvent[]> {
         createdAt: event.created_at,
         organizer: event.organizer || "Sin organizador",
         seatMapId: event.seat_map_id?.toString(),
+        price: parseFloat(event.price) || 0,
+        capacity: parseInt(event.total_capacity) || 0,
+        views: parseInt(event.views) || 0,
+        attendees: parseInt(event.attendees) || 0,
+        salesStartDate: event.sales_start_date || event.date,
+        additionalData: event.additional_data || [],
       }))
     }
   } catch (error) {
@@ -589,6 +608,7 @@ export async function getTicketTypes(): Promise<AdminTicketType[]> {
         eventId: ticketType.event_id?.toString() || '',
         eventName: ticketType.event_title || '',
         createdAt: ticketType.created_at,
+        isDefault: ticketType.is_default || false,
       }))
     }
   } catch (error) {
@@ -798,6 +818,8 @@ export async function getSales(): Promise<AdminSale[]> {
         totalAmount: sale.total_amount,
         paymentMethod: sale.payment_method || 'online',
         status: sale.status,
+        transactionType: sale.transaction_type || 'purchase',
+        transactionDate: sale.transaction_date || sale.purchase_date,
         purchaseDate: sale.purchase_date,
         eventDate: sale.event_date,
       }))
@@ -1027,11 +1049,13 @@ export async function getAdminUsers(params?: {
       return {
         users: response.data.users.map((user: any) => ({
           id: user.id.toString(),
-          name: `${user.first_name} ${user.last_name}`,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
           email: user.email,
+          phone: user.phone || '',
           role: user.role,
           status: user.status,
-          createdAt: user.created_at,
+          created_at: user.created_at,
           lastLogin: user.last_login || "Nunca",
           eventsCreated: user.events_created || 0,
           ticketsSold: user.tickets_purchased || 0,
@@ -1089,15 +1113,14 @@ export async function getAdminUser(id: string): Promise<AdminUser | null> {
       const user = response.data.user
       return {
         id: user.id.toString(),
-        name: `${user.first_name} ${user.last_name}`,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
         email: user.email,
+        phone: user.phone || '',
         role: user.role,
         status: user.status,
-        createdAt: user.created_at,
+        created_at: user.created_at,
         lastLogin: user.last_login || "Nunca",
-        eventsCreated: user.events_created || 0,
-        ticketsSold: user.tickets_purchased || 0,
-        twoFactorAuthEnabled: false, // Por implementar
       }
     }  
   } catch (error) {
@@ -1506,6 +1529,7 @@ export async function getAdminEvent(id: string): Promise<AdminEvent | null> {
       return {
         id: event.id.toString(),
         title: event.title,
+        slug: event.slug || '',
         description: event.description || '',
         date: event.date,
         time: event.time || '',
@@ -1655,6 +1679,7 @@ export async function getAdminTicketType(id: string): Promise<AdminTicketType | 
         eventId: ticketType.event_id?.toString() || '',
         eventName: ticketType.event_title || '',
         createdAt: ticketType.created_at,
+        isDefault: ticketType.is_default || false,
       }
     }
   } catch (error) {
@@ -1711,6 +1736,8 @@ export async function getAdminSale(id: string): Promise<AdminSale | null> {
         unitPrice: sale.total_amount / sale.quantity || 0,
         totalAmount: sale.total_amount,
         status: sale.status,
+        transactionType: sale.transaction_type || 'purchase',
+        transactionDate: sale.transaction_date || sale.created_at,
         purchaseDate: sale.created_at,
         eventDate: sale.event_date || sale.created_at,
         paymentMethod: sale.payment_method,
@@ -3548,15 +3575,14 @@ export async function createAdminUser(userData: {
       
       return {
         id: user.id.toString(),
-        name: `${user.first_name} ${user.last_name}`,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
         email: user.email,
+        phone: user.phone || '',
         role: user.role,
         status: user.status,
-        createdAt: user.created_at,
+        created_at: user.created_at,
         lastLogin: user.last_login || "Nunca",
-        eventsCreated: user.events_created || 0,
-        ticketsSold: user.tickets_purchased || 0,
-        twoFactorAuthEnabled: false,
       }
     }
     throw new Error('Error al crear el usuario')

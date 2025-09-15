@@ -357,6 +357,7 @@ interface TicketTypeFormValues {
   status: string
   eventId: string
   eventName: string
+  isDefault: boolean
 }
 
 interface CreateTicketTypeDialogProps {
@@ -375,13 +376,14 @@ function CreateTicketTypeDialog({ onCreate }: CreateTicketTypeDialogProps) {
     status: "active",
     eventId: "",
     eventName: "",
+    isDefault: false,
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onCreate(formData)
     setOpen(false)
-    setFormData({ name: "", description: "", price: 0, quantity: 0, sold: 0, remaining: 0, status: "active", eventId: "", eventName: "" }) // Reset form
+    setFormData({ name: "", description: "", price: 0, quantity: 0, sold: 0, remaining: 0, status: "active", eventId: "", eventName: "", isDefault: false }) // Reset form
   }
 
   return (
@@ -447,6 +449,7 @@ function EditTicketTypeDialog({ ticketType, onUpdate }: EditTicketTypeDialogProp
     status: ticketType.status,
     eventId: ticketType.eventId,
     eventName: ticketType.eventName,
+    isDefault: ticketType.isDefault,
   })
 
   const handleSubmit = (e: React.FormEvent) => {

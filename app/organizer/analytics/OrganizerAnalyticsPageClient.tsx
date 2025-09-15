@@ -232,7 +232,7 @@ export default function OrganizerAnalyticsPageClient() {
 
   // AI Business Intelligence - Generate intelligent insights
   const generateAIInsights = () => {
-    const insights = []
+    const insights: any[] = []
     
     if (analyticsData.eventPerformanceData.length === 0) {
       return insights
@@ -509,7 +509,7 @@ export default function OrganizerAnalyticsPageClient() {
                       cy="50%"
                       outerRadius={80}
                       dataKey="ventas"
-                      label={({ canal, ventas }) => `${canal}: ${ventas}%`}
+                      label={(entry: any) => `${entry.canal}: ${entry.ventas}%`}
                     >
                       {analyticsData.channelData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />

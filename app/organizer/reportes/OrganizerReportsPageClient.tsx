@@ -24,6 +24,7 @@ import {
   Clock,
   Eye,
   RefreshCw,
+  Zap,
 } from "lucide-react"
 
 // Report data interfaces
@@ -229,7 +230,7 @@ export default function OrganizerReportsPageClient() {
 
   // AI Business Intelligence - Generate intelligent recommendations
   const generateAIRecommendations = () => {
-    const recommendations = []
+    const recommendations: any[] = []
     
     if (reportData.salesReportData.length === 0) {
       return recommendations

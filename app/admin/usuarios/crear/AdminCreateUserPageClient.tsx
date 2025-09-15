@@ -27,7 +27,7 @@ export default function AdminCreateUserPageClient() {
       const newUser = await createAdminUser(apiUserData)
       toast({
         title: "Usuario Creado",
-        description: `El usuario "${newUser.name}" ha sido creado exitosamente.`,
+        description: `El usuario "${newUser.first_name} ${newUser.last_name}" ha sido creado exitosamente.`,
       })
       router.push("/admin/usuarios")
     } catch (error: any) {

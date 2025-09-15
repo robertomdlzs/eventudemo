@@ -92,7 +92,7 @@ export default function ContactoPage() {
       setContactInfo(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof ContactInfo],
+          ...(prev[parent as keyof ContactInfo] as Record<string, any> || {}),
           [child]: value
         }
       }))

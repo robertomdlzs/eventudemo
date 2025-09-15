@@ -53,7 +53,7 @@ export const SEAT_MAP_TEMPLATES: SeatMapTemplate[] = [
         rows: 10,
         seatsPerRow: 20,
         seats: [],
-        category: 'premium',
+        category: 'vip',
         description: 'Asientos de orquesta con mejor vista',
         isPremium: true,
         amenities: ['Vista privilegiada', 'Acceso prioritario']
@@ -146,7 +146,7 @@ export const SEAT_MAP_TEMPLATES: SeatMapTemplate[] = [
         rows: 0,
         seatsPerRow: 0,
         seats: [],
-        category: 'premium',
+        category: 'vip',
         description: 'Área de piso general sin asientos asignados',
         isPremium: true,
         amenities: ['Vista cercana', 'Área de baile']
@@ -275,7 +275,7 @@ export const SEAT_MAP_TEMPLATES: SeatMapTemplate[] = [
         rows: 4,
         seatsPerRow: 5,
         seats: [],
-        category: 'accessible',
+        category: 'economy',
         description: 'Asientos para personas con discapacidad',
         hasWheelchairAccess: true,
         amenities: ['Acceso para sillas de ruedas', 'Espacio amplio']

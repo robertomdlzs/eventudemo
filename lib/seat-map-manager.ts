@@ -334,11 +334,12 @@ export class SeatMapManager {
   }
 
   async loadFromTemplate(templateId: string): Promise<void> {
-    const template = this.storage.getTemplate(templateId)
+    const template = SeatMapStorage.getTemplate(templateId)
     if (template) {
       this.sections = template.data.sections.map((section) => ({
         ...section,
         id: `section_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        isSelected: false,
         seats: section.seats.map((seat) => ({
           ...seat,
           id: `${section.id}_${seat.row}${seat.number}_${Math.random().toString(36).substr(2, 4)}`,

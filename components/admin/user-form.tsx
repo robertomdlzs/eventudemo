@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertTriangle, Calendar, MapPin } from "lucide-react"
-import type { AdminUser } from "@/lib/types"
+import type { AdminUser } from "@/app/admin/actions"
 import { apiClient } from "@/lib/api-client"
 import { getEventsForOrganizers } from "@/app/admin/actions"
 
@@ -24,10 +24,9 @@ interface UserFormProps {
 }
 
 export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
-  // Separar nombre completo en firstName y lastName
-  const nameParts = initialData?.name ? initialData.name.split(' ') : ['', '']
-  const firstName = nameParts[0] || ''
-  const lastName = nameParts.slice(1).join(' ') || ''
+  // Usar first_name y last_name directamente
+  const firstName = initialData?.first_name || ''
+  const lastName = initialData?.last_name || ''
 
   const [formData, setFormData] = useState({
     firstName: firstName,
@@ -83,10 +82,6 @@ export function UserForm({ initialData, onSubmit, onCancel }: UserFormProps) {
       ...(formData.role === 'organizer' && { assignedEvents: selectedEvents })
     }
     
-    // Si es edición y no hay password, remover el campo
-    if (initialData && !formData.password) {
-      delete submitData.password
-    }
     
     onSubmit(submitData)
   }

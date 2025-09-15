@@ -273,7 +273,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                               ${ticketType.price?.toLocaleString()}
                             </p>
                             <p className="text-sm text-gray-500 mb-4">
-                              {ticketType.available_quantity} disponibles
+                              {'quantity' in ticketType ? ticketType.quantity - ticketType.sold : ticketType.available_quantity} disponibles
                             </p>
                             
                             {/* Selector de cantidad */}
@@ -293,7 +293,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleQuantityChange(ticketType.id, 1)}
-                                disabled={selectedTickets[ticketType.id] >= ticketType.available_quantity}
+                                disabled={selectedTickets[ticketType.id] >= ('quantity' in ticketType ? ticketType.quantity - ticketType.sold : ticketType.available_quantity)}
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -435,7 +435,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                       </div>
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="font-semibold">CIUDAD:</span>
-                        <span>{event.city || event.location}</span>
+                        <span>{event.location}</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="font-semibold">LUGAR:</span>

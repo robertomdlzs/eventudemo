@@ -59,9 +59,9 @@ export function TwoFactorAuthForm({
     }
 
     startTransition(async () => {
-      const result = await simulate2FACodeVerification(userId, code)
+      const result = await simulate2FACodeVerification(code)
 
-      if (result.success) {
+      if (result) {
         toast({
           title: "Verificación 2FA exitosa",
           description: "Has iniciado sesión de forma segura.",
@@ -87,10 +87,10 @@ export function TwoFactorAuthForm({
           }
         }
       } else {
-        setError(result.message || "Código 2FA incorrecto. Inténtalo de nuevo.")
+        setError("Código 2FA incorrecto. Inténtalo de nuevo.")
         toast({
           title: "Error 2FA",
-          description: result.message || "Código de autenticación incorrecto.",
+          description: "Código de autenticación incorrecto.",
           variant: "destructive",
         })
       }

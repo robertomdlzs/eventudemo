@@ -449,7 +449,7 @@ export class TicketManager {
     const revenue = eventTickets.reduce((sum, t) => sum + t.price, 0)
 
     return {
-      capacity,
+      capacity: capacity || null,
       totalSales: eventTickets.length,
       digitalSales: eventTickets.filter((t) => t.ticketType === "digital").length,
       physicalSales: eventTickets.filter((t) => t.ticketType === "physical").length,

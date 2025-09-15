@@ -40,18 +40,6 @@ export function EventForm({ event, onSubmit, onCancel, isLoading }: EventFormPro
     totalCapacity: 0,
     status: "draft",
     seatMapId: "", // Nuevo campo para el ID del mapa de asientos
-    // Campos de tarifa de servicio
-    serviceFeeType: "percentage" as "percentage" | "fixed",
-    serviceFeeValue: 5.00,
-    serviceFeeDescription: "Tarifa de servicio",
-    // Campos de métodos de pago
-    paymentMethods: {
-      pse: true,
-      credit_card: true,
-      debit_card: true,
-      daviplata: true,
-      tc_serfinanza: true,
-    },
   })
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
@@ -69,18 +57,6 @@ export function EventForm({ event, onSubmit, onCancel, isLoading }: EventFormPro
         totalCapacity: event.totalCapacity,
         status: event.status,
         seatMapId: event.seatMapId || "", // Cargar el seatMapId existente
-        // Campos de tarifa de servicio
-        serviceFeeType: (event as any).serviceFeeType || "percentage",
-        serviceFeeValue: (event as any).serviceFeeValue || 5.00,
-        serviceFeeDescription: (event as any).serviceFeeDescription || "Tarifa de servicio",
-        // Campos de métodos de pago
-        paymentMethods: (event as any).paymentMethods || {
-          pse: true,
-          credit_card: true,
-          debit_card: true,
-          daviplata: true,
-          tc_serfinanza: true,
-        },
       })
       if (event.date) {
         setSelectedDate(new Date(event.date))

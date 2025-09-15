@@ -118,7 +118,9 @@ export default function SearchBar() {
 
   const getUniqueCategories = () => {
     const categories = Array.from(new Set(allEvents.map((event) => 
-      typeof event.category === 'object' ? event.category.name : event.category
+      typeof event.category === 'object' && event.category && 'name' in event.category 
+        ? (event.category as any).name 
+        : event.category
     )))
     return categories.sort()
   }

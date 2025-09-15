@@ -109,7 +109,7 @@ export default function SeatMapSelector({
     if (!selectedSeatMapId) return
 
     try {
-      const response = await apiClient.getSeatMap(selectedSeatMapId)
+      const response = await apiClient.getSeatMap(selectedSeatMapId.toString())
       if (response.success && response.data) {
         setSelectedSeatMap(response.data)
       }
@@ -167,7 +167,7 @@ export default function SeatMapSelector({
     }
 
     try {
-      const response = await apiClient.deleteSeatMap(seatMapId)
+      const response = await apiClient.deleteSeatMap(seatMapId.toString())
       if (response.success) {
         toast({
           title: "Mapa de asientos eliminado",

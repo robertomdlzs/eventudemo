@@ -81,30 +81,18 @@ export function useSeatUpdates({ eventId, onSeatUpdate, onConnectionChange }: Us
     if (!eventId) return
 
     // Set up event listeners
-    wsClient.on("seatUpdate", handleSeatUpdate)
-    wsClient.on("connected", () => handleConnectionChange("connected"))
-    wsClient.on("disconnected", () => handleConnectionChange("disconnected"))
-    wsClient.on("error", () => handleConnectionChange("error"))
-    wsClient.on("maxReconnectAttemptsReached", () => {
-      toast({
-        title: "Error de conexión",
-        description: "No se pudo establecer conexión para actualizaciones en tiempo real",
-        variant: "destructive",
-      })
-    })
+    wsClient.onSeatUpdate(handleSeatUpdate)
+    // Note: maxReconnectAttemptsReached event handling removed as it's not available in the current WebSocketClient
 
     // Connect to WebSocket
     wsClient.connect(eventId)
 
     // Update connection status
-    setConnectionStatus(wsClient.getConnectionStatus())
+    setConnectionStatus(wsClient.isConnectedToServer() ? "connected" : "disconnected")
 
     return () => {
       // Clean up event listeners
-      wsClient.off("seatUpdate", handleSeatUpdate)
-      wsClient.off("connected", () => handleConnectionChange("connected"))
-      wsClient.off("disconnected", () => handleConnectionChange("disconnected"))
-      wsClient.off("error", () => handleConnectionChange("error"))
+      wsClient.offSeatUpdate(handleSeatUpdate)
     }
   }, [eventId, handleSeatUpdate, handleConnectionChange, wsClient, toast])
 

@@ -133,7 +133,7 @@ export default function OrganizerEventsPageClient() {
     }
 
     try {
-      const response = await apiClient.deleteEvent(parseInt(eventId))
+      const response = await apiClient.deleteOrganizerEvent(eventId)
       if (response.success) {
         toast({
           title: "Evento eliminado",
@@ -351,7 +351,7 @@ export default function OrganizerEventsPageClient() {
                   </div>
                   <div className="text-center">
                     <div className="text-sm text-gray-600">Categoría</div>
-                    <p className="font-semibold text-sm">{typeof event.category === 'object' ? event.category.name : event.category}</p>
+                    <p className="font-semibold text-sm">{typeof event.category === 'object' ? (event.category as any).name : event.category}</p>
                   </div>
                 </div>
 

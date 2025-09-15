@@ -30,19 +30,15 @@ export function BrowserSessionProvider({ children }: BrowserSessionProviderProps
   })
 
   // Hook para manejar timeout de inactividad
-  const { timeLeft, isWarningActive, extendSession } = useSessionTimeout({
+  const { updateLastActivity, getMinutesSinceLastActivity } = useSessionTimeout({
     timeoutMinutes: 15,
-    warningMinutes: 2,
-    onWarning: () => {
-      setShowWarning(true)
-    },
     onTimeout: () => {
       setShowWarning(false)
     }
   })
 
   const handleExtendSession = () => {
-    extendSession()
+    updateLastActivity()
     setShowWarning(false)
   }
 
@@ -53,12 +49,7 @@ export function BrowserSessionProvider({ children }: BrowserSessionProviderProps
   return (
     <>
       {children}
-      <SessionTimeoutWarning
-        isOpen={showWarning && isWarningActive}
-        timeLeft={timeLeft}
-        onExtend={handleExtendSession}
-        onClose={handleCloseWarning}
-      />
+      {showWarning && <SessionTimeoutWarning />}
       <SessionStatusIndicator />
     </>
   )

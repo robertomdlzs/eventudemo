@@ -5,7 +5,7 @@ import { es } from "date-fns/locale"
 import { Calendar, MapPin, Users, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { AdminEvent } from "@/lib/types"
+import type { AdminEvent } from "@/app/admin/actions"
 
 interface EventPreviewCardProps {
   event: AdminEvent
