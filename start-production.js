@@ -13,6 +13,16 @@ console.log('🚀 Iniciando aplicación en modo producción...');
 // Configurar variables de entorno
 process.env.NODE_ENV = 'production';
 
+// Cargar configuración de producción si existe
+const path = require('path');
+const fs = require('fs');
+const productionConfigPath = path.join(__dirname, 'backend/config.production.env');
+
+if (fs.existsSync(productionConfigPath)) {
+  console.log('📋 Cargando configuración de producción...');
+  require('dotenv').config({ path: productionConfigPath });
+}
+
 // Configurar URLs para producción
 if (!process.env.NEXT_PUBLIC_API_URL) {
   process.env.NEXT_PUBLIC_API_URL = `https://${process.env.DOMAIN || 'eventu.mnz.dom.my.id'}/api`;

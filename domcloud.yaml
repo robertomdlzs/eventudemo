@@ -41,7 +41,14 @@ commands:
   - echo "NODE_ENV=production" >> backend/.env
   - echo "PORT=$PORT" >> backend/.env
   - echo "FRONTEND_URL=https://eventu.mnz.dom.my.id" >> backend/.env
+  - echo "DB_TYPE=postgresql" >> backend/.env
+  - echo "DB_HOST=localhost" >> backend/.env
+  - echo "DB_PORT=5432" >> backend/.env
+  - echo "DB_NAME=eventu_db" >> backend/.env
+  - echo "DB_USER=postgres" >> backend/.env
+  - echo "DB_PASSWORD=Eventu321" >> backend/.env
   - echo "BACKEND_URL=http://localhost:$PORT" >> .env
+  - cp backend/config.production.env backend/.env
   
   # Configurar base de datos MySQL (descomenta y ajusta según tu configuración)
   # - echo "DB_HOST=localhost" >> backend/.env
