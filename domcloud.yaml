@@ -23,8 +23,9 @@ commands:
   # Construir la aplicación Next.js
   - $NPM run build
   
-  # Instalar dependencias del backend
-  - cd backend && $NPM install --production
+  # Instalar dependencias del backend usando script personalizado
+  - chmod +x install-backend-deps.sh
+  - ./install-backend-deps.sh
   
   # Crear archivo .env si no existe
   - "[ -f .env ] || touch .env"
