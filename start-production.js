@@ -14,7 +14,6 @@ console.log('🚀 Iniciando aplicación en modo producción...');
 process.env.NODE_ENV = 'production';
 
 // Cargar configuración de producción si existe
-const path = require('path');
 const fs = require('fs');
 const productionConfigPath = path.join(__dirname, 'backend/config.production.env');
 
