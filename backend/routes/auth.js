@@ -2,6 +2,7 @@ const express = require("express")
 const jwt = require("jsonwebtoken")
 const User = require("../models/User")
 const { auth } = require("../middleware/auth")
+const AuditService = require("../services/auditService")
 // El middleware de auditoría global ya maneja todas las acciones automáticamente
 const { Pool } = require("pg")
 require("dotenv").config()
@@ -104,6 +105,29 @@ router.post("/login", async (req, res) => {
     // Find user
     const user = await User.findByEmail(email)
     if (!user) {
+      // Registrar intento de login fallido
+      try {
+        await AuditService.logActivity({
+          userId: 'login_attempt',
+          userName: `Usuario (${email})`,
+          userEmail: email,
+          action: 'LOGIN',
+          resource: 'AUTH',
+          resourceId: null,
+          details: {
+            method: 'POST',
+            path: '/api/auth/login',
+            reason: 'user_not_found'
+          },
+          ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+          userAgent: req.get('User-Agent') || 'Unknown',
+          severity: 'medium',
+          status: 'failure'
+        })
+      } catch (auditError) {
+        console.error('Error logging failed login attempt:', auditError)
+      }
+      
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
@@ -113,6 +137,29 @@ router.post("/login", async (req, res) => {
     // Check password
     const isValidPassword = await user.validatePassword(password)
     if (!isValidPassword) {
+      // Registrar intento de login fallido por contraseña incorrecta
+      try {
+        await AuditService.logActivity({
+          userId: user.id.toString(),
+          userName: user.name || user.email,
+          userEmail: user.email,
+          action: 'LOGIN',
+          resource: 'AUTH',
+          resourceId: null,
+          details: {
+            method: 'POST',
+            path: '/api/auth/login',
+            reason: 'invalid_password'
+          },
+          ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+          userAgent: req.get('User-Agent') || 'Unknown',
+          severity: 'medium',
+          status: 'failure'
+        })
+      } catch (auditError) {
+        console.error('Error logging failed login attempt:', auditError)
+      }
+      
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
@@ -164,6 +211,31 @@ router.post("/login", async (req, res) => {
         redirectUrl = "/"
         welcomeMessage = "Bienvenido a Eventu"
         break
+    }
+
+    // Registrar login exitoso en auditoría
+    try {
+      await AuditService.logActivity({
+        userId: user.id.toString(),
+        userName: user.name || user.email,
+        userEmail: user.email,
+        action: 'LOGIN',
+        resource: 'AUTH',
+        resourceId: null,
+        details: {
+          method: 'POST',
+          path: '/api/auth/login',
+          role: user.role,
+          redirectUrl: redirectUrl
+        },
+        ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        severity: 'medium',
+        status: 'success'
+      })
+    } catch (auditError) {
+      console.error('Error logging login activity:', auditError)
+      // No interrumpir el flujo de login por errores de auditoría
     }
 
     res.json({
@@ -426,6 +498,29 @@ router.get("/verify-token", auth, async (req, res) => {
 // Logout (client-side token removal, optional endpoint for logging)
 router.post("/logout", auth, async (req, res) => {
   try {
+    // Registrar logout en auditoría
+    try {
+      await AuditService.logActivity({
+        userId: req.user.userId.toString(),
+        userName: req.user.name || req.user.email,
+        userEmail: req.user.email,
+        action: 'LOGOUT',
+        resource: 'AUTH',
+        resourceId: null,
+        details: {
+          method: 'POST',
+          path: '/api/auth/logout'
+        },
+        ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        severity: 'low',
+        status: 'success'
+      })
+    } catch (auditError) {
+      console.error('Error logging logout activity:', auditError)
+      // No interrumpir el flujo de logout por errores de auditoría
+    }
+    
     // In a real app, you might want to blacklist the token
     // For now, we'll just acknowledge the logout
     res.json({

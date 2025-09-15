@@ -78,13 +78,32 @@ function AdminAuditClient() {
   const fetchLogs = async () => {
     try {
       setLoading(true)
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'
+      const token = localStorage.getItem('auth_token')
+      
+      if (!token) {
+        console.error('No auth token found')
+        setLoading(false)
+        return
+      }
+
       const queryParams = new URLSearchParams({
         limit: pagination.limit.toString(),
         offset: pagination.offset.toString(),
         ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''))
       })
 
-      const response = await fetch(`/api/audit/logs?${queryParams}`)
+      const response = await fetch(`${backendUrl}/api/audit/logs?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -104,7 +123,25 @@ function AdminAuditClient() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/audit/stats')
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'
+      const token = localStorage.getItem('auth_token')
+      
+      if (!token) {
+        console.error('No auth token found')
+        return
+      }
+
+      const response = await fetch(`${backendUrl}/api/audit/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -153,11 +190,29 @@ function AdminAuditClient() {
 
   const exportLogs = async () => {
     try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'
+      const token = localStorage.getItem('auth_token')
+      
+      if (!token) {
+        console.error('No auth token found')
+        return
+      }
+
       const queryParams = new URLSearchParams(
         Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''))
       )
 
-      const response = await fetch(`/api/audit/export?${queryParams}`)
+      const response = await fetch(`${backendUrl}/api/audit/export?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const blob = await response.blob()
       
       const url = window.URL.createObjectURL(blob)

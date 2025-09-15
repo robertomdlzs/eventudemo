@@ -254,9 +254,23 @@ const auditMiddleware = (options = {}) => {
         }
         
         // Obtener información del usuario
-        const userId = req.user?.userId || req.user?.id || 'anonymous'
-        const userName = req.user?.name || req.user?.userName || 'Usuario Anónimo'
-        const userEmail = req.user?.email || req.user?.userEmail || 'anonymous@eventu.com'
+        let userId = req.user?.userId || req.user?.id || 'anonymous'
+        let userName = req.user?.name || req.user?.userName || 'Usuario Anónimo'
+        let userEmail = req.user?.email || req.user?.userEmail || 'anonymous@eventu.com'
+        
+        // Para login, intentar obtener información del body
+        if (action === 'LOGIN' && req.body?.email) {
+          userEmail = req.body.email
+          userName = `Usuario (${req.body.email})`
+          userId = 'login_attempt'
+        }
+        
+        // Para register, usar información del body
+        if (action === 'REGISTER' && req.body?.email) {
+          userEmail = req.body.email
+          userName = req.body.name || `Usuario (${req.body.email})`
+          userId = 'register_attempt'
+        }
         
         // Crear detalles de la actividad
         const details = {

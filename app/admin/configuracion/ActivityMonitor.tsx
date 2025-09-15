@@ -266,10 +266,11 @@ export default function ActivityMonitor() {
 
   const loadRealMetrics = async () => {
     try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'
       const token = localStorage.getItem("auth_token")
       if (!token) return
 
-      const response = await fetch('http://localhost:3002/api/audit/stats', {
+      const response = await fetch(`${backendUrl}/api/audit/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -282,10 +283,11 @@ export default function ActivityMonitor() {
           const stats = data.data
           
           // Procesar estadísticas reales
-          const totalLogins = stats.logsByAction?.find((item: any) => item.action === 'LOGIN')?.count || 0
-          const failedLogins = stats.logsByStatus?.find((item: any) => item.status === 'failure')?.count || 0
-          const highSeverity = stats.logsBySeverity?.find((item: any) => item.severity === 'high')?.count || 0
-          const criticalSeverity = stats.logsBySeverity?.find((item: any) => item.severity === 'critical')?.count || 0
+          const totalLogins = parseInt(stats.logsByAction?.find((item: any) => item.action === 'LOGIN')?.count || '0')
+          const failedLogins = parseInt(stats.logsByStatus?.find((item: any) => item.status === 'failure')?.count || '0')
+          const highSeverity = parseInt(stats.logsBySeverity?.find((item: any) => item.severity === 'high')?.count || '0')
+          const criticalSeverity = parseInt(stats.logsBySeverity?.find((item: any) => item.severity === 'critical')?.count || '0')
+          const totalLogs = parseInt(stats.totalLogs?.[0]?.count || '0')
           
           setMetrics({
             totalLogins,
@@ -293,11 +295,14 @@ export default function ActivityMonitor() {
             blockedAttempts: failedLogins,
             securityAlerts: highSeverity + criticalSeverity,
             activeSessions: 1, // Esto requeriría un sistema de sesiones activas
-            passwordChanges: stats.logsByAction?.find((item: any) => item.action === 'PASSWORD_CHANGE')?.count || 0,
-            twoFactorActivations: stats.logsByAction?.find((item: any) => item.action === '2FA_ACTIVATION')?.count || 0,
+            passwordChanges: parseInt(stats.logsByAction?.find((item: any) => item.action === 'PASSWORD_CHANGE')?.count || '0'),
+            twoFactorActivations: parseInt(stats.logsByAction?.find((item: any) => item.action === '2FA_ACTIVATION')?.count || '0'),
             suspiciousActivities: highSeverity
           })
         }
+      } else {
+        console.error('Error response:', response.status, response.statusText)
+        generateMockMetrics()
       }
     } catch (error) {
       console.error('Error loading audit stats:', error)
