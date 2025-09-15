@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { apiClient } from "../../lib/api-client"
 import { EventMetricsDashboard } from "../../components/organizer/event-metrics-dashboard"
+import { PromoterDashboard } from "../../components/organizer/promoter-dashboard"
 import Link from "next/link"
 
 interface OrganizerEvent {
@@ -138,6 +139,11 @@ export default function OrganizerDashboard() {
       case 'cancelled': return 'Cancelado'
       default: return status
     }
+  }
+
+  // Si es un promotor, mostrar el dashboard visual
+  if (currentUser && currentUser.first_name === "Promotor") {
+    return <PromoterDashboard />
   }
 
   if (loading) {
