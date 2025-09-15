@@ -1,23 +1,17 @@
 source: https://github.com/robertmdlzs01/eventudev.git
 
-# Template para aplicación Next.js con backend Node.js
-# La aplicación frontend se construye con Next.js y el backend corre en Node.js
-
+# Configuración corregida para DomCloud - Next.js con Backend
 features:
   - node lts
   - mysql
 
 nginx:
-  # Next.js standalone genera archivos en .next/standalone
-  root: public_html/.next/standalone/public
+  root: public_html/public
   passenger:
     enabled: "on"
 
-# Variables de entorno para producción
 app_env: "production"
-
-# Comando para iniciar la aplicación
-# Script personalizado que maneja frontend y backend
+# Comando corregido para usar nuestro script personalizado
 app_start_command: env PORT=$PORT node start-production.js
 
 # Comandos de despliegue
@@ -38,9 +32,11 @@ commands:
   
   # Configurar variables de entorno para producción
   - echo "NODE_ENV=production" >> .env
-  - echo "NEXT_PUBLIC_API_URL=https://tu-dominio.com/api" >> .env
+  - echo "NEXT_PUBLIC_API_URL=https://eventu.mnz.dom.my.id/api" >> .env
   - echo "NODE_ENV=production" >> backend/.env
   - echo "PORT=$PORT" >> backend/.env
+  - echo "FRONTEND_URL=https://eventu.mnz.dom.my.id" >> backend/.env
+  - echo "BACKEND_URL=http://localhost:$PORT" >> .env
   
   # Configurar base de datos MySQL (descomenta y ajusta según tu configuración)
   # - echo "DB_HOST=localhost" >> backend/.env

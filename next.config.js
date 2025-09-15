@@ -9,6 +9,14 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   
+  // Deshabilitar prerenderizado para páginas dinámicas
+  trailingSlash: false,
+  
+  // Configuración para evitar errores de prerenderizado
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
+  
   images: {
     domains: [
       'images.unsplash.com',

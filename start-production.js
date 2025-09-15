@@ -13,6 +13,15 @@ console.log('🚀 Iniciando aplicación en modo producción...');
 // Configurar variables de entorno
 process.env.NODE_ENV = 'production';
 
+// Configurar URLs para producción
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  process.env.NEXT_PUBLIC_API_URL = `https://${process.env.DOMAIN || 'eventu.mnz.dom.my.id'}/api`;
+}
+
+if (!process.env.FRONTEND_URL) {
+  process.env.FRONTEND_URL = `https://${process.env.DOMAIN || 'eventu.mnz.dom.my.id'}`;
+}
+
 // Función para iniciar el backend
 function startBackend() {
   console.log('📡 Iniciando backend...');

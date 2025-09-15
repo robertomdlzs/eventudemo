@@ -1,4 +1,14 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002/api"
+// Configuración de API para diferentes entornos
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // En el cliente, usar la URL del navegador
+    return process.env.NEXT_PUBLIC_API_URL || `${window.location.origin}/api`
+  }
+  // En el servidor, usar la URL de producción o localhost
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002/api"
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 export interface ApiResponse<T> {
   success: boolean
