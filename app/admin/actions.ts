@@ -1099,7 +1099,7 @@ export async function getAdminUser(id: string): Promise<AdminUser | null> {
         ticketsSold: user.tickets_purchased || 0,
         twoFactorAuthEnabled: false, // Por implementar
       }
-    }
+    }  
   } catch (error) {
     console.error('Error fetching admin user:', error)
   }

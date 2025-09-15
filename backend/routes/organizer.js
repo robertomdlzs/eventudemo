@@ -1451,4 +1451,207 @@ router.patch('/events/:eventId/status', auth, requireOrganizer, async (req, res)
   }
 })
 
+// ===== MÉTRICAS DE EVENTO ESPECÍFICO =====
+router.get('/events/:eventId/analytics', auth, requireOrganizer, async (req, res) => {
+  try {
+    const organizerId = req.user.userId
+    const { eventId } = req.params
+
+    // Verificar que el evento pertenece al organizador
+    const eventCheckQuery = `
+      SELECT id, title, date, total_capacity, status
+      FROM events 
+      WHERE id = $1 AND organizer_id = $2
+    `
+    const eventCheckResult = await db.query(eventCheckQuery, [eventId, organizerId])
+    
+    if (eventCheckResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Evento no encontrado o no tienes permisos para verlo'
+      })
+    }
+
+    const event = eventCheckResult.rows[0]
+
+    // Métricas del evento
+    const metricsQuery = `
+      SELECT 
+        COUNT(DISTINCT s.id) as total_sales,
+        COALESCE(SUM(s.quantity), 0) as total_tickets_sold,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
+        COUNT(DISTINCT s.buyer_email) as unique_customers,
+        CASE 
+          WHEN e.total_capacity > 0 
+          THEN (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity)
+          ELSE 0 
+        END as occupancy_rate,
+        CASE 
+          WHEN COUNT(DISTINCT s.id) > 0 
+          THEN COALESCE(SUM(s.total_amount), 0) / COUNT(DISTINCT s.id)
+          ELSE 0 
+        END as average_order_value,
+        e.total_capacity - COALESCE(SUM(s.quantity), 0) as remaining_capacity,
+        CASE 
+          WHEN e.total_capacity > 0 
+          THEN (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity)
+          ELSE 0 
+        END as conversion_rate
+      FROM events e
+      LEFT JOIN sales s ON e.id = s.event_id
+      WHERE e.id = $1 AND e.organizer_id = $2
+      GROUP BY e.id, e.title, e.total_capacity
+    `
+
+    const metricsResult = await db.query(metricsQuery, [eventId, organizerId])
+    const metrics = metricsResult.rows[0] || {
+      total_sales: 0,
+      total_tickets_sold: 0,
+      total_revenue: 0,
+      unique_customers: 0,
+      occupancy_rate: 0,
+      average_order_value: 0,
+      remaining_capacity: event.total_capacity,
+      conversion_rate: 0
+    }
+
+    // Ventas por hora (últimas 24 horas)
+    const hourlySalesQuery = `
+      SELECT 
+        EXTRACT(HOUR FROM s.created_at) as hour,
+        COUNT(s.id) as sales_count,
+        COALESCE(SUM(s.quantity), 0) as tickets_sold,
+        COALESCE(SUM(s.total_amount), 0) as revenue
+      FROM sales s
+      WHERE s.event_id = $1 
+        AND s.created_at >= NOW() - INTERVAL '24 hours'
+      GROUP BY EXTRACT(HOUR FROM s.created_at)
+      ORDER BY hour
+    `
+
+    const hourlySalesResult = await db.query(hourlySalesQuery, [eventId])
+    const hourlySales = hourlySalesResult.rows.map(row => ({
+      hour: `${row.hour}:00`,
+      sales_count: parseInt(row.sales_count) || 0,
+      tickets_sold: parseInt(row.tickets_sold) || 0,
+      revenue: parseInt(row.revenue) || 0
+    }))
+
+    // Ventas por tipo de ticket
+    const ticketTypeSalesQuery = `
+      SELECT 
+        tt.name as ticket_type,
+        tt.price,
+        COUNT(s.id) as sales_count,
+        COALESCE(SUM(s.quantity), 0) as tickets_sold,
+        COALESCE(SUM(s.total_amount), 0) as revenue
+      FROM sales s
+      LEFT JOIN ticket_types tt ON s.ticket_type_id = tt.id
+      WHERE s.event_id = $1
+      GROUP BY tt.id, tt.name, tt.price
+      ORDER BY revenue DESC
+    `
+
+    const ticketTypeSalesResult = await db.query(ticketTypeSalesQuery, [eventId])
+    const ticketTypeSales = ticketTypeSalesResult.rows.map(row => ({
+      ticket_type: row.ticket_type || 'General',
+      price: parseInt(row.price) || 0,
+      sales_count: parseInt(row.sales_count) || 0,
+      tickets_sold: parseInt(row.tickets_sold) || 0,
+      revenue: parseInt(row.revenue) || 0
+    }))
+
+    // Ventas recientes
+    const recentSalesQuery = `
+      SELECT 
+        s.id,
+        s.buyer_name,
+        s.buyer_email,
+        s.quantity,
+        s.total_amount,
+        s.payment_method,
+        s.status,
+        s.created_at,
+        tt.name as ticket_type
+      FROM sales s
+      LEFT JOIN ticket_types tt ON s.ticket_type_id = tt.id
+      WHERE s.event_id = $1
+      ORDER BY s.created_at DESC
+      LIMIT 10
+    `
+
+    const recentSalesResult = await db.query(recentSalesQuery, [eventId])
+    const recentSales = recentSalesResult.rows.map(row => ({
+      id: row.id,
+      buyer_name: row.buyer_name,
+      buyer_email: row.buyer_email,
+      quantity: parseInt(row.quantity) || 0,
+      total_amount: parseInt(row.total_amount) || 0,
+      payment_method: row.payment_method || 'N/A',
+      status: row.status,
+      created_at: row.created_at,
+      ticket_type: row.ticket_type || 'General'
+    }))
+
+    // Tendencias por día (últimos 7 días)
+    const trendsQuery = `
+      SELECT 
+        DATE(s.created_at) as day,
+        COUNT(s.id) as daily_sales,
+        COALESCE(SUM(s.quantity), 0) as daily_tickets,
+        COALESCE(SUM(s.total_amount), 0) as daily_revenue
+      FROM sales s
+      WHERE s.event_id = $1 
+        AND s.created_at >= NOW() - INTERVAL '7 days'
+      GROUP BY DATE(s.created_at)
+      ORDER BY day DESC
+    `
+
+    const trendsResult = await db.query(trendsQuery, [eventId])
+    const trends = trendsResult.rows.map(row => ({
+      day: row.day,
+      daily_sales: parseInt(row.daily_sales) || 0,
+      daily_tickets: parseInt(row.daily_tickets) || 0,
+      daily_revenue: parseInt(row.daily_revenue) || 0
+    }))
+
+    const response = {
+      event: {
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        total_capacity: event.total_capacity,
+        status: event.status
+      },
+      metrics: {
+        total_sales: parseInt(metrics.total_sales) || 0,
+        total_tickets_sold: parseInt(metrics.total_tickets_sold) || 0,
+        total_revenue: parseInt(metrics.total_revenue) || 0,
+        unique_customers: parseInt(metrics.unique_customers) || 0,
+        occupancy_rate: parseFloat(metrics.occupancy_rate) || 0,
+        average_order_value: parseInt(metrics.average_order_value) || 0,
+        remaining_capacity: parseInt(metrics.remaining_capacity) || event.total_capacity,
+        conversion_rate: parseFloat(metrics.conversion_rate) || 0
+      },
+      hourly_sales: hourlySales,
+      ticket_type_sales: ticketTypeSales,
+      recent_sales: recentSales,
+      trends: trends,
+      last_updated: new Date().toISOString()
+    }
+
+    res.json({
+      success: true,
+      data: response
+    })
+
+  } catch (error) {
+    console.error('Error getting event analytics:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    })
+  }
+})
+
 module.exports = router
