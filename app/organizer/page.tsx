@@ -43,14 +43,19 @@ interface OrganizerEvent {
 }
 
 interface OrganizerStats {
-  total_events: number
-  published_events: number
-  draft_events: number
-  total_sales: number
-  total_revenue: number
-  total_tickets_sold: number
-  unique_customers: number
-  average_order_value: number
+  totalEvents: number
+  publishedEvents: number
+  draftEvents: number
+  totalSales: number
+  totalRevenue: number
+  totalTicketsSold: number
+  uniqueCustomers: number
+  averageOrderValue: number
+  todaySales: number
+  todayRevenue: number
+  totalAttendees: number
+  alerts: number
+  eventsThisWeek: number
 }
 
 export default function OrganizerDashboard() {
@@ -99,7 +104,10 @@ export default function OrganizerDashboard() {
     fetchOrganizerData()
   }, [])
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | undefined | null) => {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return '$0'
+    }
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP'
@@ -195,9 +203,9 @@ export default function OrganizerDashboard() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_events}</div>
+              <div className="text-2xl font-bold">{stats.totalEvents || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.published_events} publicados • {stats.draft_events} borradores
+                {stats.publishedEvents || 0} publicados • {stats.draftEvents || 0} borradores
               </p>
             </CardContent>
           </Card>
@@ -208,9 +216,9 @@ export default function OrganizerDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_sales}</div>
+              <div className="text-2xl font-bold">{stats.totalSales || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(stats.total_revenue)} en ingresos
+                {formatCurrency(stats.totalRevenue)} en ingresos
               </p>
             </CardContent>
           </Card>
@@ -221,9 +229,9 @@ export default function OrganizerDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_tickets_sold}</div>
+              <div className="text-2xl font-bold">{stats.totalTicketsSold || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.unique_customers} clientes únicos
+                {stats.uniqueCustomers || 0} clientes únicos
               </p>
             </CardContent>
           </Card>
@@ -234,7 +242,7 @@ export default function OrganizerDashboard() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.average_order_value)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.averageOrderValue)}</div>
               <p className="text-xs text-muted-foreground">
                 Valor promedio por transacción
               </p>
