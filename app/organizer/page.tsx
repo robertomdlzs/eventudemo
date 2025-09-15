@@ -59,11 +59,18 @@ export default function OrganizerDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<number | null>(null)
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   const fetchOrganizerData = async () => {
     try {
       setLoading(true)
       setError(null)
+      
+      // Obtener información del usuario actual
+      const userResponse = await apiClient.getCurrentUser()
+      if (userResponse.success) {
+        setCurrentUser(userResponse.data)
+      }
       
       // Obtener estadísticas del organizador usando el endpoint sin ID
       const statsResponse = await apiClient.getOrganizerDashboard()
@@ -76,7 +83,7 @@ export default function OrganizerDashboard() {
       // Obtener eventos del organizador usando el endpoint sin ID
       const eventsResponse = await apiClient.getOrganizerEvents()
       if (eventsResponse.success) {
-        setEvents(eventsResponse.data.events || [])
+        setEvents(eventsResponse.data || [])
       } else {
         setError(eventsResponse.message || "Error al cargar eventos")
       }
@@ -167,12 +174,15 @@ export default function OrganizerDashboard() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
-          <Button asChild>
-            <Link href="/organizer/eventos/crear">
-              <Plus className="h-4 w-4 mr-2" />
-              Crear Evento
-            </Link>
-          </Button>
+          {/* Solo mostrar el botón "Crear Evento" si no es un promotor */}
+          {currentUser && currentUser.first_name !== "Promotor" && (
+            <Button asChild>
+              <Link href="/organizer/eventos/crear">
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Evento
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

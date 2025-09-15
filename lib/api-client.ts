@@ -1063,6 +1063,13 @@ export class ApiClient {
     })
   }
 
+  // Obtener información del usuario actual
+  async getCurrentUser(): Promise<ApiResponse<any>> {
+    return this.request("/auth/verify-token", {
+      method: "GET",
+    })
+  }
+
   // Export APIs
   async exportToPDF(data: any): Promise<ApiResponse<any>> {
     return this.request("/admin/export/pdf", {
