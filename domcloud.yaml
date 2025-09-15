@@ -25,7 +25,11 @@ commands:
   
   # Instalar dependencias del backend usando script personalizado
   - chmod +x install-backend-deps.sh
+  - echo "Ejecutando script de instalación del backend..."
   - ./install-backend-deps.sh
+  - echo "Verificando instalación de multer..."
+  - cd backend && ls -la node_modules/ | grep multer
+  - cd backend && npm list multer
   
   # Crear archivo .env si no existe
   - "[ -f .env ] || touch .env"
