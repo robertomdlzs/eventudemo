@@ -1,0 +1,18 @@
+source: https://github.com/robertmdlzs01/eventudev.git
+
+features:
+  - node lts
+
+nginx:
+  root: public_html/public
+  passenger:
+    enabled: "on"
+
+app_env: "production"
+app_start_command: "env PORT=$PORT node dist/src/index-simple.js"
+
+commands:
+  - NPM=`which npm`
+  - $NPM install
+  - $NPM run build
+  - cd backend && $NPM install --production
