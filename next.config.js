@@ -4,6 +4,11 @@ const nextConfig = {
     appDir: true,
   },
   
+  // Configuración para producción
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
+  
   images: {
     domains: [
       'images.unsplash.com',

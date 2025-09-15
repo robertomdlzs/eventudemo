@@ -1,14 +1,53 @@
-build:
-  command: npm run build
-  publish: .next
-  environment:
-    NODE_VERSION: 18.x
-    NPM_VERSION: 9.x
+source: https://github.com/robertmdlzs01/eventudev.git
 
-deploy:
-  autoDeploy: true
-  branch: main
+# Template para aplicación Next.js con backend Node.js
+# La aplicación frontend se construye con Next.js y el backend corre en Node.js
 
-framework:
-  name: nextjs
-  version: 14.x
+features:
+  - node lts
+  - mysql
+
+nginx:
+  # Next.js standalone genera archivos en .next/standalone
+  root: public_html/.next/standalone/public
+  passenger:
+    enabled: "on"
+
+# Variables de entorno para producción
+app_env: "production"
+
+# Comando para iniciar la aplicación
+# Script personalizado que maneja frontend y backend
+app_start_command: env PORT=$PORT node start-production.js
+
+# Comandos de despliegue
+commands:
+  # Instalar dependencias del frontend
+  - NPM=`which npm`
+  - $NPM install
+  
+  # Construir la aplicación Next.js
+  - $NPM run build
+  
+  # Instalar dependencias del backend
+  - cd backend && $NPM install --production
+  
+  # Crear archivo .env si no existe
+  - "[ -f .env ] || touch .env"
+  - "[ -f backend/.env ] || touch backend/.env"
+  
+  # Configurar variables de entorno para producción
+  - echo "NODE_ENV=production" >> .env
+  - echo "NEXT_PUBLIC_API_URL=https://tu-dominio.com/api" >> .env
+  - echo "NODE_ENV=production" >> backend/.env
+  - echo "PORT=$PORT" >> backend/.env
+  
+  # Configurar base de datos MySQL (descomenta y ajusta según tu configuración)
+  # - echo "DB_HOST=localhost" >> backend/.env
+  # - echo "DB_USER=$USERNAME" >> backend/.env
+  # - echo "DB_PASSWORD=$MYPASSWD" >> backend/.env
+  # - echo "DB_NAME=$DATABASE" >> backend/.env
+  # - echo "DB_PORT=3306" >> backend/.env
+
+# Configuración adicional para Next.js
+passenger_app_root: public_html
