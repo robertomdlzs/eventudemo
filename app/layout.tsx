@@ -3,11 +3,10 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
-import { GoogleAnalytics } from '@/components/GoogleAnalytics'
-import { CookieConsent } from '@/components/CookieConsent'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
+import CookieConsent from '@/components/CookieConsent'
 import { BrowserSessionProvider } from '@/components/browser-session-provider'
 import { SessionTimeoutProvider } from '@/components/session-timeout-provider'
-import { ConnectionStatusProvider } from '@/components/connection-status-indicator'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -49,11 +48,9 @@ export default function RootLayout({
         >
           <BrowserSessionProvider>
             <SessionTimeoutProvider>
-              <ConnectionStatusProvider>
-                {children}
-                <Toaster />
-                <CookieConsent />
-              </ConnectionStatusProvider>
+              {children}
+              <Toaster />
+              <CookieConsent />
             </SessionTimeoutProvider>
           </BrowserSessionProvider>
         </ThemeProvider>

@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { FeaturedEventsList } from '@/components/featured-events-list'
 import { EventsExplorer } from '@/components/events-explorer'
-import { MainHeader } from '@/components/main-header'
+import MainHeader from '@/components/main-header'
 import { Footer } from '@/components/footer'
 
 // Deshabilitar prerenderizado para esta página
