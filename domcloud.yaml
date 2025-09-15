@@ -12,7 +12,7 @@ nginx:
 
 app_env: "production"
 # Comando corregido para usar nuestro script personalizado
-app_start_command: env PORT=$PORT node start-production.js
+app_start_command: env PORT=$PORT node dist/src/index.js
 
 # Comandos de despliegue
 commands:
