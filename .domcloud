@@ -1,1 +1,1 @@
-app_start_command=env PORT=$PORT npm run domcloud:start
+app_start_command=env PORT=$PORT node dist/src/index-fast.js
