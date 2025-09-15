@@ -184,26 +184,38 @@ router.get('/dashboard', auth, requireOrganizer, async (req, res) => {
         COUNT(DISTINCT e.id) as total_events,
         COUNT(DISTINCT CASE WHEN e.status = 'published' THEN e.id END) as published_events,
         COUNT(DISTINCT CASE WHEN e.status = 'draft' THEN e.id END) as draft_events,
-        0 as total_sales,
-        0 as total_revenue,
-        0 as total_tickets_sold,
-        0 as unique_customers,
-        0 as average_order_value
+        COALESCE(COUNT(DISTINCT s.id), 0) as total_sales,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
+        COALESCE(SUM(s.quantity), 0) as total_tickets_sold,
+        COALESCE(COUNT(DISTINCT s.buyer_email), 0) as unique_customers,
+        CASE 
+          WHEN COUNT(DISTINCT s.id) > 0 
+          THEN COALESCE(SUM(s.total_amount), 0) / COUNT(DISTINCT s.id)
+          ELSE 0 
+        END as average_order_value
       FROM events e
+      LEFT JOIN sales s ON e.id = s.event_id
       WHERE e.organizer_id = $1
     `
 
     // Obtener ventas de hoy
     const todaySalesQuery = `
       SELECT 
-        0 as sales_today,
-        0 as revenue_today
+        COALESCE(COUNT(DISTINCT s.id), 0) as sales_today,
+        COALESCE(SUM(s.total_amount), 0) as revenue_today
+      FROM events e
+      LEFT JOIN sales s ON e.id = s.event_id 
+        AND DATE(s.created_at) = CURRENT_DATE
+      WHERE e.organizer_id = $1
     `
 
     // Obtener total de asistentes
     const attendeesQuery = `
       SELECT 
-        0 as total_attendees
+        COALESCE(SUM(s.quantity), 0) as total_attendees
+      FROM events e
+      LEFT JOIN sales s ON e.id = s.event_id
+      WHERE e.organizer_id = $1
     `
 
     // Obtener alertas (eventos próximos sin ventas, eventos con baja ocupación, etc.)
@@ -226,20 +238,29 @@ router.get('/dashboard', auth, requireOrganizer, async (req, res) => {
     const overviewResult = await db.query(overviewQuery, [organizerId])
     const overview = overviewResult.rows[0] || {}
 
+    const todaySalesResult = await db.query(todaySalesQuery, [organizerId])
+    const todaySales = todaySalesResult.rows[0] || {}
+
+    const attendeesResult = await db.query(attendeesQuery, [organizerId])
+    const attendees = attendeesResult.rows[0] || {}
+
+    const alertsResult = await db.query(alertsQuery, [organizerId])
+    const alerts = alertsResult.rows[0] || {}
+
     const stats = {
       totalEvents: parseInt(overview.total_events) || 0,
       publishedEvents: parseInt(overview.published_events) || 0,
       draftEvents: parseInt(overview.draft_events) || 0,
-      totalSales: 0,
-      totalRevenue: 0,
-      totalTicketsSold: 0,
-      uniqueCustomers: 0,
-      averageOrderValue: 0,
-      todaySales: 0,
-      todayRevenue: 0,
-      totalAttendees: 0,
-      alerts: 0,
-      eventsThisWeek: 0
+      totalSales: parseInt(overview.total_sales) || 0,
+      totalRevenue: parseInt(overview.total_revenue) || 0,
+      totalTicketsSold: parseInt(overview.total_tickets_sold) || 0,
+      uniqueCustomers: parseInt(overview.unique_customers) || 0,
+      averageOrderValue: parseInt(overview.average_order_value) || 0,
+      todaySales: parseInt(todaySales.sales_today) || 0,
+      todayRevenue: parseInt(todaySales.revenue_today) || 0,
+      totalAttendees: parseInt(attendees.total_attendees) || 0,
+      alerts: parseInt(alerts.upcoming_events_no_sales) || 0,
+      eventsThisWeek: parseInt(alerts.events_this_week) || 0
     }
 
     res.json({
@@ -268,7 +289,7 @@ router.get('/quick-stats', auth, requireOrganizer, async (req, res) => {
       SELECT 
         COUNT(CASE WHEN e.status = 'published' THEN 1 END) as active_events,
         COALESCE(SUM(CASE WHEN DATE(s.created_at) = CURRENT_DATE THEN s.total_amount ELSE 0 END), 0) as today_revenue,
-        COALESCE(SUM(CASE WHEN s.status = 'completed' THEN s.quantity ELSE 0 END), 0) as total_attendees,
+        COALESCE(SUM(s.quantity), 0) as total_attendees,
         COUNT(CASE 
           WHEN e.date <= NOW() + INTERVAL '7 days' 
           AND e.status = 'published' 
@@ -395,11 +416,17 @@ router.get('/events', auth, requireOrganizer, async (req, res) => {
         e.category_id,
         e.image_url,
         e.total_capacity,
-        0 as tickets_sold,
-        0 as revenue,
-        0 as occupancy_rate
+        COALESCE(SUM(s.quantity), 0) as tickets_sold,
+        COALESCE(SUM(s.total_amount), 0) as revenue,
+        CASE 
+          WHEN e.total_capacity > 0 
+          THEN (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity)
+          ELSE 0 
+        END as occupancy_rate
       FROM events e
+      LEFT JOIN sales s ON e.id = s.event_id
       WHERE e.organizer_id = $1
+      GROUP BY e.id, e.title, e.description, e.date, e.time, e.venue, e.status, e.category_id, e.image_url, e.total_capacity
     `
 
     const params = [organizerId]
@@ -423,9 +450,34 @@ router.get('/events', auth, requireOrganizer, async (req, res) => {
       params.push(`%${search}%`)
     }
 
-    // Query para contar total
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(DISTINCT e.id) as total FROM')
-    const countResult = await db.query(countQuery, params)
+    // Query para contar total (sin GROUP BY)
+    let countQuery = `
+      SELECT COUNT(DISTINCT e.id) as total
+      FROM events e
+      WHERE e.organizer_id = $1
+    `
+    const countParams = [organizerId]
+    let countParamCount = 1
+
+    if (status && status !== 'all') {
+      countParamCount++
+      countQuery += ` AND e.status = $${countParamCount}`
+      countParams.push(status)
+    }
+
+    if (category && category !== 'all') {
+      countParamCount++
+      countQuery += ` AND e.category_id = $${countParamCount}`
+      countParams.push(category)
+    }
+
+    if (search) {
+      countParamCount++
+      countQuery += ` AND (e.title ILIKE $${countParamCount} OR e.description ILIKE $${countParamCount})`
+      countParams.push(`%${search}%`)
+    }
+
+    const countResult = await db.query(countQuery, countParams)
     const total = parseInt(countResult.rows[0].total) || 0
 
     // Query principal con paginación
