@@ -8426,3 +8426,63 @@
 {"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:04:41.172Z"}
 {"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:06:54.159Z"}
 {"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:07:13.966Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:14.012Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.357Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.695Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.699Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.700Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.701Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.702Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.726Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.825Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.827Z"}
+{"level":"info","message":"GET /api/organizer/dashboard - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.832Z"}
+{"level":"info","message":"GET /api/organizer/dashboard - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.833Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.869Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:15.870Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:19.407Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:19.409Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:20.459Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:20.462Z"}
+{"level":"info","message":"GET /api/organizer/dashboard - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:20.473Z"}
+{"level":"info","message":"GET /api/organizer/dashboard - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:20.475Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:20.485Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:20.487Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:52.634Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:52.638Z"}
+{"level":"info","message":"GET /api/organizer/dashboard - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:52.660Z"}
+{"level":"info","message":"GET /api/organizer/dashboard - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:52.661Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:52.675Z"}
+{"level":"info","message":"GET /api/organizer/events - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:52.676Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:57.646Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:09:57.650Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:10:27.663Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:10:57.718Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:11:15.808Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:11:27.819Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:11:57.910Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:12:28.019Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:12:58.116Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:13:15.903Z"}
+{"level":"info","message":"GET /api/organizer/events/3/analytics - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:13:49.283Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:15:16.009Z"}
+{"level":"info","message":"POST /api/api/auth/invalidate-session - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:15:28.720Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:16:10.542Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:16:10.922Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:16:15.252Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:16:15.520Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:16:56.089Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:16:56.388Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-15T16:17:05.145Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-15T16:17:05.146Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-15T16:17:05.146Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-15T16:17:05.163Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:17:11.346Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:17:11.657Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:17:16.104Z"}
+{"level":"info","message":"Server running on port 3002","service":"eventu-backend","timestamp":"2025-09-15T16:17:57.348Z"}
+{"level":"info","message":"WebSocket server initialized","service":"eventu-backend","timestamp":"2025-09-15T16:17:57.349Z"}
+{"level":"info","message":"Using postgresql database","service":"eventu-backend","timestamp":"2025-09-15T16:17:57.350Z"}
+{"level":"info","message":"postgresql database connected successfully","service":"eventu-backend","timestamp":"2025-09-15T16:17:57.369Z"}
+{"level":"info","message":"POST /api/auth/login - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:18:06.444Z"}
+{"level":"info","message":"GET /api/auth/verify-token - 127.0.0.1","service":"eventu-backend","timestamp":"2025-09-15T16:18:06.756Z"}

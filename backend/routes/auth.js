@@ -479,11 +479,15 @@ router.get("/verify-token", auth, async (req, res) => {
     res.json({
       success: true,
       message: "Token válido",
-      user: {
+      data: {
         id: req.user.userId,
         email: req.user.email,
         role: req.user.role,
-        name: req.user.name
+        name: req.user.name,
+        first_name: req.user.first_name,
+        last_name: req.user.last_name,
+        phone: req.user.phone,
+        company: req.user.company
       }
     })
   } catch (error) {
@@ -604,25 +608,5 @@ router.post("/invalidate-session", auth, async (req, res) => {
 })
 
 // Verify token endpoint
-router.get("/verify-token", auth, async (req, res) => {
-  try {
-    // Si llegamos aquí, el token es válido (el middleware auth ya lo verificó)
-    res.json({
-      success: true,
-      message: "Token is valid",
-      user: {
-        id: req.user.userId,
-        email: req.user.email,
-        role: req.user.role
-      }
-    })
-  } catch (error) {
-    console.error("Verify token error:", error)
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    })
-  }
-})
 
 module.exports = router

@@ -69,6 +69,10 @@ const auth = async (req, res, next) => {
       email: user.email,
       role: user.role,
       name: user.name,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone: user.phone,
+      company: user.company
     }
 
     next()

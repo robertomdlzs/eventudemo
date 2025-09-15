@@ -141,11 +141,6 @@ export default function OrganizerDashboard() {
     }
   }
 
-  // Si es un promotor, mostrar el dashboard visual
-  if (currentUser && currentUser.first_name === "Promotor") {
-    return <PromoterDashboard />
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -155,6 +150,11 @@ export default function OrganizerDashboard() {
         </div>
       </div>
     )
+  }
+
+  // Si es un promotor, mostrar el dashboard visual
+  if (currentUser && currentUser.first_name === "Promotor") {
+    return <PromoterDashboard />
   }
 
   if (error) {
