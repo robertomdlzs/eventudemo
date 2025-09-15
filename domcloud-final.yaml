@@ -10,7 +10,7 @@ nginx:
     enabled: "on"
 
 app_env: "production"
-app_start_command: "env PORT=$PORT npm run domcloud:start"
+app_start_command: "env PORT=$PORT node start-production.js"
 
 commands:
   - NPM=`which npm`
