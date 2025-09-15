@@ -48,12 +48,12 @@ router.get('/dashboard-stats/:organizerId', auth, requireOrganizer, canAccessOrg
         COUNT(DISTINCT CASE WHEN e.status = 'published' THEN e.id END) as published_events,
         COUNT(DISTINCT CASE WHEN e.status = 'draft' THEN e.id END) as draft_events,
         COUNT(DISTINCT s.id) as total_sales,
-        COALESCE(SUM(s.amount), 0) as total_revenue,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
         COALESCE(SUM(s.quantity), 0) as total_tickets_sold,
         COUNT(DISTINCT s.buyer_email) as unique_customers,
         CASE 
           WHEN COUNT(DISTINCT s.id) > 0 
-          THEN COALESCE(SUM(s.amount), 0) / COUNT(DISTINCT s.id)
+          THEN COALESCE(SUM(s.total_amount), 0) / COUNT(DISTINCT s.id)
           ELSE 0 
         END as average_order_value
       FROM events e
@@ -69,7 +69,7 @@ router.get('/dashboard-stats/:organizerId', auth, requireOrganizer, canAccessOrg
       SELECT 
         TO_CHAR(s.created_at, 'YYYY-MM') as month,
         COUNT(s.id) as sales,
-        COALESCE(SUM(s.amount), 0) as revenue
+        COALESCE(SUM(s.total_amount), 0) as revenue
       FROM sales s
       JOIN events e ON s.event_id = e.id
       WHERE e.organizer_id = $1
@@ -89,7 +89,7 @@ router.get('/dashboard-stats/:organizerId', auth, requireOrganizer, canAccessOrg
         e.title,
         e.date,
         COUNT(s.id) as sales_count,
-        COALESCE(SUM(s.amount), 0) as revenue,
+        COALESCE(SUM(s.total_amount), 0) as revenue,
         COALESCE(SUM(s.quantity), 0) as tickets_sold,
         e.total_capacity,
         CASE 
@@ -115,7 +115,7 @@ router.get('/dashboard-stats/:organizerId', auth, requireOrganizer, canAccessOrg
         'sale' as type,
         s.id,
         'Nueva venta realizada' as description,
-        s.amount,
+        s.total_amount,
         e.title as event_title,
         s.created_at,
         EXTRACT(EPOCH FROM (NOW() - s.created_at)) / 3600 as hours_ago
@@ -323,10 +323,10 @@ router.get('/sales-realtime/:organizerId', auth, requireOrganizer, async (req, r
           ELSE 0 
         END as occupancy_rate,
         COUNT(s.id) as total_sales,
-        COALESCE(SUM(s.amount), 0) as total_revenue,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
         CASE 
           WHEN COUNT(s.id) > 0 
-          THEN COALESCE(SUM(s.amount), 0) / COUNT(s.id)
+          THEN COALESCE(SUM(s.total_amount), 0) / COUNT(s.id)
           ELSE 0 
         END as average_sale_amount,
         COUNT(CASE WHEN s.created_at >= NOW() - INTERVAL '1 hour' THEN s.id END) as sales_last_hour,
@@ -481,11 +481,11 @@ router.get('/events/:organizerId', auth, requireOrganizer, async (req, res) => {
         e.time,
         e.venue,
         e.status,
-        e.category,
+        e.category_id,
         e.image_url,
         e.total_capacity,
         COALESCE(SUM(s.quantity), 0) as tickets_sold,
-        COALESCE(SUM(s.amount), 0) as revenue,
+        COALESCE(SUM(s.total_amount), 0) as revenue,
         CASE 
           WHEN e.total_capacity > 0 
           THEN (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity)
@@ -507,7 +507,7 @@ router.get('/events/:organizerId', auth, requireOrganizer, async (req, res) => {
 
     if (category && category !== 'all') {
       paramCount++
-      query += ` AND e.category = $${paramCount}`
+      query += ` AND e.category_id = $${paramCount}`
       params.push(category)
     }
 
@@ -518,7 +518,7 @@ router.get('/events/:organizerId', auth, requireOrganizer, async (req, res) => {
     }
 
     query += `
-      GROUP BY e.id, e.title, e.description, e.date, e.time, e.venue, e.status, e.category, e.image_url, e.total_capacity
+      GROUP BY e.id, e.title, e.description, e.date, e.time, e.venue, e.status, e.category_id, e.image_url, e.total_capacity
       ORDER BY e.date DESC
     `
 
@@ -562,7 +562,7 @@ router.get('/sales/:organizerId', auth, requireOrganizer, async (req, res) => {
       SELECT 
         s.id,
         s.quantity,
-        s.amount,
+        s.total_amount,
         s.buyer_name,
         s.buyer_email,
         s.payment_method,
@@ -647,7 +647,7 @@ router.get('/attendees/:organizerId', auth, requireOrganizer, async (req, res) =
         s.buyer_name,
         s.buyer_email,
         s.quantity,
-        s.amount,
+        s.total_amount,
         s.status,
         s.created_at,
         s.checked_in,
@@ -776,10 +776,10 @@ router.get('/analytics/:organizerId', auth, requireOrganizer, async (req, res) =
       SELECT 
         COUNT(DISTINCT e.id) as total_events,
         COUNT(DISTINCT s.id) as total_sales,
-        COALESCE(SUM(s.amount), 0) as total_revenue,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
         COALESCE(SUM(s.quantity), 0) as total_tickets,
         COUNT(DISTINCT s.buyer_email) as unique_customers,
-        AVG(s.amount) as average_ticket_price
+        AVG(s.total_amount) as average_ticket_price
       FROM events e
       LEFT JOIN sales s ON e.id = s.event_id
       WHERE e.organizer_id = $1
@@ -794,7 +794,7 @@ router.get('/analytics/:organizerId', auth, requireOrganizer, async (req, res) =
       SELECT 
         DATE(s.created_at) as date,
         COUNT(s.id) as sales_count,
-        COALESCE(SUM(s.amount), 0) as revenue,
+        COALESCE(SUM(s.total_amount), 0) as revenue,
         COALESCE(SUM(s.quantity), 0) as tickets_sold
       FROM sales s
       JOIN events e ON s.event_id = e.id
@@ -813,7 +813,7 @@ router.get('/analytics/:organizerId', auth, requireOrganizer, async (req, res) =
         e.title,
         e.date,
         COUNT(s.id) as sales_count,
-        COALESCE(SUM(s.amount), 0) as revenue,
+        COALESCE(SUM(s.total_amount), 0) as revenue,
         COALESCE(SUM(s.quantity), 0) as tickets_sold,
         e.total_capacity,
         (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity) as occupancy_rate
@@ -869,7 +869,7 @@ router.get('/reports/:organizerId', auth, requireOrganizer, async (req, res) => 
           SELECT 
             s.id,
             s.quantity,
-            s.amount,
+            s.total_amount,
             s.buyer_name,
             s.buyer_email,
             s.payment_method,
@@ -895,7 +895,7 @@ router.get('/reports/:organizerId', auth, requireOrganizer, async (req, res) => 
             e.status,
             e.total_capacity,
             COALESCE(SUM(s.quantity), 0) as tickets_sold,
-            COALESCE(SUM(s.amount), 0) as revenue,
+            COALESCE(SUM(s.total_amount), 0) as revenue,
             (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity) as occupancy_rate
           FROM events e
           LEFT JOIN sales s ON e.id = s.event_id
@@ -913,7 +913,7 @@ router.get('/reports/:organizerId', auth, requireOrganizer, async (req, res) => 
             s.buyer_name,
             s.buyer_email,
             s.quantity,
-            s.amount,
+            s.total_amount,
             s.status,
             s.checked_in,
             s.created_at,
@@ -978,7 +978,7 @@ router.get('/event-metrics/:eventId', auth, requireOrganizer, async (req, res) =
       SELECT 
         COUNT(s.id) as total_sales,
         COALESCE(SUM(s.quantity), 0) as total_tickets_sold,
-        COALESCE(SUM(s.amount), 0) as total_revenue,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
         COUNT(DISTINCT s.buyer_email) as unique_customers,
         CASE 
           WHEN $2 > 0 
@@ -987,7 +987,7 @@ router.get('/event-metrics/:eventId', auth, requireOrganizer, async (req, res) =
         END as occupancy_rate,
         CASE 
           WHEN COUNT(s.id) > 0 
-          THEN COALESCE(SUM(s.amount), 0) / COUNT(s.id)
+          THEN COALESCE(SUM(s.total_amount), 0) / COUNT(s.id)
           ELSE 0 
         END as average_order_value
       FROM sales s
@@ -1003,7 +1003,7 @@ router.get('/event-metrics/:eventId', auth, requireOrganizer, async (req, res) =
         DATE_TRUNC('hour', s.created_at) as hour,
         COUNT(s.id) as sales_count,
         COALESCE(SUM(s.quantity), 0) as tickets_sold,
-        COALESCE(SUM(s.amount), 0) as revenue
+        COALESCE(SUM(s.total_amount), 0) as revenue
       FROM sales s
       WHERE s.event_id = $1
         AND s.created_at >= NOW() - INTERVAL '24 hours'
@@ -1021,7 +1021,7 @@ router.get('/event-metrics/:eventId', auth, requireOrganizer, async (req, res) =
         tt.price,
         COUNT(s.id) as sales_count,
         COALESCE(SUM(s.quantity), 0) as tickets_sold,
-        COALESCE(SUM(s.amount), 0) as revenue
+        COALESCE(SUM(s.total_amount), 0) as revenue
       FROM ticket_types tt
       LEFT JOIN sales s ON tt.id = s.ticket_type_id AND s.event_id = $1
       WHERE tt.event_id = $1
@@ -1039,7 +1039,7 @@ router.get('/event-metrics/:eventId', auth, requireOrganizer, async (req, res) =
         s.buyer_name,
         s.buyer_email,
         s.quantity,
-        s.amount,
+        s.total_amount,
         s.payment_method,
         s.status,
         s.created_at,
@@ -1060,7 +1060,7 @@ router.get('/event-metrics/:eventId', auth, requireOrganizer, async (req, res) =
         DATE_TRUNC('day', s.created_at) as day,
         COUNT(s.id) as daily_sales,
         COALESCE(SUM(s.quantity), 0) as daily_tickets,
-        COALESCE(SUM(s.amount), 0) as daily_revenue
+        COALESCE(SUM(s.total_amount), 0) as daily_revenue
       FROM sales s
       WHERE s.event_id = $1
         AND s.created_at >= NOW() - INTERVAL '7 days'
@@ -1167,7 +1167,7 @@ router.get('/events/:organizerId', auth, requireOrganizer, async (req, res) => {
         e.updated_at,
         COUNT(s.id) as total_sales,
         COALESCE(SUM(s.quantity), 0) as total_tickets_sold,
-        COALESCE(SUM(s.amount), 0) as total_revenue,
+        COALESCE(SUM(s.total_amount), 0) as total_revenue,
         CASE 
           WHEN e.total_capacity > 0 
           THEN (COALESCE(SUM(s.quantity), 0) * 100.0 / e.total_capacity)
