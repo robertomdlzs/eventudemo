@@ -144,15 +144,47 @@ const mockEvents: EventData[] = [
 ]
 
 export async function getAllEvents(): Promise<EventData[]> {
-  // En producción, esto haría una llamada al API
-  // Por ahora retornamos datos mock
-  return mockEvents
+  try {
+    // Llamada a la API de Vercel
+    const response = await fetch('/api/events', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch events')
+    }
+    
+    const result = await response.json()
+    return result.success ? result.data : mockEvents
+  } catch (error) {
+    console.warn('Failed to fetch events from API, using mock data:', error)
+    return mockEvents
+  }
 }
 
 export async function getFeaturedEvents(): Promise<EventData[]> {
-  // En producción, esto haría una llamada al API
-  // Por ahora retornamos eventos destacados
-  return mockEvents.filter(event => event.featured)
+  try {
+    // Llamada a la API de Vercel
+    const response = await fetch('/api/events?featured=true', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch featured events')
+    }
+    
+    const result = await response.json()
+    return result.success ? result.data : mockEvents.filter(event => event.featured)
+  } catch (error) {
+    console.warn('Failed to fetch featured events from API, using mock data:', error)
+    return mockEvents.filter(event => event.featured)
+  }
 }
 
 export async function getEventBySlug(slug: string): Promise<EventData | null> {

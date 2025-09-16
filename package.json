@@ -10,7 +10,9 @@
     "build:production": "npm run build && cd backend && npm install --production",
     "start:production": "node start-production.js",
     "build:netlify": "next build && next export",
-    "preview": "next start"
+    "preview": "next start",
+    "vercel-build": "next build",
+    "deploy": "vercel --prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
