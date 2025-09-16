@@ -220,12 +220,6 @@ El sistema implementa múltiples capas de seguridad:
 
 ## 🚀 Despliegue
 
-### DomCloud
-El proyecto está configurado para desplegarse en DomCloud con:
-- Configuración automática de base de datos
-- Variables de entorno de producción
-- Scripts de inicio optimizados
-
 ### Variables de Producción
 ```env
 NODE_ENV=production

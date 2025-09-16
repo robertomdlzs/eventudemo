@@ -8,9 +8,7 @@
     "lint": "next lint",
     "start": "next start",
     "build:production": "npm run build && cd backend && npm install --production",
-    "start:production": "node start-production.js",
-    "deploy:domcloud": "./deploy-domcloud.sh",
-    "domcloud:start": "node start-production.js"
+    "start:production": "node start-production.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
