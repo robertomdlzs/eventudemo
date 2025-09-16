@@ -40,7 +40,9 @@ export function EventsExplorer({ events = [] }: EventsExplorerProps) {
       const matchesSearch =
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.organizer?.toLowerCase().includes(searchTerm.toLowerCase())
+        (typeof event.organizer === 'object' && event.organizer && 'name' in event.organizer 
+          ? (event.organizer as any).name 
+          : event.organizer)?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesCategory = selectedCategory === "all" || 
         (typeof event.category === 'object' && event.category && 'name' in event.category 

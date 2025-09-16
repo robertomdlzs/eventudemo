@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   
-  // Configuración para producción
-  output: 'standalone',
+  // Configuración para Netlify
+  output: 'export',
+  trailingSlash: true,
   poweredByHeader: false,
   compress: true,
-  
-  // Deshabilitar prerenderizado para páginas dinámicas
-  trailingSlash: false,
   
   // Configuración para evitar errores de prerenderizado
   generateBuildId: async () => {
@@ -43,27 +41,7 @@ const nextConfig = {
     ],
   },
 
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-        ],
-      },
-    ]
-  },
+  // Headers se configuran en netlify.toml para export
 }
 
 module.exports = nextConfig
