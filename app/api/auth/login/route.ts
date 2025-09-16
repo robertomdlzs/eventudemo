@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-
-// Mock de usuarios para demo
-const users = [
-  {
-    id: 1,
-    email: 'admin@eventu.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'admin',
-    first_name: 'Admin',
-    last_name: 'User'
-  },
-  {
-    id: 2,
-    email: 'organizer@eventu.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'organizer',
-    first_name: 'Organizer',
-    last_name: 'User'
-  }
-];
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,9 +14,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar usuario
-    const user = users.find(u => u.email === email);
-    if (!user) {
+    // Buscar usuario en Supabase
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('status', 'active')
+      .single();
+
+    if (error || !user) {
       return NextResponse.json(
         { success: false, message: 'Credenciales inválidas' },
         { status: 401 }

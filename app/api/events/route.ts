@@ -1,68 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock de eventos para demo
-const events = [
-  {
-    id: 1,
-    title: 'Concierto de Rock',
-    slug: 'concierto-rock-2024',
-    description: 'Un increíble concierto de rock con las mejores bandas del país',
-    date: '2024-12-25',
-    time: '20:00',
-    venue: 'Estadio El Campín',
-    location: 'Bogotá, Colombia',
-    category: { id: 1, name: 'Música' },
-    organizer: { id: 1, name: 'Rock Productions' },
-    total_capacity: 50000,
-    sold: 25000,
-    price: 150000,
-    status: 'active',
-    featured: true,
-    image: '/images/rock-concert.jpg',
-    locationDisplay: 'Bogotá, Colombia',
-    categoryDisplay: 'Música'
-  },
-  {
-    id: 2,
-    title: 'Festival de Comida',
-    slug: 'festival-comida-2024',
-    description: 'Disfruta de la mejor gastronomía local e internacional',
-    date: '2024-12-30',
-    time: '12:00',
-    venue: 'Parque Simón Bolívar',
-    location: 'Bogotá, Colombia',
-    category: { id: 2, name: 'Gastronomía' },
-    organizer: { id: 2, name: 'Food Events' },
-    total_capacity: 10000,
-    sold: 5000,
-    price: 50000,
-    status: 'active',
-    featured: true,
-    image: '/images/food-festival.jpg',
-    locationDisplay: 'Bogotá, Colombia',
-    categoryDisplay: 'Gastronomía'
-  },
-  {
-    id: 3,
-    title: 'Conferencia de Tecnología',
-    slug: 'conferencia-tecnologia-2024',
-    description: 'Las últimas tendencias en tecnología y desarrollo',
-    date: '2025-01-15',
-    time: '09:00',
-    venue: 'Centro de Convenciones',
-    location: 'Medellín, Colombia',
-    category: { id: 3, name: 'Tecnología' },
-    organizer: { id: 3, name: 'Tech Events' },
-    total_capacity: 2000,
-    sold: 800,
-    price: 200000,
-    status: 'active',
-    featured: false,
-    image: '/images/tech-conference.jpg',
-    locationDisplay: 'Medellín, Colombia',
-    categoryDisplay: 'Tecnología'
-  }
-];
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,23 +7,64 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured');
     const limit = searchParams.get('limit');
 
-    let filteredEvents = events;
+    // Construir query base
+    let query = supabase
+      .from('events')
+      .select(`
+        *,
+        categories:category_id(name),
+        users:organizer_id(first_name, last_name)
+      `)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
 
     // Filtrar eventos destacados
     if (featured === 'true') {
-      filteredEvents = events.filter(event => event.featured);
+      query = query.eq('featured', true);
     }
 
     // Limitar resultados
     if (limit) {
       const limitNum = parseInt(limit);
-      filteredEvents = filteredEvents.slice(0, limitNum);
+      query = query.limit(limitNum);
     }
+
+    const { data: events, error } = await query;
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Error al obtener eventos' },
+        { status: 500 }
+      );
+    }
+
+    // Transformar datos para el frontend
+    const transformedEvents = events?.map(event => ({
+      id: event.id,
+      title: event.title,
+      slug: event.slug,
+      description: event.description,
+      date: event.date,
+      time: event.time,
+      venue: event.venue,
+      location: event.location,
+      category: event.categories ? { id: event.category_id, name: event.categories.name } : null,
+      organizer: event.users ? { id: event.organizer_id, name: `${event.users.first_name} ${event.users.last_name}` } : null,
+      total_capacity: event.total_capacity,
+      sold: event.sold,
+      price: event.price,
+      status: event.status,
+      featured: event.featured,
+      image: event.image_url || '/images/placeholder-event.jpg',
+      locationDisplay: event.location,
+      categoryDisplay: event.categories?.name || 'Sin categoría'
+    })) || [];
 
     return NextResponse.json({
       success: true,
-      data: filteredEvents,
-      total: filteredEvents.length
+      data: transformedEvents,
+      total: transformedEvents.length
     });
 
   } catch (error) {
@@ -110,18 +88,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear nuevo evento
-    const newEvent = {
-      id: events.length + 1,
-      ...eventData,
-      slug: eventData.title.toLowerCase().replace(/\s+/g, '-'),
-      status: 'active',
-      featured: false,
-      sold: 0,
-      created_at: new Date().toISOString()
-    };
+    // Crear slug único
+    const slug = eventData.title.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .trim();
 
-    events.push(newEvent);
+    // Insertar evento en Supabase
+    const { data: newEvent, error } = await supabase
+      .from('events')
+      .insert({
+        title: eventData.title,
+        slug: slug,
+        description: eventData.description || null,
+        date: eventData.date,
+        time: eventData.time || '20:00',
+        venue: eventData.venue,
+        location: eventData.location || '',
+        category_id: eventData.category_id || null,
+        organizer_id: eventData.organizer_id || 2, // Default organizer
+        total_capacity: eventData.total_capacity || 0,
+        sold: 0,
+        price: eventData.price || 0,
+        status: 'active',
+        featured: eventData.featured || false,
+        image_url: eventData.image_url || null
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Error al crear evento' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
