@@ -12,7 +12,7 @@ class ThreatIntelligenceService {
     this.threatFeeds = new Map();
     this.threatIndicators = new Map();
     this.blockedIPs = new Set();
-    self.blockedDomains = new Set();
+    this.blockedDomains = new Set();
     this.maliciousHashes = new Set();
     this.threatActors = new Map();
     this.campaigns = new Map();

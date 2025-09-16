@@ -1,6 +1,6 @@
 const express = require('express');
 const { auth } = require('../middleware/auth');
-const { requireRole } = require('../middleware/requireRole');
+const requireRole = require('../middleware/requireRole');
 const { securityMonitoringService } = require('../services/securityMonitoringService');
 const router = express.Router();
 
