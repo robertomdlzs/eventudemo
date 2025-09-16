@@ -8,12 +8,21 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
   },
   "regions": ["iad1"],
   "framework": "nextjs"

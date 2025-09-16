@@ -1,114 +1,139 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 
-// Datos mock de eventos para la API
-const mockEvents = [
+// Mock de eventos para demo
+const events = [
   {
-    id: "1",
-    title: "Rock en la Noche 2025",
-    slug: "rock-en-la-noche-2025",
-    description: "Festival internacional de rock con las mejores bandas del mundo",
-    date: "2025-06-15",
-    time: "20:00",
-    venue: "Autódromo Hermanos Rodríguez",
-    location: "Ciudad de México, México",
-    category: {
-      id: "1",
-      name: "Música"
-    },
-    organizer: {
-      id: "1",
-      name: "María González"
-    },
-    totalCapacity: 50000,
+    id: 1,
+    title: 'Concierto de Rock',
+    slug: 'concierto-rock-2024',
+    description: 'Un increíble concierto de rock con las mejores bandas del país',
+    date: '2024-12-25',
+    time: '20:00',
+    venue: 'Estadio El Campín',
+    location: 'Bogotá, Colombia',
+    category: { id: 1, name: 'Música' },
+    organizer: { id: 1, name: 'Rock Productions' },
+    total_capacity: 50000,
     sold: 25000,
-    price: 1500,
-    status: "active",
+    price: 150000,
+    status: 'active',
     featured: true,
-    image: "/placeholder.jpg",
-    tags: ["rock", "música", "festival"],
-    rating: 4.8
+    image: '/images/rock-concert.jpg',
+    locationDisplay: 'Bogotá, Colombia',
+    categoryDisplay: 'Música'
   },
   {
-    id: "2",
-    title: "Tech Summit México 2025",
-    slug: "tech-summit-mexico-2025",
-    description: "Conferencia de tecnología más importante de México",
-    date: "2025-07-20",
-    time: "09:00",
-    venue: "Cintermex",
-    location: "Monterrey, México",
-    category: {
-      id: "2",
-      name: "Tecnología"
-    },
-    organizer: {
-      id: "2",
-      name: "Carlos Rodríguez"
-    },
-    totalCapacity: 2000,
-    sold: 800,
-    price: 2500,
-    status: "active",
+    id: 2,
+    title: 'Festival de Comida',
+    slug: 'festival-comida-2024',
+    description: 'Disfruta de la mejor gastronomía local e internacional',
+    date: '2024-12-30',
+    time: '12:00',
+    venue: 'Parque Simón Bolívar',
+    location: 'Bogotá, Colombia',
+    category: { id: 2, name: 'Gastronomía' },
+    organizer: { id: 2, name: 'Food Events' },
+    total_capacity: 10000,
+    sold: 5000,
+    price: 50000,
+    status: 'active',
     featured: true,
-    image: "/placeholder.jpg",
-    tags: ["tecnología", "conferencia", "innovación"],
-    rating: 4.5
+    image: '/images/food-festival.jpg',
+    locationDisplay: 'Bogotá, Colombia',
+    categoryDisplay: 'Gastronomía'
+  },
+  {
+    id: 3,
+    title: 'Conferencia de Tecnología',
+    slug: 'conferencia-tecnologia-2024',
+    description: 'Las últimas tendencias en tecnología y desarrollo',
+    date: '2025-01-15',
+    time: '09:00',
+    venue: 'Centro de Convenciones',
+    location: 'Medellín, Colombia',
+    category: { id: 3, name: 'Tecnología' },
+    organizer: { id: 3, name: 'Tech Events' },
+    total_capacity: 2000,
+    sold: 800,
+    price: 200000,
+    status: 'active',
+    featured: false,
+    image: '/images/tech-conference.jpg',
+    locationDisplay: 'Medellín, Colombia',
+    categoryDisplay: 'Tecnología'
   }
-]
+];
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const featured = searchParams.get('featured')
-    
-    let events = mockEvents
-    
+    const { searchParams } = new URL(request.url);
+    const featured = searchParams.get('featured');
+    const limit = searchParams.get('limit');
+
+    let filteredEvents = events;
+
+    // Filtrar eventos destacados
     if (featured === 'true') {
-      events = mockEvents.filter(event => event.featured)
+      filteredEvents = events.filter(event => event.featured);
     }
-    
+
+    // Limitar resultados
+    if (limit) {
+      const limitNum = parseInt(limit);
+      filteredEvents = filteredEvents.slice(0, limitNum);
+    }
+
     return NextResponse.json({
       success: true,
-      data: events,
-      count: events.length
-    })
+      data: filteredEvents,
+      total: filteredEvents.length
+    });
+
   } catch (error) {
+    console.error('Events API error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Error fetching events' 
-      },
+      { success: false, message: 'Error interno del servidor' },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    
-    // Simular creación de evento
-    const newEvent = {
-      id: Date.now().toString(),
-      ...body,
-      status: "active",
-      sold: 0,
-      rating: 0,
-      createdAt: new Date().toISOString()
+    const eventData = await request.json();
+
+    // Validar datos requeridos
+    if (!eventData.title || !eventData.date || !eventData.venue) {
+      return NextResponse.json(
+        { success: false, message: 'Datos requeridos faltantes' },
+        { status: 400 }
+      );
     }
-    
+
+    // Crear nuevo evento
+    const newEvent = {
+      id: events.length + 1,
+      ...eventData,
+      slug: eventData.title.toLowerCase().replace(/\s+/g, '-'),
+      status: 'active',
+      featured: false,
+      sold: 0,
+      created_at: new Date().toISOString()
+    };
+
+    events.push(newEvent);
+
     return NextResponse.json({
       success: true,
-      message: "Event created successfully",
+      message: 'Evento creado exitosamente',
       data: newEvent
-    }, { status: 201 })
+    }, { status: 201 });
+
   } catch (error) {
+    console.error('Create event error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Error creating event' 
-      },
+      { success: false, message: 'Error interno del servidor' },
       { status: 500 }
-    )
+    );
   }
 }
