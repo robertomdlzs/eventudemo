@@ -4,6 +4,7 @@ const path = require("path")
 const fs = require("fs")
 const db = require("../config/database-postgres")
 const { auth, requireRole } = require("../middleware/auth")
+const { malwareScanMiddleware } = require("../middleware/malwareScanner")
 
 const router = express.Router()
 
@@ -102,7 +103,7 @@ router.get("/:id", auth, requireRole("admin"), async (req, res) => {
 })
 
 // Upload media files
-router.post("/upload", auth, requireRole("admin"), upload.array('files', 10), async (req, res) => {
+router.post("/upload", auth, requireRole("admin"), upload.array('files', 10), malwareScanMiddleware, async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({

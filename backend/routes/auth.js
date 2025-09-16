@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken")
 const User = require("../models/User")
 const { auth } = require("../middleware/auth")
 const AuditService = require("../services/auditService")
+const { userValidationSchemas, validateUser } = require("../validators/userValidator")
 // El middleware de auditoría global ya maneja todas las acciones automáticamente
 const { Pool } = require("pg")
 require("dotenv").config()
@@ -28,8 +29,8 @@ async function userHasEvents(userId) {
   }
 }
 
-// Register
-router.post("/register", async (req, res) => {
+// Register con validación robusta
+router.post("/register", validateUser(userValidationSchemas.register), async (req, res) => {
   try {
     const { email, password, name, phone } = req.body
 
@@ -89,8 +90,8 @@ router.post("/register", async (req, res) => {
   }
 })
 
-// Login
-router.post("/login", async (req, res) => {
+// Login con validación robusta
+router.post("/login", validateUser(userValidationSchemas.login), async (req, res) => {
   try {
     const { email, password } = req.body
 

@@ -32,8 +32,14 @@ const salesRoutes = require("./routes/sales")
 const passwordResetRoutes = require("./routes/passwordReset")
 const auditRoutes = require("./routes/audit")
 const adminDataRoutes = require("./routes/admin-data")
+const backupRoutes = require("./routes/backup")
+const securityRoutes = require("./routes/security")
+const wafRoutes = require("./routes/waf")
 const { sessionTimeout, updateActivity } = require("./middleware/session-timeout")
 const auditMiddleware = require("./middleware/auditMiddleware")
+const { require2FA } = require("./middleware/require2FA")
+const { securityMonitoringMiddleware } = require("./middleware/securityMonitoring")
+const { waf } = require("./middleware/waf")
 
 const app = express()
 const server = http.createServer(app)
@@ -57,24 +63,77 @@ const logger = winston.createLogger({
   ],
 })
 
-// Rate limiting
-const limiter = rateLimit({
+// Rate limiting AGRESIVO para seguridad
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5000, // limit each IP to 5000 requests per windowMs (aumentado para desarrollo)
-  message: "Too many requests from this IP, please try again later.",
+  max: 100, // 100 requests por IP (reducido de 5000)
+  message: {
+    error: "Demasiadas peticiones. Intenta de nuevo en 15 minutos.",
+    retryAfter: 15 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
   skip: (req) => {
     // Saltar rate limiting para peticiones preflight (OPTIONS)
     return req.method === 'OPTIONS'
   }
 })
 
-// Middleware
-app.use(helmet())
+// Rate limiting ESPECÍFICO para autenticación
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // Solo 5 intentos de login por IP
+  skipSuccessfulRequests: true,
+  message: {
+    error: "Demasiados intentos de login. Intenta de nuevo en 15 minutos.",
+    retryAfter: 15 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    // Log del intento de rate limiting
+    console.warn(`🚨 Rate limit exceeded for IP: ${req.ip} on ${req.path}`);
+    res.status(429).json({
+      error: "Demasiados intentos de login. Intenta de nuevo en 15 minutos.",
+      retryAfter: 15 * 60
+    });
+  }
+})
+
+// Middleware con headers de seguridad ESTRICTOS
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
+}))
 app.use(compression())
-app.use(limiter)
+app.use(generalLimiter)
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'https://eventu.mnz.dom.my.id',
+      'https://www.eventu.mnz.dom.my.id',
+      'http://localhost:3000' // Solo para desarrollo
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -87,6 +146,12 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path} - ${req.ip}`)
   next()
 })
+
+// Web Application Firewall (WAF)
+app.use(waf.middleware())
+
+// Security monitoring middleware
+app.use(securityMonitoringMiddleware)
 
 // JSON parsing middleware - MUST be before routes
 app.use(express.json({ limit: "10mb" }))
@@ -137,8 +202,8 @@ app.use(updateActivity) // Actualizar timestamp de actividad en cada request
 // Audit middleware - registrar todas las actividades
 app.use(auditMiddleware())
 
-// Routes
-app.use("/api/auth", authRoutes)
+// Routes con rate limiting específico para auth
+app.use("/api/auth", authLimiter, authRoutes)
 app.use("/api/password-reset", passwordResetRoutes)
 app.use("/api/events", eventRoutes)
 app.use("/api/users", userRoutes)
@@ -150,7 +215,10 @@ app.use("/api/analytics", analyticsRoutes)
 app.use("/api/export", exportRoutes)
 app.use("/api/settings", settingsRoutes)
 app.use("/api/organizer", organizerRoutes)
-app.use("/api/admin", adminRoutes)
+app.use("/api/admin", require2FA, adminRoutes)
+app.use("/api/backup", require2FA, backupRoutes)
+app.use("/api/security", require2FA, securityRoutes)
+app.use("/api/waf", require2FA, wafRoutes)
 app.use("/api/seat-maps", seatMapRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/payments/epayco", epaycoRoutes)
