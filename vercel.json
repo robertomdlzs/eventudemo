@@ -13,8 +13,7 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "NEXT_PUBLIC_API_URL": "@next_public_api_url"
+    "NODE_ENV": "production"
   },
   "regions": ["iad1"],
   "framework": "nextjs"
