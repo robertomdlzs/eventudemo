@@ -1237,7 +1237,7 @@ INSERT INTO users (email, password_hash, first_name, last_name, role, status) VA
 INSERT INTO events (id, title, slug, description, date, time, venue, location, category_id, organizer_id, total_quantity, price, status, featured, image_url) VALUES
 (1, 'Concierto de Rock Nacional', 'concierto-rock-nacional-2024', 'Un increíble concierto de rock con las mejores bandas del país', '2024-12-25', '20:00', 'Estadio El Campín', 'Bogotá, Colombia', 1, 2, 50000, 150000, 'active', true, '/images/rock-concert.jpg'),
 (2, 'Festival de Comida Internacional', 'festival-comida-internacional-2024', 'Disfruta de la mejor gastronomía local e internacional', '2024-12-30', '12:00', 'Parque Simón Bolívar', 'Bogotá, Colombia', 2, 2, 10000, 50000, 'active', true, '/images/food-festival.jpg'),
-(3, 'Conferencia de Tecnología 2025', 'conferencia-tecnologia-2025', 'Las últimas tendencias en tecnología y desarrollo', '2025-01-15', '09:00', 'Centro de Convenciones', 'Medellín, Colombia', 3, 2, 2000, 800, 200000, 'active', false, '/images/tech-conference.jpg')
+(3, 'Conferencia de Tecnología 2025', 'conferencia-tecnologia-2025', 'Las últimas tendencias en tecnología y desarrollo', '2025-01-15', '09:00', 'Centro de Convenciones', 'Medellín, Colombia', 3, 2, 2000, 200000, 'active', false, '/images/tech-conference.jpg')
 ;
 INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
 (1, 'General', 'Acceso general al concierto', 150000, 40000, 20000, 'active'),
