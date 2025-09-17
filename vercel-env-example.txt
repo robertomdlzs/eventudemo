@@ -1,0 +1,24 @@
+# Variables de Entorno para Vercel
+# Copia estas variables en tu proyecto de Vercel: Settings → Environment Variables
+
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_ANON_KEY=tu-anon-key-aqui
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key-aqui
+
+JWT_SECRET=tu-jwt-secret-muy-seguro-aqui
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_EXPIRES_IN=30d
+
+NEXT_PUBLIC_API_URL=/api
+NODE_ENV=production
+NEXT_TELEMETRY_DISABLED=1
+
+# INSTRUCCIONES:
+# 1. Ve a https://vercel.com/dashboard
+# 2. Selecciona tu proyecto eventudev-k36f
+# 3. Ve a Settings → Environment Variables
+# 4. Agrega cada variable una por una
+# 5. Para obtener las credenciales de Supabase:
+#    - Ve a tu proyecto en Supabase
+#    - Settings → API
+#    - Copia Project URL, anon public, y service_role

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('*')
       .eq('email', email)
-      .eq('status', 'active')
+      .eq('status', 'published')
       .single();
 
     if (error || !user) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar contraseña
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return NextResponse.json(
         { success: false, message: 'Credenciales inválidas' },
