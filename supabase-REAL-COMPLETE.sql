@@ -5,163 +5,13 @@
 -- Habilitar RLS para Supabase
 ALTER DATABASE postgres SET row_security = on;
 
---
--- PostgreSQL database dump
---
 
--- Dumped from database version 17.5
--- Dumped by pg_dump version 17.5
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
-SET xmloption = content;
 SET client_min_messages = warning;
-SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.virtual_tickets DROP CONSTRAINT IF EXISTS virtual_tickets_ticket_type_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.virtual_tickets DROP CONSTRAINT IF EXISTS virtual_tickets_event_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.tickets DROP CONSTRAINT IF EXISTS tickets_sale_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.ticket_types DROP CONSTRAINT IF EXISTS ticket_types_event_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.seats DROP CONSTRAINT IF EXISTS seats_section_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.seat_sections DROP CONSTRAINT IF EXISTS seat_sections_seat_map_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.seat_maps DROP CONSTRAINT IF EXISTS seat_maps_template_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.seat_maps DROP CONSTRAINT IF EXISTS seat_maps_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY public.seat_map_templates DROP CONSTRAINT IF EXISTS seat_map_templates_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY public.sales DROP CONSTRAINT IF EXISTS sales_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.sales DROP CONSTRAINT IF EXISTS sales_ticket_type_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.sales DROP CONSTRAINT IF EXISTS sales_event_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.refunds DROP CONSTRAINT IF EXISTS refunds_payment_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.physical_tickets DROP CONSTRAINT IF EXISTS physical_tickets_ticket_type_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.physical_tickets DROP CONSTRAINT IF EXISTS physical_tickets_event_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.payments DROP CONSTRAINT IF EXISTS payments_sale_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.password_reset_tokens DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.media_folders DROP CONSTRAINT IF EXISTS media_folders_parent_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.events DROP CONSTRAINT IF EXISTS events_seat_map_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.events DROP CONSTRAINT IF EXISTS events_organizer_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.events DROP CONSTRAINT IF EXISTS events_category_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.event_additional_data DROP CONSTRAINT IF EXISTS event_additional_data_event_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.check_in_records DROP CONSTRAINT IF EXISTS check_in_records_sale_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.check_in_records DROP CONSTRAINT IF EXISTS check_in_records_event_id_fkey;
-DROP TRIGGER IF EXISTS update_virtual_tickets_updated_at ON public.virtual_tickets;
-DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
-DROP TRIGGER IF EXISTS update_ticket_types_updated_at ON public.ticket_types;
-DROP TRIGGER IF EXISTS update_seat_maps_updated_at ON public.seat_maps;
-DROP TRIGGER IF EXISTS update_seat_map_templates_updated_at ON public.seat_map_templates;
-DROP TRIGGER IF EXISTS update_sales_updated_at ON public.sales;
-DROP TRIGGER IF EXISTS update_sales_points_updated_at ON public.sales_points;
-DROP TRIGGER IF EXISTS update_refunds_updated_at ON public.refunds;
-DROP TRIGGER IF EXISTS update_physical_tickets_updated_at ON public.physical_tickets;
-DROP TRIGGER IF EXISTS update_payments_updated_at ON public.payments;
-DROP TRIGGER IF EXISTS update_payment_methods_updated_at ON public.payment_methods;
-DROP TRIGGER IF EXISTS update_media_folders_updated_at ON public.media_folders;
-DROP TRIGGER IF EXISTS update_media_files_updated_at ON public.media_files;
-DROP TRIGGER IF EXISTS update_events_updated_at ON public.events;
-DROP TRIGGER IF EXISTS update_event_additional_data_updated_at ON public.event_additional_data;
-DROP TRIGGER IF EXISTS update_categories_updated_at ON public.categories;
-DROP INDEX IF EXISTS public.unique_seat_per_section;
-DROP INDEX IF EXISTS public.idx_virtual_tickets_status;
-DROP INDEX IF EXISTS public.idx_virtual_tickets_number;
-DROP INDEX IF EXISTS public.idx_virtual_tickets_event;
-DROP INDEX IF EXISTS public.idx_virtual_tickets_customer_email;
-DROP INDEX IF EXISTS public.idx_virtual_tickets_created;
-DROP INDEX IF EXISTS public.idx_users_status;
-DROP INDEX IF EXISTS public.idx_users_role;
-DROP INDEX IF EXISTS public.idx_users_phone;
-DROP INDEX IF EXISTS public.idx_users_email;
-DROP INDEX IF EXISTS public.idx_tickets_status;
-DROP INDEX IF EXISTS public.idx_tickets_sale;
-DROP INDEX IF EXISTS public.idx_tickets_code;
-DROP INDEX IF EXISTS public.idx_ticket_types_status;
-DROP INDEX IF EXISTS public.idx_ticket_types_event;
-DROP INDEX IF EXISTS public.idx_seats_status;
-DROP INDEX IF EXISTS public.idx_seats_section;
-DROP INDEX IF EXISTS public.idx_seat_sections_map;
-DROP INDEX IF EXISTS public.idx_scheduled_reports_status;
-DROP INDEX IF EXISTS public.idx_scheduled_reports_next_run;
-DROP INDEX IF EXISTS public.idx_saved_reports_created_by;
-DROP INDEX IF EXISTS public.idx_sales_user;
-DROP INDEX IF EXISTS public.idx_sales_status;
-DROP INDEX IF EXISTS public.idx_sales_points_status;
-DROP INDEX IF EXISTS public.idx_sales_points_name;
-DROP INDEX IF EXISTS public.idx_sales_event;
-DROP INDEX IF EXISTS public.idx_sales_created;
-DROP INDEX IF EXISTS public.idx_refunds_status;
-DROP INDEX IF EXISTS public.idx_refunds_payment;
-DROP INDEX IF EXISTS public.idx_physical_tickets_status;
-DROP INDEX IF EXISTS public.idx_physical_tickets_event;
-DROP INDEX IF EXISTS public.idx_physical_tickets_created;
-DROP INDEX IF EXISTS public.idx_physical_tickets_batch_number;
-DROP INDEX IF EXISTS public.idx_payments_status;
-DROP INDEX IF EXISTS public.idx_payments_sale;
-DROP INDEX IF EXISTS public.idx_payments_gateway_transaction;
-DROP INDEX IF EXISTS public.idx_password_reset_tokens_user_id;
-DROP INDEX IF EXISTS public.idx_password_reset_tokens_expires_at;
-DROP INDEX IF EXISTS public.idx_notifications_type;
-DROP INDEX IF EXISTS public.idx_notifications_target;
-DROP INDEX IF EXISTS public.idx_notifications_sent_at;
-DROP INDEX IF EXISTS public.idx_media_folders_parent;
-DROP INDEX IF EXISTS public.idx_media_files_upload_date;
-DROP INDEX IF EXISTS public.idx_media_files_type;
-DROP INDEX IF EXISTS public.idx_media_files_folder;
-DROP INDEX IF EXISTS public.idx_events_video_url;
-DROP INDEX IF EXISTS public.idx_events_status;
-DROP INDEX IF EXISTS public.idx_events_slug;
-DROP INDEX IF EXISTS public.idx_events_organizer;
-DROP INDEX IF EXISTS public.idx_events_main_image;
-DROP INDEX IF EXISTS public.idx_events_featured;
-DROP INDEX IF EXISTS public.idx_events_date;
-DROP INDEX IF EXISTS public.idx_events_category;
-DROP INDEX IF EXISTS public.idx_event_additional_data_event_key;
-DROP INDEX IF EXISTS public.idx_check_in_records_ticket_number;
-DROP INDEX IF EXISTS public.idx_check_in_records_event_id;
-DROP INDEX IF EXISTS public.idx_check_in_records_check_in_time;
-DROP INDEX IF EXISTS public.idx_categories_status;
-DROP INDEX IF EXISTS public.idx_categories_slug;
-DROP INDEX IF EXISTS public.idx_audit_logs_user_id;
-DROP INDEX IF EXISTS public.idx_audit_logs_timestamp;
-DROP INDEX IF EXISTS public.idx_audit_logs_severity;
-DROP INDEX IF EXISTS public.idx_audit_logs_action;
-ALTER TABLE IF EXISTS ONLY public.virtual_tickets DROP CONSTRAINT IF EXISTS virtual_tickets_ticket_number_key;
-ALTER TABLE IF EXISTS ONLY public.virtual_tickets DROP CONSTRAINT IF EXISTS virtual_tickets_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
-ALTER TABLE IF EXISTS ONLY public.tickets DROP CONSTRAINT IF EXISTS tickets_ticket_code_key;
-ALTER TABLE IF EXISTS ONLY public.tickets DROP CONSTRAINT IF EXISTS tickets_pkey;
-ALTER TABLE IF EXISTS ONLY public.ticket_types DROP CONSTRAINT IF EXISTS ticket_types_pkey;
-ALTER TABLE IF EXISTS ONLY public.seats DROP CONSTRAINT IF EXISTS seats_pkey;
-ALTER TABLE IF EXISTS ONLY public.seat_sections DROP CONSTRAINT IF EXISTS seat_sections_pkey;
-ALTER TABLE IF EXISTS ONLY public.seat_maps DROP CONSTRAINT IF EXISTS seat_maps_pkey;
-ALTER TABLE IF EXISTS ONLY public.seat_map_templates DROP CONSTRAINT IF EXISTS seat_map_templates_pkey;
-ALTER TABLE IF EXISTS ONLY public.scheduled_reports DROP CONSTRAINT IF EXISTS scheduled_reports_pkey;
-ALTER TABLE IF EXISTS ONLY public.saved_reports DROP CONSTRAINT IF EXISTS saved_reports_pkey;
-ALTER TABLE IF EXISTS ONLY public.sales_points DROP CONSTRAINT IF EXISTS sales_points_pkey;
-ALTER TABLE IF EXISTS ONLY public.sales DROP CONSTRAINT IF EXISTS sales_pkey;
-ALTER TABLE IF EXISTS ONLY public.refunds DROP CONSTRAINT IF EXISTS refunds_pkey;
-ALTER TABLE IF EXISTS ONLY public.physical_tickets DROP CONSTRAINT IF EXISTS physical_tickets_pkey;
-ALTER TABLE IF EXISTS ONLY public.physical_tickets DROP CONSTRAINT IF EXISTS physical_tickets_batch_number_key;
-ALTER TABLE IF EXISTS ONLY public.payments DROP CONSTRAINT IF EXISTS payments_pkey;
-ALTER TABLE IF EXISTS ONLY public.payment_methods DROP CONSTRAINT IF EXISTS payment_methods_pkey;
-ALTER TABLE IF EXISTS ONLY public.password_reset_tokens DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_key;
-ALTER TABLE IF EXISTS ONLY public.password_reset_tokens DROP CONSTRAINT IF EXISTS password_reset_tokens_pkey;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_pkey;
-ALTER TABLE IF EXISTS ONLY public.media_folders DROP CONSTRAINT IF EXISTS media_folders_pkey;
-ALTER TABLE IF EXISTS ONLY public.media_files DROP CONSTRAINT IF EXISTS media_files_pkey;
-ALTER TABLE IF EXISTS ONLY public.events DROP CONSTRAINT IF EXISTS events_slug_key;
-ALTER TABLE IF EXISTS ONLY public.events DROP CONSTRAINT IF EXISTS events_pkey;
-ALTER TABLE IF EXISTS ONLY public.event_additional_data DROP CONSTRAINT IF EXISTS event_additional_data_pkey;
-ALTER TABLE IF EXISTS ONLY public.check_in_records DROP CONSTRAINT IF EXISTS check_in_records_ticket_number_key;
-ALTER TABLE IF EXISTS ONLY public.check_in_records DROP CONSTRAINT IF EXISTS check_in_records_pkey;
-ALTER TABLE IF EXISTS ONLY public.categories DROP CONSTRAINT IF EXISTS categories_slug_key;
-ALTER TABLE IF EXISTS ONLY public.categories DROP CONSTRAINT IF EXISTS categories_pkey;
-ALTER TABLE IF EXISTS ONLY public.backups DROP CONSTRAINT IF EXISTS backups_pkey;
-ALTER TABLE IF EXISTS ONLY public.backup_schedules DROP CONSTRAINT IF EXISTS backup_schedules_pkey;
-ALTER TABLE IF EXISTS ONLY public.audit_logs DROP CONSTRAINT IF EXISTS audit_logs_pkey;
 ALTER TABLE IF EXISTS public.virtual_tickets ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.tickets ALTER COLUMN id DROP DEFAULT;
@@ -246,9 +96,7 @@ DROP VIEW IF EXISTS public.audit_summary;
 DROP SEQUENCE IF EXISTS public.audit_logs_id_seq;
 DROP TABLE IF EXISTS public.audit_logs;
 DROP FUNCTION IF EXISTS public.update_updated_at_column();
---
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
@@ -264,9 +112,7 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
---
 -- Name: audit_logs; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.audit_logs (
     id integer NOT NULL,
@@ -287,9 +133,7 @@ CREATE TABLE public.audit_logs (
 );
 
 
---
 -- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.audit_logs_id_seq
     AS integer
@@ -300,16 +144,12 @@ CREATE SEQUENCE public.audit_logs_id_seq
     CACHE 1;
 
 
---
 -- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.audit_logs_id_seq OWNED BY public.audit_logs.id;
 
 
---
 -- Name: audit_summary; Type: VIEW; Schema: public; Owner: -
---
 
 CREATE VIEW public.audit_summary AS
  SELECT date("timestamp") AS date,
@@ -321,9 +161,7 @@ CREATE VIEW public.audit_summary AS
   GROUP BY (date("timestamp")), action, severity, status;
 
 
---
 -- Name: backup_schedules; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.backup_schedules (
     id integer NOT NULL,
@@ -341,9 +179,7 @@ CREATE TABLE public.backup_schedules (
 );
 
 
---
 -- Name: backup_schedules_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.backup_schedules_id_seq
     AS integer
@@ -354,16 +190,12 @@ CREATE SEQUENCE public.backup_schedules_id_seq
     CACHE 1;
 
 
---
 -- Name: backup_schedules_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.backup_schedules_id_seq OWNED BY public.backup_schedules.id;
 
 
---
 -- Name: backups; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.backups (
     id integer NOT NULL,
@@ -379,9 +211,7 @@ CREATE TABLE public.backups (
 );
 
 
---
 -- Name: backups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.backups_id_seq
     AS integer
@@ -392,16 +222,12 @@ CREATE SEQUENCE public.backups_id_seq
     CACHE 1;
 
 
---
 -- Name: backups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.backups_id_seq OWNED BY public.backups.id;
 
 
---
 -- Name: categories; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.categories (
     id integer NOT NULL,
@@ -417,9 +243,7 @@ CREATE TABLE public.categories (
 );
 
 
---
 -- Name: categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.categories_id_seq
     AS integer
@@ -430,16 +254,12 @@ CREATE SEQUENCE public.categories_id_seq
     CACHE 1;
 
 
---
 -- Name: categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.categories_id_seq OWNED BY public.categories.id;
 
 
---
 -- Name: check_in_records; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.check_in_records (
     id integer NOT NULL,
@@ -457,9 +277,7 @@ CREATE TABLE public.check_in_records (
 );
 
 
---
 -- Name: check_in_records_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.check_in_records_id_seq
     AS integer
@@ -470,16 +288,12 @@ CREATE SEQUENCE public.check_in_records_id_seq
     CACHE 1;
 
 
---
 -- Name: check_in_records_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.check_in_records_id_seq OWNED BY public.check_in_records.id;
 
 
---
 -- Name: event_additional_data; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.event_additional_data (
     id integer NOT NULL,
@@ -491,9 +305,7 @@ CREATE TABLE public.event_additional_data (
 );
 
 
---
 -- Name: event_additional_data_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.event_additional_data_id_seq
     AS integer
@@ -504,16 +316,12 @@ CREATE SEQUENCE public.event_additional_data_id_seq
     CACHE 1;
 
 
---
 -- Name: event_additional_data_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.event_additional_data_id_seq OWNED BY public.event_additional_data.id;
 
 
---
 -- Name: events; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.events (
     id integer NOT NULL,
@@ -546,37 +354,27 @@ CREATE TABLE public.events (
 );
 
 
---
 -- Name: COLUMN events.main_image_url; Type: COMMENT; Schema: public; Owner: -
---
 
 COMMENT ON COLUMN public.events.main_image_url IS 'URL de la imagen principal del evento';
 
 
---
 -- Name: COLUMN events.video_url; Type: COMMENT; Schema: public; Owner: -
---
 
 COMMENT ON COLUMN public.events.video_url IS 'URL del video promocional del evento';
 
 
---
 -- Name: COLUMN events.gallery_images; Type: COMMENT; Schema: public; Owner: -
---
 
 COMMENT ON COLUMN public.events.gallery_images IS 'Array JSON con URLs de imágenes de la galería';
 
 
---
 -- Name: COLUMN events.social_links; Type: COMMENT; Schema: public; Owner: -
---
 
 COMMENT ON COLUMN public.events.social_links IS 'JSON con enlaces a redes sociales del evento';
 
 
---
 -- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.events_id_seq
     AS integer
@@ -587,16 +385,12 @@ CREATE SEQUENCE public.events_id_seq
     CACHE 1;
 
 
---
 -- Name: events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
 
 
---
 -- Name: media_files; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.media_files (
     id integer NOT NULL,
@@ -618,9 +412,7 @@ CREATE TABLE public.media_files (
 );
 
 
---
 -- Name: media_files_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.media_files_id_seq
     AS integer
@@ -631,16 +423,12 @@ CREATE SEQUENCE public.media_files_id_seq
     CACHE 1;
 
 
---
 -- Name: media_files_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.media_files_id_seq OWNED BY public.media_files.id;
 
 
---
 -- Name: media_folders; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.media_folders (
     id integer NOT NULL,
@@ -651,9 +439,7 @@ CREATE TABLE public.media_folders (
 );
 
 
---
 -- Name: media_folders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.media_folders_id_seq
     AS integer
@@ -664,16 +450,12 @@ CREATE SEQUENCE public.media_folders_id_seq
     CACHE 1;
 
 
---
 -- Name: media_folders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.media_folders_id_seq OWNED BY public.media_folders.id;
 
 
---
 -- Name: notifications; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.notifications (
     id integer NOT NULL,
@@ -693,9 +475,7 @@ CREATE TABLE public.notifications (
 );
 
 
---
 -- Name: notification_summary; Type: VIEW; Schema: public; Owner: -
---
 
 CREATE VIEW public.notification_summary AS
  SELECT date(sent_at) AS date,
@@ -707,9 +487,7 @@ CREATE VIEW public.notification_summary AS
   GROUP BY (date(sent_at)), type, target, status;
 
 
---
 -- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.notifications_id_seq
     AS integer
@@ -720,16 +498,12 @@ CREATE SEQUENCE public.notifications_id_seq
     CACHE 1;
 
 
---
 -- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
---
 -- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.password_reset_tokens (
     id integer NOT NULL,
@@ -740,9 +514,7 @@ CREATE TABLE public.password_reset_tokens (
 );
 
 
---
 -- Name: password_reset_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.password_reset_tokens_id_seq
     AS integer
@@ -753,16 +525,12 @@ CREATE SEQUENCE public.password_reset_tokens_id_seq
     CACHE 1;
 
 
---
 -- Name: password_reset_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.password_reset_tokens_id_seq OWNED BY public.password_reset_tokens.id;
 
 
---
 -- Name: payment_methods; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.payment_methods (
     id integer NOT NULL,
@@ -775,9 +543,7 @@ CREATE TABLE public.payment_methods (
 );
 
 
---
 -- Name: payment_methods_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.payment_methods_id_seq
     AS integer
@@ -788,16 +554,12 @@ CREATE SEQUENCE public.payment_methods_id_seq
     CACHE 1;
 
 
---
 -- Name: payment_methods_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.payment_methods_id_seq OWNED BY public.payment_methods.id;
 
 
---
 -- Name: payments; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.payments (
     id integer NOT NULL,
@@ -816,9 +578,7 @@ CREATE TABLE public.payments (
 );
 
 
---
 -- Name: payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.payments_id_seq
     AS integer
@@ -829,16 +589,12 @@ CREATE SEQUENCE public.payments_id_seq
     CACHE 1;
 
 
---
 -- Name: payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.payments_id_seq OWNED BY public.payments.id;
 
 
---
 -- Name: physical_tickets; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.physical_tickets (
     id integer NOT NULL,
@@ -860,9 +616,7 @@ CREATE TABLE public.physical_tickets (
 );
 
 
---
 -- Name: physical_tickets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.physical_tickets_id_seq
     AS integer
@@ -873,16 +627,12 @@ CREATE SEQUENCE public.physical_tickets_id_seq
     CACHE 1;
 
 
---
 -- Name: physical_tickets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.physical_tickets_id_seq OWNED BY public.physical_tickets.id;
 
 
---
 -- Name: refunds; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.refunds (
     id integer NOT NULL,
@@ -898,9 +648,7 @@ CREATE TABLE public.refunds (
 );
 
 
---
 -- Name: refunds_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.refunds_id_seq
     AS integer
@@ -911,16 +659,12 @@ CREATE SEQUENCE public.refunds_id_seq
     CACHE 1;
 
 
---
 -- Name: refunds_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.refunds_id_seq OWNED BY public.refunds.id;
 
 
---
 -- Name: sales; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.sales (
     id integer NOT NULL,
@@ -942,9 +686,7 @@ CREATE TABLE public.sales (
 );
 
 
---
 -- Name: sales_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.sales_id_seq
     AS integer
@@ -955,16 +697,12 @@ CREATE SEQUENCE public.sales_id_seq
     CACHE 1;
 
 
---
 -- Name: sales_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.sales_id_seq OWNED BY public.sales.id;
 
 
---
 -- Name: sales_points; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.sales_points (
     id integer NOT NULL,
@@ -981,9 +719,7 @@ CREATE TABLE public.sales_points (
 );
 
 
---
 -- Name: sales_points_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.sales_points_id_seq
     AS integer
@@ -994,16 +730,12 @@ CREATE SEQUENCE public.sales_points_id_seq
     CACHE 1;
 
 
---
 -- Name: sales_points_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.sales_points_id_seq OWNED BY public.sales_points.id;
 
 
---
 -- Name: saved_reports; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.saved_reports (
     id integer NOT NULL,
@@ -1018,9 +750,7 @@ CREATE TABLE public.saved_reports (
 );
 
 
---
 -- Name: saved_reports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.saved_reports_id_seq
     AS integer
@@ -1031,16 +761,12 @@ CREATE SEQUENCE public.saved_reports_id_seq
     CACHE 1;
 
 
---
 -- Name: saved_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.saved_reports_id_seq OWNED BY public.saved_reports.id;
 
 
---
 -- Name: scheduled_reports; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.scheduled_reports (
     id integer NOT NULL,
@@ -1059,9 +785,7 @@ CREATE TABLE public.scheduled_reports (
 );
 
 
---
 -- Name: scheduled_reports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.scheduled_reports_id_seq
     AS integer
@@ -1072,16 +796,12 @@ CREATE SEQUENCE public.scheduled_reports_id_seq
     CACHE 1;
 
 
---
 -- Name: scheduled_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.scheduled_reports_id_seq OWNED BY public.scheduled_reports.id;
 
 
---
 -- Name: seat_map_templates; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.seat_map_templates (
     id integer NOT NULL,
@@ -1096,9 +816,7 @@ CREATE TABLE public.seat_map_templates (
 );
 
 
---
 -- Name: seat_map_templates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.seat_map_templates_id_seq
     AS integer
@@ -1109,16 +827,12 @@ CREATE SEQUENCE public.seat_map_templates_id_seq
     CACHE 1;
 
 
---
 -- Name: seat_map_templates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.seat_map_templates_id_seq OWNED BY public.seat_map_templates.id;
 
 
---
 -- Name: seat_maps; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.seat_maps (
     id integer NOT NULL,
@@ -1133,9 +847,7 @@ CREATE TABLE public.seat_maps (
 );
 
 
---
 -- Name: seat_maps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.seat_maps_id_seq
     AS integer
@@ -1146,16 +858,12 @@ CREATE SEQUENCE public.seat_maps_id_seq
     CACHE 1;
 
 
---
 -- Name: seat_maps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.seat_maps_id_seq OWNED BY public.seat_maps.id;
 
 
---
 -- Name: seat_sections; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.seat_sections (
     id integer NOT NULL,
@@ -1171,9 +879,7 @@ CREATE TABLE public.seat_sections (
 );
 
 
---
 -- Name: seat_sections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.seat_sections_id_seq
     AS integer
@@ -1184,16 +890,12 @@ CREATE SEQUENCE public.seat_sections_id_seq
     CACHE 1;
 
 
---
 -- Name: seat_sections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.seat_sections_id_seq OWNED BY public.seat_sections.id;
 
 
---
 -- Name: seats; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.seats (
     id integer NOT NULL,
@@ -1208,9 +910,7 @@ CREATE TABLE public.seats (
 );
 
 
---
 -- Name: seats_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.seats_id_seq
     AS integer
@@ -1221,16 +921,12 @@ CREATE SEQUENCE public.seats_id_seq
     CACHE 1;
 
 
---
 -- Name: seats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.seats_id_seq OWNED BY public.seats.id;
 
 
---
 -- Name: ticket_types; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.ticket_types (
     id integer NOT NULL,
@@ -1250,9 +946,7 @@ CREATE TABLE public.ticket_types (
 );
 
 
---
 -- Name: ticket_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.ticket_types_id_seq
     AS integer
@@ -1263,16 +957,12 @@ CREATE SEQUENCE public.ticket_types_id_seq
     CACHE 1;
 
 
---
 -- Name: ticket_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.ticket_types_id_seq OWNED BY public.ticket_types.id;
 
 
---
 -- Name: tickets; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.tickets (
     id integer NOT NULL,
@@ -1287,9 +977,7 @@ CREATE TABLE public.tickets (
 );
 
 
---
 -- Name: tickets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.tickets_id_seq
     AS integer
@@ -1300,16 +988,12 @@ CREATE SEQUENCE public.tickets_id_seq
     CACHE 1;
 
 
---
 -- Name: tickets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.tickets_id_seq OWNED BY public.tickets.id;
 
 
---
 -- Name: users; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.users (
     id integer NOT NULL,
@@ -1331,16 +1015,12 @@ CREATE TABLE public.users (
 );
 
 
---
 -- Name: COLUMN users.phone; Type: COMMENT; Schema: public; Owner: -
---
 
 COMMENT ON COLUMN public.users.phone IS 'Número de teléfono del usuario';
 
 
---
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.users_id_seq
     AS integer
@@ -1351,16 +1031,12 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
---
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
---
 -- Name: virtual_tickets; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.virtual_tickets (
     id integer NOT NULL,
@@ -1384,9 +1060,7 @@ CREATE TABLE public.virtual_tickets (
 );
 
 
---
 -- Name: virtual_tickets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.virtual_tickets_id_seq
     AS integer
@@ -1397,203 +1071,146 @@ CREATE SEQUENCE public.virtual_tickets_id_seq
     CACHE 1;
 
 
---
 -- Name: virtual_tickets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
 
 ALTER SEQUENCE public.virtual_tickets_id_seq OWNED BY public.virtual_tickets.id;
 
 
---
 -- Name: audit_logs id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.audit_logs ALTER COLUMN id SET DEFAULT nextval('public.audit_logs_id_seq'::regclass);
 
 
---
 -- Name: backup_schedules id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.backup_schedules ALTER COLUMN id SET DEFAULT nextval('public.backup_schedules_id_seq'::regclass);
 
 
---
 -- Name: backups id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.backups ALTER COLUMN id SET DEFAULT nextval('public.backups_id_seq'::regclass);
 
 
---
 -- Name: categories id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.categories_id_seq'::regclass);
 
 
---
 -- Name: check_in_records id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.check_in_records ALTER COLUMN id SET DEFAULT nextval('public.check_in_records_id_seq'::regclass);
 
 
---
 -- Name: event_additional_data id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.event_additional_data ALTER COLUMN id SET DEFAULT nextval('public.event_additional_data_id_seq'::regclass);
 
 
---
 -- Name: events id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.events_id_seq'::regclass);
 
 
---
 -- Name: media_files id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.media_files ALTER COLUMN id SET DEFAULT nextval('public.media_files_id_seq'::regclass);
 
 
---
 -- Name: media_folders id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.media_folders ALTER COLUMN id SET DEFAULT nextval('public.media_folders_id_seq'::regclass);
 
 
---
 -- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
 
 
---
 -- Name: password_reset_tokens id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.password_reset_tokens ALTER COLUMN id SET DEFAULT nextval('public.password_reset_tokens_id_seq'::regclass);
 
 
---
 -- Name: payment_methods id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.payment_methods ALTER COLUMN id SET DEFAULT nextval('public.payment_methods_id_seq'::regclass);
 
 
---
 -- Name: payments id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.payments ALTER COLUMN id SET DEFAULT nextval('public.payments_id_seq'::regclass);
 
 
---
 -- Name: physical_tickets id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.physical_tickets ALTER COLUMN id SET DEFAULT nextval('public.physical_tickets_id_seq'::regclass);
 
 
---
 -- Name: refunds id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.refunds ALTER COLUMN id SET DEFAULT nextval('public.refunds_id_seq'::regclass);
 
 
---
 -- Name: sales id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.sales ALTER COLUMN id SET DEFAULT nextval('public.sales_id_seq'::regclass);
 
 
---
 -- Name: sales_points id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.sales_points ALTER COLUMN id SET DEFAULT nextval('public.sales_points_id_seq'::regclass);
 
 
---
 -- Name: saved_reports id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.saved_reports ALTER COLUMN id SET DEFAULT nextval('public.saved_reports_id_seq'::regclass);
 
 
---
 -- Name: scheduled_reports id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.scheduled_reports ALTER COLUMN id SET DEFAULT nextval('public.scheduled_reports_id_seq'::regclass);
 
 
---
 -- Name: seat_map_templates id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.seat_map_templates ALTER COLUMN id SET DEFAULT nextval('public.seat_map_templates_id_seq'::regclass);
 
 
---
 -- Name: seat_maps id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.seat_maps ALTER COLUMN id SET DEFAULT nextval('public.seat_maps_id_seq'::regclass);
 
 
---
 -- Name: seat_sections id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.seat_sections ALTER COLUMN id SET DEFAULT nextval('public.seat_sections_id_seq'::regclass);
 
 
---
 -- Name: seats id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.seats ALTER COLUMN id SET DEFAULT nextval('public.seats_id_seq'::regclass);
 
 
---
 -- Name: ticket_types id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.ticket_types ALTER COLUMN id SET DEFAULT nextval('public.ticket_types_id_seq'::regclass);
 
 
---
 -- Name: tickets id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.tickets ALTER COLUMN id SET DEFAULT nextval('public.tickets_id_seq'::regclass);
 
 
---
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
---
 -- Name: virtual_tickets id; Type: DEFAULT; Schema: public; Owner: -
---
 
 ALTER TABLE ONLY public.virtual_tickets ALTER COLUMN id SET DEFAULT nextval('public.virtual_tickets_id_seq'::regclass);
 
 
---
 -- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: -
 
 
