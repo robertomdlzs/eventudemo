@@ -1235,9 +1235,9 @@ INSERT INTO users (email, password_hash, first_name, last_name, role, status) VA
 ;
 
 -- Insertar eventos
-INSERT INTO events (title, slug, description, date, time, venue, location, category_id, organizer_id, total_capacity, sold, price, status, featured, main_image_url) VALUES
-('Concierto de Rock Nacional', 'concierto-rock-nacional-2024', 'Un increíble concierto de rock con las mejores bandas del país', '2024-12-25', '20:00', 'Estadio El Campín', 'Bogotá, Colombia', 1, 2, 50000, 25000, 150000, 'active', true, '/images/rock-concert.jpg'),
-('Festival de Comida Internacional', 'festival-comida-internacional-2024', 'Disfruta de la mejor gastronomía local e internacional', '2024-12-30', '12:00', 'Parque Simón Bolívar', 'Bogotá, Colombia', 2, 2, 10000, 5000, 50000, 'active', true, '/images/food-festival.jpg'),
+INSERT INTO events (title, slug, description, date, time, venue, location, category_id, organizer_id, total_capacity, price, status, featured, main_image_url) VALUES
+('Concierto de Rock Nacional', 'concierto-rock-nacional-2024', 'Un increíble concierto de rock con las mejores bandas del país', '2024-12-25', '20:00', 'Estadio El Campín', 'Bogotá, Colombia', 1, 2, 50000, 150000, 'active', true, '/images/rock-concert.jpg'),
+('Festival de Comida Internacional', 'festival-comida-internacional-2024', 'Disfruta de la mejor gastronomía local e internacional', '2024-12-30', '12:00', 'Parque Simón Bolívar', 'Bogotá, Colombia', 2, 2, 10000, 50000, 'active', true, '/images/food-festival.jpg'),
 ('Conferencia de Tecnología 2025', 'conferencia-tecnologia-2025', 'Las últimas tendencias en tecnología y desarrollo', '2025-01-15', '09:00', 'Centro de Convenciones', 'Medellín, Colombia', 3, 2, 2000, 800, 200000, 'active', false, '/images/tech-conference.jpg')
 ;
 
