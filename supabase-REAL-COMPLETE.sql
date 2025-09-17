@@ -1240,8 +1240,7 @@ INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, st
 ('Festival de Comida Internacional', 'festival-comida-internacional-2024', 'Disfruta de la mejor gastronomía local e internacional', '2024-12-30', '12:00', 'Parque Simón Bolívar', 'Bogotá, Colombia', 2, 2, 10000, 50000, 'active', true, '/images/food-festival.jpg'),
 ('Conferencia de Tecnología 2025', 'conferencia-tecnologia-2025', 'Las últimas tendencias en tecnología y desarrollo', '2025-01-15', '09:00', 'Centro de Convenciones', 'Medellín, Colombia', 3, 2, 2000, 800, 200000, 'active', false, '/images/tech-conference.jpg')
 ;
-
--- Insertar tipos de boletos
+INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
 (1, 'General', 'Acceso general al concierto', 150000, 40000, 20000, 'active'),
 (1, 'VIP', 'Acceso VIP con beneficios especiales', 300000, 10000, 5000, 'active'),
 (2, 'Entrada General', 'Acceso a todas las zonas del festival', 50000, 8000, 4000, 'active'),
