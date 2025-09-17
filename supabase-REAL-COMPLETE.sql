@@ -1228,7 +1228,7 @@ INSERT INTO categories (name, slug, description, status) VALUES
 ;
 
 -- Insertar usuarios
-INSERT INTO users (email, password, first_name, last_name, role, status) VALUES
+INSERT INTO users (email, password_hash, first_name, last_name, role, status) VALUES
 ('admin@eventu.co', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Principal', 'admin', 'active'),
 ('organizer@eventu.co', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Organizador', 'Eventos', 'organizer', 'active'),
 ('user@eventu.co', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Usuario', 'Demo', 'user', 'active')
