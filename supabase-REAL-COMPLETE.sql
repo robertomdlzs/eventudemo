@@ -1225,21 +1225,21 @@ INSERT INTO categories (name, slug, description, status) VALUES
 ('Tecnología', 'tecnologia', 'Conferencias y eventos tecnológicos', 'active'),
 ('Deportes', 'deportes', 'Eventos deportivos y competencias', 'active'),
 ('Arte y Cultura', 'arte-cultura', 'Exposiciones y eventos culturales', 'active')
-ON CONFLICT (slug) DO NOTHING;
+;
 
 -- Insertar usuarios
 INSERT INTO users (email, password, first_name, last_name, role, status) VALUES
 ('admin@eventu.co', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Principal', 'admin', 'active'),
 ('organizer@eventu.co', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Organizador', 'Eventos', 'organizer', 'active'),
 ('user@eventu.co', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Usuario', 'Demo', 'user', 'active')
-ON CONFLICT (email) DO NOTHING;
+;
 
 -- Insertar eventos
 INSERT INTO events (title, slug, description, date, time, venue, location, category_id, organizer_id, total_capacity, sold, price, status, featured, main_image_url) VALUES
 ('Concierto de Rock Nacional', 'concierto-rock-nacional-2024', 'Un increíble concierto de rock con las mejores bandas del país', '2024-12-25', '20:00', 'Estadio El Campín', 'Bogotá, Colombia', 1, 2, 50000, 25000, 150000, 'active', true, '/images/rock-concert.jpg'),
 ('Festival de Comida Internacional', 'festival-comida-internacional-2024', 'Disfruta de la mejor gastronomía local e internacional', '2024-12-30', '12:00', 'Parque Simón Bolívar', 'Bogotá, Colombia', 2, 2, 10000, 5000, 50000, 'active', true, '/images/food-festival.jpg'),
 ('Conferencia de Tecnología 2025', 'conferencia-tecnologia-2025', 'Las últimas tendencias en tecnología y desarrollo', '2025-01-15', '09:00', 'Centro de Convenciones', 'Medellín, Colombia', 3, 2, 2000, 800, 200000, 'active', false, '/images/tech-conference.jpg')
-ON CONFLICT (slug) DO NOTHING;
+;
 
 -- Insertar tipos de boletos
 INSERT INTO ticket_types (event_id, name, description, price, capacity, sold, status) VALUES
@@ -1249,7 +1249,7 @@ INSERT INTO ticket_types (event_id, name, description, price, capacity, sold, st
 (2, 'Premium', 'Acceso premium con degustaciones', 100000, 2000, 1000, 'active'),
 (3, 'Estudiante', 'Descuento para estudiantes', 150000, 1000, 400, 'active'),
 (3, 'Profesional', 'Entrada para profesionales', 200000, 1000, 400, 'active')
-ON CONFLICT DO NOTHING;
+;
 
 -- =====================================================
 -- FINALIZACIÓN
