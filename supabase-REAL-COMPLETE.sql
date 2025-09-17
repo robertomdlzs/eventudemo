@@ -1242,7 +1242,6 @@ INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, st
 ;
 
 -- Insertar tipos de boletos
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
 (1, 'General', 'Acceso general al concierto', 150000, 40000, 20000, 'active'),
 (1, 'VIP', 'Acceso VIP con beneficios especiales', 300000, 10000, 5000, 'active'),
 (2, 'Entrada General', 'Acceso a todas las zonas del festival', 50000, 8000, 4000, 'active'),
@@ -1282,19 +1281,6 @@ INSERT INTO categories (id, name, slug, description, icon, color, status, create
 INSERT INTO categories (id, name, slug, description, icon, color, status, created_at, updated_at) VALUES ('6', 'Familiar', 'familiar', 'Eventos para toda la familia', 'Heart', '#DDA0DD', 'active', '2025-08-19 16:06:26.149857', '2025-08-19 16:06:26.149857');
 INSERT INTO categories (id, name, slug, description, icon, color, status, created_at, updated_at) VALUES ('7', 'Educación', 'educacion', 'Talleres, cursos y eventos educativos', 'BookOpen', '#98D8C8', 'active', '2025-08-19 16:06:26.149857', '2025-08-19 16:06:26.149857');
 
--- Datos para events (12 registros)
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status) VALUES
 
 -- Datos para notifications (2 registros)
 INSERT INTO notifications (id, title, message, type, target, recipients, sent_at, read_by, status, created_by, created_at) VALUES ('1', 'Nuevo evento publicado', 'El evento "Conferencia Tech 2024" ha sido publicado exitosamente', 'success', 'all', NULL, '2025-08-25 12:48:29.723542', '[]', 'delivered', NULL, '2025-08-25 12:48:29.723542');
@@ -1383,14 +1369,8 @@ INSERT INTO sales_points (id, name, location, address, contact_person, contact_p
 INSERT INTO sales_points (id, name, location, address, contact_person, contact_phone, contact_email, status, created_at, updated_at) VALUES ('3', 'Punto de Venta Sur', 'Centro Comercial Sur', 'Carrera 78 #34-56, Sur', 'Ana Martínez', '3003456789', 'sur@eventu.co', 'active', '2025-08-26 12:39:22.110964', '2025-08-26 12:39:22.110964');
 
 -- Datos para seat_map_templates (3 registros)
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status)": 40}]}', NULL, 't', '1', '2025-08-19 16:06:26.152011', '2025-08-19 16:06:26.152011');
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status)": 100}]}', NULL, 't', '1', '2025-08-19 16:06:26.152011', '2025-08-19 16:06:26.152011');
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status)": 200}]}', NULL, 't', '1', '2025-08-19 16:06:26.152011', '2025-08-19 16:06:26.152011');
 
 -- Datos para seat_maps (3 registros)
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status)": 200}]}', '1', '2', '2025-08-19 16:06:26.155355', '2025-08-19 16:06:26.155355');
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status)": 200}]}', '2', '2', '2025-08-19 16:06:26.155355', '2025-08-19 16:06:26.155355');
-INSERT INTO ticket_types (event_id, name, description, price, quantity, sold, status)": 500}]}', '2', '2', '2025-08-19 16:07:58.125962', '2025-08-19 16:07:58.125962');
 
 -- Datos para ticket_types (47 registros)
 INSERT INTO ticket_types (id, event_id, name, description, price, quantity, sold, max_per_order, sale_start, sale_end, status, created_at, updated_at) VALUES ('4', '3', 'Entrada General', 'Asiento numerado', '35000.00', '400', '0', '6', NULL, NULL, 'active', '2025-08-19 16:06:26.16093', '2025-08-19 16:06:26.16093');
