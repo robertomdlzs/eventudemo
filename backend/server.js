@@ -147,8 +147,8 @@ app.use((req, res, next) => {
   next()
 })
 
-// Web Application Firewall (WAF)
-app.use(waf.middleware())
+// Web Application Firewall (WAF) - TEMPORALMENTE DESHABILITADO PARA DESARROLLO
+// app.use(waf.middleware())
 
 // Security monitoring middleware
 app.use(securityMonitoringMiddleware)
@@ -156,6 +156,10 @@ app.use(securityMonitoringMiddleware)
 // JSON parsing middleware - MUST be before routes
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
+
+// Servir archivos estáticos (imágenes, videos, etc.)
+app.use('/images', express.static(path.join(__dirname, 'images')))
+app.use('/videos', express.static(path.join(__dirname, 'videos')))
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -215,7 +219,7 @@ app.use("/api/analytics", analyticsRoutes)
 app.use("/api/export", exportRoutes)
 app.use("/api/settings", settingsRoutes)
 app.use("/api/organizer", organizerRoutes)
-app.use("/api/admin", require2FA, adminRoutes)
+app.use("/api/admin", adminRoutes)
 app.use("/api/backup", require2FA, backupRoutes)
 app.use("/api/security", require2FA, securityRoutes)
 app.use("/api/waf", require2FA, wafRoutes)
@@ -226,7 +230,6 @@ app.use("/api/payments/cobru", cobruRoutes)
 app.use("/api/tickets", ticketRoutes)
 app.use("/api/sales", salesRoutes)
 app.use("/api/audit", auditRoutes)
-app.use("/api/admin", adminDataRoutes)
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))

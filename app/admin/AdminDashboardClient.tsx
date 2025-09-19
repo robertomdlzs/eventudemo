@@ -89,26 +89,6 @@ export default function AdminDashboardClient({ dashboardData }: AdminDashboardCl
             Resumen general del sistema Eventu
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/admin/mi-cuenta">
-              <User className="mr-2 h-4 w-4" />
-              Mi Cuenta
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/admin/administradores">
-              <Shield className="mr-2 h-4 w-4" />
-              Gestionar Administradores
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/admin/usuarios">
-              <Users className="mr-2 h-4 w-4" />
-              Gestionar Usuarios
-            </Link>
-          </Button>
-        </div>
       </div>
 
       {/* Stats Cards */}

@@ -35,8 +35,21 @@ export default function AdminSeatMapsPageClient() {
     try {
       const response = await apiClient.getSeatMaps()
       if (response.success && response.data) {
-        setSeatMaps(response.data)
-        console.log(`✅ Mapas cargados desde API: ${response.data.length} mapas`)
+        // Transformar los datos de la API para que coincidan con la estructura esperada
+        const transformedMaps = response.data.map((map: any) => ({
+          id: map.id.toString(),
+          name: map.name || 'Mapa sin nombre',
+          eventId: map.event_id || '',
+          sections: map.sections || [],
+          metadata: {
+            capacity: map.total_seats || map.total_capacity || 0,
+            createdAt: new Date(map.created_at || Date.now()),
+            updatedAt: new Date(map.updated_at || Date.now()),
+            isPublished: true
+          }
+        }))
+        setSeatMaps(transformedMaps)
+        console.log(`✅ Mapas cargados desde API: ${transformedMaps.length} mapas`)
       } else {
         console.warn("⚠️ API falló, usando fallback del localStorage")
         // Fallback to local storage if API fails
@@ -127,7 +140,7 @@ export default function AdminSeatMapsPageClient() {
       try {
         const updateData = {
           name: editingMapData.name,
-          total_capacity: editingMapData.metadata.capacity || 0,
+          total_capacity: editingMapData.metadata?.capacity || 0,
         }
 
         const response = await apiClient.updateSeatMap(editingMapData.id, updateData)
@@ -320,11 +333,11 @@ export default function AdminSeatMapsPageClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground">
-                  <p>Capacidad Total: {map.metadata.capacity || 0}</p>
-                  <p>Secciones: {map.sections.length || 0}</p>
+                  <p>Capacidad Total: {map.metadata?.capacity || 0}</p>
+                  <p>Secciones: {map.sections?.length || 0}</p>
                   <p>Evento: {map.eventId || 'Sin evento asignado'}</p>
                   <p>Venue: {'No especificado'}</p>
-                  <p>Última Actualización: {new Date(map.metadata.updatedAt).toLocaleDateString()}</p>
+                  <p>Última Actualización: {map.metadata?.updatedAt ? new Date(map.metadata.updatedAt).toLocaleDateString() : 'No disponible'}</p>
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button

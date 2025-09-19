@@ -23,9 +23,12 @@ class Event {
     this.sales_start_date = data.sales_start_date ?? data.visibility_start ?? null
     this.sales_end_date = data.sales_end_date ?? data.visibility_end ?? null
     this.youtube_url = data.youtube_url ?? null
+    this.video_url = data.video_url ?? null
     this.image_url = data.image_url ?? data.image ?? null
+    this.gallery_images = data.gallery_images ?? null
     this.featured = data.featured ?? (typeof data.web_visible !== "undefined" ? Boolean(data.web_visible) : null)
     this.seat_map_id = data.seat_map_id ?? null
+    this.max_seats_per_purchase = data.max_seats_per_purchase ?? 4
     this.created_at = data.created_at ?? null
     this.updated_at = data.updated_at ?? null
   }
@@ -52,6 +55,7 @@ class Event {
       image_url,
       featured = false,
       seat_map_id,
+      max_seats_per_purchase = 4,
     } = eventData
 
     // Generar slug automáticamente si no se proporciona
@@ -66,9 +70,9 @@ class Event {
         INSERT INTO events (
           title, slug, description, long_description, date, time, venue, location,
           category_id, organizer_id, total_capacity, price, status, sales_start_date,
-          sales_end_date, youtube_url, image_url, featured, seat_map_id
+          sales_end_date, youtube_url, image_url, featured, seat_map_id, max_seats_per_purchase
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
         RETURNING *
       `
 
@@ -92,6 +96,7 @@ class Event {
         image_url,
         featured,
         seat_map_id,
+        max_seats_per_purchase,
       ])
 
       return new Event(result.rows[0])
@@ -205,6 +210,11 @@ class Event {
         params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`)
         paramIndex += 3
       }
+
+      if (filters.slug) {
+        query += ` AND slug = $${paramIndex++}`
+        params.push(filters.slug)
+      }
     } else {
       // MySQL legacy filters
       if (normalizedStatus !== undefined) {
@@ -226,6 +236,11 @@ class Event {
       if (filters.search) {
         query += ` AND (name LIKE ? OR location LIKE ?)`
         params.push(`%${filters.search}%`, `%${filters.search}%`)
+      }
+
+      if (filters.slug) {
+        query += ` AND slug = ?`
+        params.push(filters.slug)
       }
     }
 

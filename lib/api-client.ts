@@ -1,11 +1,7 @@
 // Configuración de API para diferentes entornos
 const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    // En el cliente, usar la URL del navegador
-    return process.env.NEXT_PUBLIC_API_URL || `${window.location.origin}/api`
-  }
-  // En el servidor, usar la URL de producción o localhost
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002/api"
+  // Siempre usar el backend en localhost:3002 para desarrollo
+  return "http://localhost:3002/api"
 }
 
 const API_BASE_URL = getApiBaseUrl()
@@ -33,6 +29,9 @@ export interface LoginResponse {
   user: User
   token: string
   error?: string
+  redirectUrl?: string
+  welcomeMessage?: string
+  role?: string
 }
 
 export class ApiClient {
@@ -209,18 +208,13 @@ export class ApiClient {
   // Authentication API
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/login`, {
+      const response = await this.request<LoginResponse>("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
 
-      const raw = await response.json()
-      const payload = raw?.data || {}
-      const user = payload?.user
-      const token = payload?.token
-
-      if (raw.success && user && token) {
+      if (response.success && response.data) {
+        const { user, token } = response.data
         this.token = token
         this.currentUser = user
 
@@ -230,14 +224,14 @@ export class ApiClient {
           localStorage.setItem("eventu_authenticated", "true")
           
           // Store redirect information
-          if (payload.redirectUrl) {
-            localStorage.setItem("redirectUrl", payload.redirectUrl)
+          if (response.data.redirectUrl) {
+            localStorage.setItem("redirectUrl", response.data.redirectUrl)
           }
-          if (payload.welcomeMessage) {
-            localStorage.setItem("welcomeMessage", payload.welcomeMessage)
+          if (response.data.welcomeMessage) {
+            localStorage.setItem("welcomeMessage", response.data.welcomeMessage)
           }
-          if (payload.role) {
-            localStorage.setItem("userRole", payload.role)
+          if (response.data.role) {
+            localStorage.setItem("userRole", response.data.role)
           }
           
           // Disparar evento para notificar otros componentes
@@ -250,14 +244,15 @@ export class ApiClient {
         success: false,
         user: {} as User,
         token: "",
-        error: raw?.message || "Login failed",
+        error: response.error || "Login failed",
       }
     } catch (error) {
+      console.error("Login error:", error)
       return {
         success: false,
         user: {} as User,
         token: "",
-        error: error instanceof Error ? error.message : "Login failed",
+        error: error instanceof Error ? error.message : "Network error",
       }
     }
   }

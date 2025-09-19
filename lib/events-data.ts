@@ -7,6 +7,7 @@ export interface EventData {
   slug: string
   description: string
   longDescription?: string
+  long_description?: string // Alias para compatibilidad
   date: string
   startDate?: string
   time: string
@@ -29,12 +30,28 @@ export interface EventData {
   status: "cancelled" | "active" | "inactive"
   featured: boolean
   imageUrl?: string
+  image_url?: string // Alias para compatibilidad
   image: string // Alias para compatibilidad
   youtubeUrl?: string
+  video_url?: string // Alias para compatibilidad
+  gallery_images?: string[]
   tags: string[]
   rating: number
   locationDisplay: string
   categoryDisplay: string
+  ticketTypes?: any[] // Para compatibilidad con el componente
+  seatMapId?: string // Para compatibilidad con el componente
+  maxSeatsPerPurchase?: number // Máximo de asientos por compra
+  organizerName?: string // Para compatibilidad con el componente
+  organizerId?: string // Para compatibilidad con el componente
+  ageRestriction?: string
+  alcoholSales?: boolean
+  pregnantWomen?: boolean
+  disabledAccess?: boolean
+  accommodationType?: string
+  pulepCode?: string
+  externalFood?: boolean
+  parking?: boolean
 }
 
 // Datos mock de eventos
@@ -145,8 +162,8 @@ const mockEvents: EventData[] = [
 
 export async function getAllEvents(): Promise<EventData[]> {
   try {
-    // Llamada a la API de Vercel
-    const response = await fetch('/api/events', {
+    // Llamada al backend
+    const response = await fetch('http://localhost:3002/api/events', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -158,7 +175,50 @@ export async function getAllEvents(): Promise<EventData[]> {
     }
     
     const result = await response.json()
-    return result.success ? result.data : mockEvents
+    if (result.success && result.data) {
+      // Mapear los datos del backend al formato esperado
+      return result.data.map((backendEvent: any) => ({
+        id: backendEvent.id.toString(),
+        title: backendEvent.title,
+        slug: backendEvent.slug,
+        description: backendEvent.description || "",
+        date: backendEvent.date,
+        startDate: backendEvent.date,
+        endDate: backendEvent.date,
+        time: backendEvent.time || "",
+        location: backendEvent.location,
+        locationDisplay: backendEvent.location,
+        category: {
+          id: "1",
+          name: typeof backendEvent.category === 'object' ? backendEvent.category.name : backendEvent.category || "General"
+        },
+        categoryDisplay: typeof backendEvent.category === 'object' ? backendEvent.category.name : backendEvent.category || "General",
+        organizer: {
+          id: backendEvent.organizer_id?.toString() || "0",
+          name: backendEvent.organizer_name || "Organizador"
+        },
+        totalCapacity: backendEvent.total_capacity || 0,
+        total_capacity: backendEvent.total_capacity || 0,
+        capacity: backendEvent.total_capacity || 0,
+        sold: backendEvent.sold || 0,
+        soldTickets: backendEvent.sold || 0,
+        price: parseFloat(backendEvent.price) || 0,
+        status: backendEvent.status === "published" ? "active" : "inactive",
+        featured: backendEvent.featured || false,
+        image_url: backendEvent.image_url,
+        imageUrl: backendEvent.image_url,
+        image: backendEvent.image_url || "/placeholder.svg",
+        youtubeUrl: backendEvent.youtube_url,
+        video_url: backendEvent.video_url,
+        gallery_images: backendEvent.gallery_images || [],
+        tags: [],
+        rating: 0,
+        venue: backendEvent.location,
+        organizerName: backendEvent.organizer_name || "Organizador",
+        organizerId: backendEvent.organizer_id?.toString() || "0"
+      }))
+    }
+    return mockEvents
   } catch (error) {
     console.warn('Failed to fetch events from API, using mock data:', error)
     return mockEvents
@@ -195,6 +255,81 @@ export async function getEventBySlug(slug: string): Promise<EventData | null> {
 }
 
 export async function getEventBySlugOriginal(slug: string): Promise<EventData | null> {
-  // Alias para compatibilidad
+  try {
+    // Primero intentar obtener del backend
+    const response = await fetch(`http://localhost:3002/api/events?slug=${slug}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.data && data.data.length > 0) {
+        const backendEvent = data.data[0]
+        
+        // Transformar los datos del backend al formato esperado por EventData
+        const transformedEvent: EventData = {
+          id: backendEvent.id.toString(),
+          title: backendEvent.title,
+          slug: backendEvent.slug,
+          description: backendEvent.description,
+          longDescription: backendEvent.long_description,
+          long_description: backendEvent.long_description,
+          date: backendEvent.date,
+          startDate: backendEvent.date,
+          time: backendEvent.time,
+          venue: backendEvent.venue || '',
+          location: backendEvent.location,
+          category: {
+            id: backendEvent.category_id?.toString() || '1',
+            name: 'Categoría' // Por ahora usar un nombre genérico
+          },
+          organizer: {
+            id: backendEvent.organizer_id?.toString() || '1',
+            name: 'Organizador' // Por ahora usar un nombre genérico
+          },
+          totalCapacity: backendEvent.total_capacity || 0,
+          total_capacity: backendEvent.total_capacity || 0,
+          capacity: backendEvent.total_capacity || 0,
+          sold: 0, // Por ahora 0, se puede calcular después
+          soldTickets: 0,
+          price: parseFloat(backendEvent.price) || 0,
+          status: backendEvent.status === 'published' ? 'active' : 'inactive',
+          featured: backendEvent.featured || false,
+          imageUrl: backendEvent.image_url ? `http://localhost:3002${backendEvent.image_url}` : null,
+          image_url: backendEvent.image_url ? `http://localhost:3002${backendEvent.image_url}` : null,
+          image: backendEvent.image_url ? `http://localhost:3002${backendEvent.image_url}` : '/placeholder.jpg',
+          youtubeUrl: backendEvent.youtube_url,
+          video_url: backendEvent.video_url,
+          gallery_images: backendEvent.gallery_images || [],
+          tags: [], // Por ahora vacío
+          rating: 4.5, // Por ahora un valor por defecto
+          locationDisplay: backendEvent.location,
+          categoryDisplay: 'Categoría', // Por ahora genérico
+          ticketTypes: [], // Por ahora vacío
+          seatMapId: backendEvent.seat_map_id?.toString(),
+          maxSeatsPerPurchase: backendEvent.max_seats_per_purchase || 4,
+          organizerName: 'Organizador',
+          organizerId: backendEvent.organizer_id?.toString() || '1',
+          ageRestriction: 'Todas las edades',
+          alcoholSales: false,
+          pregnantWomen: true,
+          disabledAccess: true,
+          accommodationType: 'No incluido',
+          pulepCode: '',
+          externalFood: false,
+          parking: false
+        }
+        
+        return transformedEvent
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching event from backend:', error)
+  }
+
+  // Si falla el backend, usar datos mock como fallback
   return getEventBySlug(slug)
 }

@@ -577,8 +577,8 @@ export default function AdminSeatMapPageClient({ eventId }: AdminSeatMapPageClie
         setHasUnsavedChanges(seatMapManager.hasChanges())
         const currentMap = new SeatMapStorage().getSeatMap(eventId)
         if (currentMap) {
-          setIsPublished(currentMap.metadata.isPublished)
-          setLastSaved(currentMap.metadata.updatedAt)
+          setIsPublished(currentMap.metadata?.isPublished || false)
+          setLastSaved(currentMap.metadata?.updatedAt || new Date())
           if (currentMap.metadata && (currentMap.metadata as any).stageConfig) {
             setStageConfig((currentMap.metadata as any).stageConfig)
           }

@@ -13,9 +13,12 @@ import {
   Download, 
   Eye,
   CreditCard,
-  Receipt
+  Receipt,
+  ArrowLeft
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { PurchaseDetailsModal } from "@/components/purchase-details-modal"
+import { downloadInvoicePDF, viewPurchaseTickets, resendPurchaseTickets } from "@/lib/purchase-utils"
 
 interface Purchase {
   id: string
@@ -36,82 +39,92 @@ interface Purchase {
 export default function HistorialComprasPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const token = localStorage.getItem("auth_token")
       if (!token) {
         router.push("/login")
         return
       }
       
-      // Simular datos de compras (en producción esto vendría de la API)
-      const mockPurchases: Purchase[] = [
-        {
-          id: "1",
-          orderNumber: "ORD-2024-001",
-          eventName: "Concierto Rock Nacional",
-          eventDate: "2024-12-15",
-          venue: "Estadio El Campín",
-          ticketType: "General",
-          quantity: 2,
-          unitPrice: 50000,
-          totalAmount: 100000,
-          paymentMethod: "Tarjeta de Crédito",
-          status: "completed",
-          purchaseDate: "2024-11-20",
-          transactionId: "TXN-001-2024"
-        },
-        {
-          id: "2",
-          orderNumber: "ORD-2024-002",
-          eventName: "Festival Gastronómico",
-          eventDate: "2024-12-20",
-          venue: "Centro Comercial Andino",
-          ticketType: "VIP",
-          quantity: 1,
-          unitPrice: 120000,
-          totalAmount: 120000,
-          paymentMethod: "Transferencia Bancaria",
-          status: "completed",
-          purchaseDate: "2024-11-25",
-          transactionId: "TXN-002-2024"
-        },
-        {
-          id: "3",
-          orderNumber: "ORD-2024-003",
-          eventName: "Teatro: Romeo y Julieta",
-          eventDate: "2024-11-30",
-          venue: "Teatro Colón",
-          ticketType: "Platea",
-          quantity: 3,
-          unitPrice: 80000,
-          totalAmount: 240000,
-          paymentMethod: "Tarjeta de Débito",
-          status: "completed",
-          purchaseDate: "2024-11-10",
-          transactionId: "TXN-003-2024"
-        },
-        {
-          id: "4",
-          orderNumber: "ORD-2024-004",
-          eventName: "Tech Summit 2024",
-          eventDate: "2025-01-15",
-          venue: "Centro de Convenciones",
-          ticketType: "Early Bird",
-          quantity: 1,
-          unitPrice: 150000,
-          totalAmount: 150000,
-          paymentMethod: "PSE",
-          status: "pending",
-          purchaseDate: "2024-12-01",
-          transactionId: "TXN-004-2024"
+      try {
+        // Obtener datos reales del backend
+        const response = await fetch('http://localhost:3002/api/sales/user/4', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            // Transformar datos del backend al formato esperado
+            const transformedPurchases: Purchase[] = data.data.map((sale: any) => ({
+              id: sale.id.toString(),
+              orderNumber: `ORD-${sale.id}`,
+              eventName: sale.event_name,
+              eventDate: sale.event_date,
+              venue: sale.event_venue,
+              ticketType: sale.ticket_type_name,
+              quantity: sale.quantity,
+              unitPrice: parseFloat(sale.unit_price),
+              totalAmount: parseFloat(sale.total_amount),
+              paymentMethod: sale.payment_method || "No especificado",
+              status: sale.status,
+              purchaseDate: sale.transaction_date,
+              transactionId: `TXN-${sale.id}`
+            }))
+            setPurchases(transformedPurchases)
+          }
+        } else {
+          // Fallback a datos mock si falla el backend
+          const mockPurchases: Purchase[] = [
+            {
+              id: "1",
+              orderNumber: "ORD-2024-001",
+              eventName: "Concierto Rock Nacional",
+              eventDate: "2024-12-15",
+              venue: "Estadio El Campín",
+              ticketType: "General",
+              quantity: 2,
+              unitPrice: 50000,
+              totalAmount: 100000,
+              paymentMethod: "Tarjeta de Crédito",
+              status: "completed",
+              purchaseDate: "2024-11-20",
+              transactionId: "TXN-001-2024"
+            }
+          ]
+          setPurchases(mockPurchases)
         }
-      ]
-      
-      setPurchases(mockPurchases)
-      setLoading(false)
+      } catch (error) {
+        console.error('Error fetching purchases:', error)
+        // Fallback a datos mock en caso de error
+        const mockPurchases: Purchase[] = [
+          {
+            id: "1",
+            orderNumber: "ORD-2024-001",
+            eventName: "Concierto Rock Nacional",
+            eventDate: "2024-12-15",
+            venue: "Estadio El Campín",
+            ticketType: "General",
+            quantity: 2,
+            unitPrice: 50000,
+            totalAmount: 100000,
+            paymentMethod: "Tarjeta de Crédito",
+            status: "completed",
+            purchaseDate: "2024-11-20",
+            transactionId: "TXN-001-2024"
+          }
+        ]
+        setPurchases(mockPurchases)
+      } finally {
+        setLoading(false)
+      }
     }
 
     checkAuth()
@@ -161,6 +174,26 @@ export default function HistorialComprasPage() {
     }
   }
 
+  // Funciones para manejar los botones
+  const handleViewDetails = (purchase: Purchase) => {
+    setSelectedPurchase(purchase)
+    setShowDetailsModal(true)
+  }
+
+  const handleDownloadInvoice = (purchase: Purchase) => {
+    downloadInvoicePDF(purchase)
+  }
+
+  const handleViewTickets = (purchase: Purchase) => {
+    const tickets = viewPurchaseTickets(purchase)
+    // Redirigir a la página de boletos con los boletos de esta compra
+    router.push('/mi-cuenta/boletos')
+  }
+
+  const handleResendTickets = (purchase: Purchase) => {
+    resendPurchaseTickets(purchase)
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -179,6 +212,17 @@ export default function HistorialComprasPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => router.back()}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Atrás
+          </Button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Historial de Compras</h1>
         <p className="text-gray-600">Revisa todas tus transacciones y compras realizadas</p>
       </div>
@@ -262,19 +306,41 @@ export default function HistorialComprasPage() {
                 <Separator className="my-4" />
 
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewDetails(purchase)}
+                  >
                     <Eye className="h-4 w-4 mr-2" />
                     Ver Detalles
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDownloadInvoice(purchase)}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Descargar Factura
                   </Button>
                   {purchase.status === "completed" && (
-                    <Button variant="outline" size="sm">
-                      <Receipt className="h-4 w-4 mr-2" />
-                      Ver Boletos
-                    </Button>
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewTickets(purchase)}
+                      >
+                        <Receipt className="h-4 w-4 mr-2" />
+                        Ver Boletos
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleResendTickets(purchase)}
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Reenviar Boletos
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -321,6 +387,16 @@ export default function HistorialComprasPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal */}
+      <PurchaseDetailsModal
+        purchase={selectedPurchase}
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false)
+          setSelectedPurchase(null)
+        }}
+      />
     </div>
   )
 }

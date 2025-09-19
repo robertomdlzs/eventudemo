@@ -7,6 +7,8 @@ import GoogleAnalytics from '@/components/GoogleAnalytics'
 import CookieConsent from '@/components/CookieConsent'
 import { BrowserSessionProvider } from '@/components/browser-session-provider'
 import { SessionTimeoutProvider } from '@/components/session-timeout-provider'
+import MainHeader from '@/components/main-header'
+import { Footer } from '@/components/footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -48,7 +50,13 @@ export default function RootLayout({
         >
           <BrowserSessionProvider>
             <SessionTimeoutProvider>
-              {children}
+              <div className="min-h-screen bg-background flex flex-col">
+                <MainHeader />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </div>
               <Toaster />
               <CookieConsent />
             </SessionTimeoutProvider>

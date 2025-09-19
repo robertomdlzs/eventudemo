@@ -1330,6 +1330,7 @@ export async function createAdminEvent(formData: FormData): Promise<boolean> {
     const serviceFeeValue = formData.get('serviceFeeValue') as string
     const serviceFeeDescription = formData.get('serviceFeeDescription') as string
     const paymentMethods = formData.get('paymentMethods') as string
+    const maxSeatsPerPurchase = formData.get('maxSeatsPerPurchase') as string
 
     console.log('📋 Datos recibidos del formulario:')
     console.log('   - title:', title)
@@ -1433,6 +1434,8 @@ export async function createAdminEvent(formData: FormData): Promise<boolean> {
         daviplata: true,
         tc_serfinanza: true,
       },
+      // Configuración de asientos
+      max_seats_per_purchase: parseInt(maxSeatsPerPurchase) || 4,
     }
 
     console.log('📤 Datos a enviar al backend:')

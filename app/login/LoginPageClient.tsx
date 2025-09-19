@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Sparkles, Star } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function LoginPageClient() {
   const searchParams = useSearchParams()
@@ -15,17 +15,13 @@ export default function LoginPageClient() {
     const reason = searchParams.get('reason')
     if (reason === 'timeout') {
       setShowTimeoutMessage(true)
-      toast({
-        title: "Sesión expirada",
+      toast.error("Sesión expirada", {
         description: "Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.",
-        variant: "destructive"
       })
     } else if (reason === 'session_closed') {
       setShowTimeoutMessage(true)
-      toast({
-        title: "Sesión cerrada",
+      toast.error("Sesión cerrada", {
         description: "Tu sesión ha sido cerrada por seguridad. Por favor, inicia sesión nuevamente.",
-        variant: "destructive"
       })
     }
   }, [searchParams])

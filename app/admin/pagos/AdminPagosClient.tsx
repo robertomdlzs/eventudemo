@@ -107,12 +107,7 @@ export default function AdminPagosClient() {
 
   const handleProcessPayment = async (paymentId: string) => {
     // FUNCIONALIDAD DESACTIVADA
-    toast({
-      title: "Función desactivada",
-      description: "El procesamiento de pagos está temporalmente desactivado",
-      variant: "destructive"
-    })
-    return
+    // Función habilitada
     
     // Código original comentado:
     // setLoading(true)
@@ -257,21 +252,6 @@ export default function AdminPagosClient() {
         </Button>
       </div>
 
-      {/* Mensaje de funcionalidad desactivada */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
-            <div className="text-orange-800">
-              <p className="font-medium mb-2">Sistema de Pagos Temporalmente Desactivado</p>
-              <p className="text-sm">
-                La funcionalidad de pagos está temporalmente desactivada mientras realizamos mejoras al sistema. 
-                Los datos mostrados son de ejemplo y las funciones de procesamiento están deshabilitadas.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -14,7 +14,6 @@ export function AuthGuard({ children, requiredRole, fallbackUrl = "/login" }: Au
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
 
   useEffect(() => {
     const checkAuth = () => {
@@ -25,10 +24,8 @@ export function AuthGuard({ children, requiredRole, fallbackUrl = "/login" }: Au
         const userRole = localStorage.getItem("userRole")
 
         if (!isAuthenticated || !currentUser) {
-          toast({
-            title: "Acceso denegado",
+          toast.error("Acceso denegado", {
             description: "Debes iniciar sesión para acceder a esta página.",
-            variant: "destructive",
           })
           router.push(fallbackUrl)
           return
@@ -43,10 +40,8 @@ export function AuthGuard({ children, requiredRole, fallbackUrl = "/login" }: Au
 
         // Check role authorization
         if (userRole !== requiredRole) {
-          toast({
-            title: "Acceso denegado",
+          toast.error("Acceso denegado", {
             description: `No tienes permisos para acceder a esta página. Se requiere rol: ${requiredRole}`,
-            variant: "destructive",
           })
           
           // Redirect based on user's actual role
@@ -59,10 +54,8 @@ export function AuthGuard({ children, requiredRole, fallbackUrl = "/login" }: Au
         setIsLoading(false)
       } catch (error) {
         console.error("Auth guard error:", error)
-        toast({
-          title: "Error de autenticación",
+        toast.error("Error de autenticación", {
           description: "Hubo un problema al verificar tu sesión.",
-          variant: "destructive",
         })
         router.push(fallbackUrl)
       }

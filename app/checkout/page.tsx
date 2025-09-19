@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, CreditCard, Check, MapPin, Calendar, Clock, User, Mail, Phone, Shield, Lock, Info } from "lucide-react"
+import { ArrowLeft, CreditCard, Check, MapPin, Calendar, Clock, User, Mail, Phone, Shield, Lock, Info, Building } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -35,6 +35,7 @@ export default function CheckoutPage() {
 
   // Estado para método de pago
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cobru')
+  const setSelectedMethod = setSelectedPaymentMethod
   
   // Estado para datos de tarjeta
   const [cardData, setCardData] = useState({
@@ -122,21 +123,14 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      // FUNCIONALIDAD DE PAGOS DESACTIVADA TEMPORALMENTE
-      toast({
-        title: "Pagos temporalmente desactivados",
-        description: "La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.",
-        variant: "destructive",
-      })
-      
-      // Simular delay para mostrar el mensaje
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Procesar el pago normalmente
+      console.log('Procesando pago...')
       
     } catch (error) {
       console.error('Error processing payment:', error)
       toast({
         title: "Error",
-        description: "La funcionalidad de pagos está temporalmente desactivada.",
+        description: "Hubo un error al procesar el pago. Por favor, intenta de nuevo.",
         variant: "destructive",
       })
     } finally {
@@ -269,27 +263,39 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Métodos de pago - DESACTIVADO */}
+            {/* Métodos de pago */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-600">
-                  <Shield className="h-5 w-5" />
-                  Sistema de Pagos Temporalmente Desactivado
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Métodos de Pago
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Info className="h-5 w-5 text-orange-600 mt-0.5" />
-                    <div className="text-orange-800">
-                      <p className="font-medium mb-2">Pagos temporalmente no disponibles</p>
-                      <p className="text-sm mb-3">
-                        La funcionalidad de pagos está temporalmente desactivada mientras realizamos mejoras al sistema.
-                      </p>
-                      <p className="text-sm">
-                        Para realizar tu compra, por favor contacta directamente con el organizador del evento.
-                      </p>
-                    </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="h-20 flex-col gap-2"
+                      onClick={() => setSelectedMethod('card')}
+                    >
+                      <CreditCard className="h-6 w-6" />
+                      <span>Tarjeta de Crédito</span>
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="h-20 flex-col gap-2"
+                      onClick={() => setSelectedMethod('pse')}
+                    >
+                      <Building className="h-6 w-6" />
+                      <span>PSE</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600">
+                    <p>Selecciona tu método de pago preferido para completar la compra de forma segura.</p>
                   </div>
                 </div>
               </CardContent>

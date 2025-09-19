@@ -789,4 +789,72 @@ router.get("/stats/overview", auth, requireRole("admin"), async (req, res) => {
   }
 })
 
+// Get sales invoice/download
+router.get("/:id/invoice", auth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const userId = req.user.userId
+
+    // Get sale details
+    const saleQuery = `
+      SELECT 
+        s.id,
+        s.buyer_name,
+        s.buyer_email,
+        s.quantity,
+        s.unit_price,
+        s.total_amount,
+        s.status,
+        s.payment_method,
+        s.created_at as purchase_date,
+        e.title as event_name,
+        e.date as event_date,
+        e.time as event_time,
+        e.venue as event_venue,
+        tt.name as ticket_type_name,
+        tt.price as ticket_price
+      FROM sales s
+      JOIN events e ON s.event_id = e.id
+      JOIN ticket_types tt ON s.ticket_type_id = tt.id
+      WHERE s.id = $1 AND s.user_id = $2
+    `
+
+    const result = await db.query(saleQuery, [id, userId])
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Sale not found or not authorized"
+      })
+    }
+
+    const sale = result.rows[0]
+
+    // Generate invoice data (in production, you would generate a PDF)
+    const invoiceData = {
+      invoiceNumber: `INV-${sale.id}-${new Date().getFullYear()}`,
+      sale: sale,
+      company: {
+        name: "Eventu - Plataforma de Eventos",
+        nit: "900.123.456-7",
+        address: "Calle 123 #45-67, Bogotá",
+        phone: "+57 (1) 234-5678"
+      },
+      generatedAt: new Date().toISOString()
+    }
+
+    res.json({
+      success: true,
+      data: invoiceData
+    })
+
+  } catch (error) {
+    console.error("Get invoice error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    })
+  }
+})
+
 module.exports = router

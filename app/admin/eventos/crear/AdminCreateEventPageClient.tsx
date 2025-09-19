@@ -97,6 +97,8 @@ export default function AdminCreateEventPageClient({ categories }: AdminCreateEv
       instagram: "",
       twitter: "",
     },
+    // Configuración de asientos
+    maxSeatsPerPurchase: 4,
   })
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
@@ -1001,6 +1003,21 @@ export default function AdminCreateEventPageClient({ categories }: AdminCreateEv
                           <SelectItem value="ASIENTOS">Asientos Numerados</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="maxSeatsPerPurchase">Máximo de Asientos por Compra</Label>
+                      <Input
+                        id="maxSeatsPerPurchase"
+                        type="number"
+                        min="1"
+                        max="20"
+                        placeholder="4"
+                        value={formData.maxSeatsPerPurchase}
+                        onChange={(e) => handleInputChange("maxSeatsPerPurchase", parseInt(e.target.value) || 4)}
+                      />
+                      <p className="text-sm text-gray-500">
+                        Número máximo de asientos que un usuario puede seleccionar en una sola compra
+                      </p>
                     </div>
                   </div>
                 </div>

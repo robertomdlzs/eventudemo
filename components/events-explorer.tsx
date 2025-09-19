@@ -1,42 +1,63 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Search, Filter, Calendar, MapPin, Tag } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import EventCard from "@/components/event-card"
-import type { EventData } from "@/lib/events-data"
+import { apiClient } from "@/lib/api-client"
 
 interface EventsExplorerProps {
-  events?: EventData[]
+  events?: any[]
 }
 
 export function EventsExplorer({ events = [] }: EventsExplorerProps) {
+  const [allEvents, setAllEvents] = useState<any[]>(events)
+  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [selectedLocation, setSelectedLocation] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("date")
 
+         // Cargar eventos del backend si no se pasaron como props
+         useEffect(() => {
+           if (allEvents.length === 0) {
+             setLoading(true)
+             apiClient.getEvents()
+               .then(response => {
+                 if (response.success && response.data) {
+                   setAllEvents(response.data)
+                 }
+               })
+               .catch(error => {
+                 console.error('Error fetching events:', error)
+               })
+               .finally(() => {
+                 setLoading(false)
+               })
+           }
+         }, [allEvents.length])
+
   // Obtener categorías y ubicaciones únicas
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(events.map((event) => 
+    const cats = Array.from(new Set(allEvents.map((event) => 
       typeof event.category === 'object' && event.category && 'name' in event.category 
         ? (event.category as any).name 
         : event.category
-    )))
+    ).filter(Boolean)))
     return cats.sort()
-  }, [events])
+  }, [allEvents])
 
   const locations = useMemo(() => {
-    const locs = Array.from(new Set(events.map((event) => event.location)))
+    const locs = Array.from(new Set(allEvents.map((event) => event.location).filter(Boolean)))
     return locs.sort()
-  }, [events])
+  }, [allEvents])
 
   // Filtrar y ordenar eventos
   const filteredEvents = useMemo(() => {
-    const filtered = events.filter((event) => {
+    const filtered = allEvents.filter((event) => {
       const matchesSearch =
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,7 +93,7 @@ export function EventsExplorer({ events = [] }: EventsExplorerProps) {
     })
 
     return filtered
-  }, [events, searchTerm, selectedCategory, selectedLocation, sortBy])
+  }, [allEvents, searchTerm, selectedCategory, selectedLocation, sortBy])
 
   const clearFilters = () => {
     setSearchTerm("")
@@ -85,7 +106,22 @@ export function EventsExplorer({ events = [] }: EventsExplorerProps) {
   const handleClearCategory = () => setSelectedCategory("all")
   const handleClearLocation = () => setSelectedLocation("all")
 
-  if (events.length === 0) {
+  if (loading) {
+    return (
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">Explora Eventos</h2>
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (allEvents.length === 0) {
     return (
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">

@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api-client"
 import { useCart } from "@/hooks/use-cart"
 import { useSeatReservation } from "@/lib/seat-reservation-manager"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface SeatSelectionClientProps {
   event: any // Cambiar a any para evitar problemas de tipo
@@ -50,23 +50,11 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
   // Calcular el total de boletas necesarias
   const totalTicketsNeeded = Object.values(selectedTickets).reduce((total, quantity) => total + quantity, 0)
   
-  // Si no hay boletas seleccionadas, permitir seleccionar hasta 4 asientos por defecto
-  const maxSeatsToSelect = totalTicketsNeeded > 0 ? totalTicketsNeeded : 4
+  // Usar el máximo configurado en el evento, o el total de boletas necesarias, o 4 por defecto
+  const eventMaxSeats = event.maxSeatsPerPurchase || 4
+  const maxSeatsToSelect = totalTicketsNeeded > 0 ? Math.min(totalTicketsNeeded, eventMaxSeats) : eventMaxSeats
 
-  useEffect(() => {
-    loadSeats()
-  }, [])
-
-  // Debug: Log cuando cambia el estado de seats
-  useEffect(() => {
-    console.log('🔄 Seats state changed:', seats.length, 'seats')
-    if (seats.length > 0) {
-      console.log('📊 First few seats:', seats.slice(0, 3))
-    }
-  }, [seats])
-
-
-  const loadSeats = async () => {
+  const loadSeats = useCallback(async () => {
     try {
       setLoading(true)
       console.log('🪑 Loading seats for event:', event.id, 'with seatMapId:', event.seatMapId)
@@ -99,7 +87,19 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
     } finally {
       setLoading(false)
     }
-  }
+  }, [event.id, event.seatMapId])
+
+  useEffect(() => {
+    loadSeats()
+  }, [loadSeats])
+
+  // Debug: Log cuando cambia el estado de seats
+  useEffect(() => {
+    console.log('🔄 Seats state changed:', seats.length, 'seats')
+    if (seats.length > 0) {
+      console.log('📊 First few seats:', seats.slice(0, 3))
+    }
+  }, [seats])
 
   const generateMockSeats = (): Seat[] => {
     const sections = [
@@ -143,10 +143,8 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
 
   const handleSeatClick = useCallback((seat: Seat) => {
     if (seat.status !== 'available') {
-      toast({
-        title: "Asiento no disponible",
-        description: "Este asiento no está disponible para selección",
-        variant: "destructive"
+      toast.error("Asiento no disponible", {
+        description: "Este asiento no está disponible para selección"
       })
       return
     }
@@ -155,24 +153,20 @@ export default function SeatSelectionClient({ event, selectedTickets }: SeatSele
       const isSelected = prev.find(s => s.id === seat.id)
       if (isSelected) {
         // Deseleccionar asiento
-        toast({
-          title: "Asiento deseleccionado",
-          description: `Asiento ${seat.section}-${seat.row}-${seat.number} deseleccionado`,
+        toast.success("Asiento deseleccionado", {
+          description: `Asiento ${seat.section}-${seat.row}-${seat.number} deseleccionado`
         })
         return prev.filter(s => s.id !== seat.id)
       } else {
         // Seleccionar asiento (si no excede la cantidad necesaria)
         if (prev.length < maxSeatsToSelect) {
-          toast({
-            title: "Asiento seleccionado",
-            description: `Asiento ${seat.section}-${seat.row}-${seat.number} seleccionado`,
+          toast.success("Asiento seleccionado", {
+            description: `Asiento ${seat.section}-${seat.row}-${seat.number} seleccionado`
           })
           return [...prev, seat]
         } else {
-          toast({
-            title: "Límite alcanzado",
-            description: `Puedes seleccionar máximo ${maxSeatsToSelect} asientos`,
-            variant: "destructive"
+          toast.error("Límite alcanzado", {
+            description: `Puedes seleccionar máximo ${maxSeatsToSelect} asientos`
           })
           return prev
         }

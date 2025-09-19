@@ -1,171 +1,211 @@
 import type { Metadata } from "next"
+import { ArrowRight, Scan, Users, Ticket, BarChart, Map, CreditCard } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Nuestros Servicios | Eventu",
   description: "Descubre todos los servicios que ofrecemos para organizadores de eventos",
 }
 
+const services = [
+  {
+    icon: Scan,
+    title: "Control de Acceso",
+    description: (
+      <ul className="list-disc pl-5 text-left space-y-1 text-gray-700">
+        <li>Control online & offline</li>
+        <li>Entrada principal y control intra-site</li>
+        <li>Acreditaciones</li>
+        <li>Escaneo de entradas digitales y físicas</li>
+      </ul>
+    ),
+  },
+  {
+    icon: Ticket,
+    title: "Ticketing & Registro",
+    description: (
+      <ul className="list-disc pl-5 text-left space-y-1 text-gray-700">
+        <li>Fácil configuración y 100% personalizable</li>
+        <li>Solución 360°</li>
+        <li>Configuración de abonos</li>
+      </ul>
+    ),
+  },
+  {
+    icon: Users,
+    title: "Gestión de Usuarios y Staff",
+    description: (
+      <ul className="list-disc pl-5 text-left space-y-1 text-gray-700">
+        <li>Acreditaciones y Staff</li>
+        <li>Configuración de todos los escenarios</li>
+        <li>Gestión de voluntarios y acreditados</li>
+        <li>Herramientas de supervisión sencillas y completas</li>
+      </ul>
+    ),
+  },
+  {
+    icon: BarChart,
+    title: "Data Marketing & CRM",
+    description: (
+      <ul className="list-disc pl-5 text-left space-y-1 text-gray-700">
+        <li>Segmentación y Bases de Datos</li>
+        <li>Campañas de comunicación y gestión</li>
+        <li>Análisis y monitoreo</li>
+      </ul>
+    ),
+  },
+  {
+    icon: Map,
+    title: "Seating Chart",
+    description: (
+      <ul className="list-disc pl-5 text-left space-y-1 text-gray-700">
+        <li>Asientos 2D y 3D</li>
+        <li>Tecnología propia</li>
+        <li>Modelado 2D y 3D</li>
+        <li>Simulación 3D con avatares</li>
+        <li>Modelaje de venues/proyectos</li>
+        <li>Vista panorámica</li>
+      </ul>
+    ),
+  },
+  {
+    icon: CreditCard,
+    title: "Cashless",
+    description: "Próximamente",
+  },
+]
+
 export default function NuestrosServiciosPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="flex-1">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Nuestros Servicios
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Todo lo que necesitas para hacer de tu evento un éxito rotundo
-          </p>
-        </div>
-      </section>
-
-      {/* Services Grid */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Service 1 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Venta de Boletos</h3>
-              <p className="text-gray-600 mb-6">
-                Plataforma completa para la venta de boletos online con múltiples métodos de pago y gestión de inventario.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Múltiples métodos de pago</li>
-                <li>• Gestión de inventario en tiempo real</li>
-                <li>• Boletos digitales con QR</li>
-                <li>• Reportes de ventas detallados</li>
-              </ul>
+      <section className="relative w-full py-20 md:py-28 lg:py-36 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+        <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium">Servicios Disponibles</span>
             </div>
-
-            {/* Service 2 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Analíticas y Reportes</h3>
-              <p className="text-gray-600 mb-6">
-                Dashboard completo con métricas en tiempo real, análisis de ventas y reportes personalizados.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Métricas en tiempo real</li>
-                <li>• Análisis de comportamiento</li>
-                <li>• Reportes personalizados</li>
-                <li>• Exportación de datos</li>
-              </ul>
-            </div>
-
-            {/* Service 3 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Gestión de Asistentes</h3>
-              <p className="text-gray-600 mb-6">
-                Sistema completo para gestionar asistentes, check-in y comunicación con los participantes.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Check-in digital</li>
-                <li>• Gestión de asistentes</li>
-                <li>• Comunicaciones masivas</li>
-                <li>• Listas de acceso</li>
-              </ul>
-            </div>
-
-            {/* Service 4 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Aplicación Móvil</h3>
-              <p className="text-gray-600 mb-6">
-                Aplicación móvil para organizadores y asistentes con funcionalidades avanzadas.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Check-in móvil</li>
-                <li>• Boletos digitales</li>
-                <li>• Notificaciones push</li>
-                <li>• Gestión offline</li>
-              </ul>
-            </div>
-
-            {/* Service 5 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Marketing y Promoción</h3>
-              <p className="text-gray-600 mb-6">
-                Herramientas de marketing integradas para promocionar tu evento y aumentar las ventas.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Campañas de email</li>
-                <li>• Integración con redes sociales</li>
-                <li>• Códigos de descuento</li>
-                <li>• Marketing de afiliados</li>
-              </ul>
-            </div>
-
-            {/* Service 6 */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Soporte 24/7</h3>
-              <p className="text-gray-600 mb-6">
-                Soporte técnico disponible las 24 horas para resolver cualquier problema que puedas tener.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Chat en vivo</li>
-                <li>• Soporte telefónico</li>
-                <li>• Base de conocimientos</li>
-                <li>• Capacitación personalizada</li>
-              </ul>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-r from-white via-purple-100 to-white bg-clip-text text-transparent">
+              Nuestros Servicios
+            </h1>
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-10 text-gray-300 leading-relaxed">
+              Soluciones integrales para llevar tu evento al siguiente nivel. 
+              <span className="text-white font-medium">Desde la planificación hasta la ejecución</span>, 
+              estamos contigo en cada paso.
+            </p>
+            <div className="flex justify-center items-center">
+              <Link href="/vende-tu-evento" passHref>
+                <Button className="group bg-white text-slate-900 hover:bg-gray-100 hover:scale-105 transition-all duration-300 text-lg px-8 py-4 rounded-xl shadow-2xl hover:shadow-white/20">
+                  <span className="font-semibold">Comenzar Ahora</span>
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
+        
+        {/* Enhanced Background Effects */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gray-900 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            ¿Listo para empezar?
-          </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Únete a miles de organizadores que ya confían en Eventu para sus eventos
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/vende-tu-evento"
-              className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Crear mi primer evento
-            </a>
-            <a
-              href="/contacto"
-              className="border border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Contactar ventas
-            </a>
+      {/* Services Grid Section */}
+      <section className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white relative">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+            {services.map((service, index) => (
+              <div
+                key={index}
+                className="group relative"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <Card className="relative h-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out rounded-2xl overflow-hidden group-hover:-translate-y-2 group-hover:scale-[1.02]">
+                  {/* Gradient Border Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 rounded-2xl blur-sm group-hover:blur-md transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
+                  
+                  {/* Card Content */}
+                  <div className="relative bg-white rounded-2xl p-8 h-full flex flex-col">
+                    <CardHeader className="flex flex-col items-center p-0 mb-6">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                        <div className="relative bg-gradient-to-br from-purple-50 to-pink-50 text-purple-600 p-5 rounded-2xl border border-purple-100 group-hover:shadow-lg transition-all duration-500">
+                          <service.icon className="h-8 w-8 group-hover:scale-110 transition-transform duration-300" />
+                        </div>
+                      </div>
+                      <CardTitle className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300">
+                        {service.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-600 text-sm w-full flex-1 flex flex-col justify-center">
+                      {service.description}
+                    </CardContent>
+                    
+                    {/* Subtle Hover Effect */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                  </div>
+                </Card>
+              </div>
+            ))}
           </div>
         </div>
+        
+        {/* Background Decoration */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-10 w-32 h-32 bg-purple-200/30 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 left-10 w-40 h-40 bg-pink-200/30 rounded-full blur-2xl"></div>
+        </div>
       </section>
-    </div>
+
+
+      {/* Call to Action Section */}
+      <section className="relative py-20 md:py-28 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+        <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium">¿Listo para comenzar?</span>
+            </div>
+            
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 bg-gradient-to-r from-white via-purple-100 to-white bg-clip-text text-transparent">
+              ¿Listo para Crear un Evento Inolvidable?
+            </h2>
+            
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-12 text-gray-300 leading-relaxed">
+              Contáctanos hoy mismo para discutir tus necesidades y cómo 
+              <span className="text-white font-medium"> Eventu puede ser tu aliado estratégico</span>.
+            </p>
+            
+            <div className="flex justify-center items-center">
+              <Link href="/vende-tu-evento" passHref>
+                <Button className="group bg-white text-slate-900 hover:bg-gray-100 hover:scale-105 transition-all duration-300 text-lg px-10 py-5 rounded-xl shadow-2xl hover:shadow-white/20">
+                  <span className="font-semibold">Contáctanos</span>
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </div>
+            
+          </div>
+        </div>
+        
+        {/* Background Effects */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-80 h-80 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+      </section>
+    </main>
   )
 }

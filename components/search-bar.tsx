@@ -3,11 +3,10 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, Calendar, MapPin, X } from "lucide-react"
+import { Search, Calendar, MapPin, X, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import EventCard from "@/components/event-card"
 import { apiClient } from "@/lib/api-client"
 
 interface SearchEvent {
@@ -23,11 +22,16 @@ interface SearchEvent {
   slug: string
 }
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onFilterChange?: (filteredEvents: SearchEvent[], totalEvents: number) => void
+}
+
+export default function SearchBar({ onFilterChange }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [location, setLocation] = useState("all")
   const [category, setCategory] = useState("all")
-  const [showResults, setShowResults] = useState(false)
+  const [dateFilter, setDateFilter] = useState("all")
+  const [priceRange, setPriceRange] = useState("all")
   const [filteredEvents, setFilteredEvents] = useState<SearchEvent[]>([])
   const [allEvents, setAllEvents] = useState<SearchEvent[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -67,30 +71,74 @@ export default function SearchBar() {
 
   // Filter events based on search criteria
   useEffect(() => {
-    const hasActiveFilters = searchQuery.trim() !== "" || location !== "all" || category !== "all"
-
-    if (!hasActiveFilters) {
-      setShowResults(false)
-      setIsSearching(false)
-      return
-    }
+    if (allEvents.length === 0) return
 
     setIsSearching(true)
 
     const filtered = allEvents.filter((event) => {
-      const matchesSearch =
+      const matchesSearch = searchQuery.trim() === "" || 
         event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.categoryDisplay.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesCategory = category === "all" || event.category === category
       const matchesLocation = location === "all" || event.location === location
+      
+      // Filtro por fecha
+      let matchesDate = true
+      if (dateFilter !== "all") {
+        const eventDate = new Date(event.date)
+        const now = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        
+        switch (dateFilter) {
+          case "today":
+            matchesDate = eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+            break
+          case "week":
+            const weekEnd = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+            matchesDate = eventDate >= today && eventDate < weekEnd
+            break
+          case "month":
+            const monthEnd = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+            matchesDate = eventDate >= today && eventDate < monthEnd
+            break
+          case "upcoming":
+            matchesDate = eventDate >= today
+            break
+        }
+      }
+      
+      // Filtro por rango de precio
+      let matchesPrice = true
+      if (priceRange !== "all") {
+        switch (priceRange) {
+          case "free":
+            matchesPrice = event.price === 0
+            break
+          case "low":
+            matchesPrice = event.price > 0 && event.price <= 50000
+            break
+          case "medium":
+            matchesPrice = event.price > 50000 && event.price <= 150000
+            break
+          case "high":
+            matchesPrice = event.price > 150000
+            break
+        }
+      }
 
-      return matchesSearch && matchesCategory && matchesLocation
+      return matchesSearch && matchesCategory && matchesLocation && matchesDate && matchesPrice
     })
 
     setFilteredEvents(filtered)
-    setShowResults(true)
     setIsSearching(false)
-  }, [searchQuery, location, category, allEvents])
+  }, [searchQuery, location, category, dateFilter, priceRange, allEvents])
+
+  // Separate effect to notify parent component
+  useEffect(() => {
+    if (onFilterChange && allEvents.length > 0) {
+      onFilterChange(filteredEvents, allEvents.length)
+    }
+  }, [filteredEvents, allEvents.length, onFilterChange])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,14 +149,14 @@ export default function SearchBar() {
 
   const handleEventClick = (event: SearchEvent) => {
     router.push(`/evento/${event.slug}`)
-    setShowResults(false)
   }
 
   const clearSearch = () => {
     setSearchQuery("")
     setLocation("all")
     setCategory("all")
-    setShowResults(false)
+    setDateFilter("all")
+    setPriceRange("all")
   }
 
   const getUniqueLocations = () => {
@@ -145,7 +193,7 @@ export default function SearchBar() {
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search Input */}
           <div className="md:col-span-2 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -189,66 +237,59 @@ export default function SearchBar() {
               ))}
             </SelectContent>
           </Select>
+
+          {/* Date Filter */}
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger>
+              <Calendar className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Fecha" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cualquier fecha</SelectItem>
+              <SelectItem value="today">Hoy</SelectItem>
+              <SelectItem value="week">Esta semana</SelectItem>
+              <SelectItem value="month">Este mes</SelectItem>
+              <SelectItem value="upcoming">Próximos eventos</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Price Filter */}
+          <Select value={priceRange} onValueChange={setPriceRange}>
+            <SelectTrigger>
+              <DollarSign className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Precio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cualquier precio</SelectItem>
+              <SelectItem value="free">Gratis</SelectItem>
+              <SelectItem value="low">$0 - $50,000</SelectItem>
+              <SelectItem value="medium">$50,000 - $150,000</SelectItem>
+              <SelectItem value="high">$150,000+</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Search Results */}
-        {showResults && (
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {isSearching ? "Buscando..." : `${filteredEvents.length} eventos encontrados`}
-              </h3>
+        {/* Filter Actions */}
+        <div className="flex justify-between items-center mt-4">
+          <div className="flex gap-2">
+            {(searchQuery || location !== "all" || category !== "all" || dateFilter !== "all" || priceRange !== "all") && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={clearSearch}
-                className="flex items-center gap-2"
+                className="text-gray-600"
               >
-                <X className="h-4 w-4" />
-                Limpiar
+                <X className="h-4 w-4 mr-1" />
+                Limpiar filtros
               </Button>
-            </div>
-
-            {filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredEvents.slice(0, 6).map((event) => (
-                  <div
-                    key={event.id}
-                    className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => handleEventClick(event)}
-                  >
-                    <div className="aspect-video bg-gray-200 rounded-lg mb-3 flex items-center justify-center">
-                      {event.image_url ? (
-                        <img
-                          src={event.image_url}
-                          alt={event.title}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <div className="text-gray-500 text-sm text-center">
-                          Sin imagen
-                        </div>
-                      )}
-                    </div>
-                    <h4 className="font-semibold text-gray-900 mb-1 line-clamp-2">{event.title}</h4>
-                    <p className="text-sm text-gray-600 mb-2">{event.locationDisplay}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">{event.categoryDisplay}</span>
-                      <span className="font-semibold text-green-600">
-                        ${event.price?.toLocaleString() || "Gratis"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No se encontraron eventos con los filtros seleccionados</p>
-              </div>
             )}
           </div>
-        )}
+          
+          <div className="text-sm text-gray-500">
+            {isSearching ? "Buscando..." : `${filteredEvents.length} evento${filteredEvents.length !== 1 ? 's' : ''} encontrado${filteredEvents.length !== 1 ? 's' : ''}`}
+          </div>
+        </div>
       </form>
     </div>
   )

@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { TwoFactorAuthForm } from "./two-factor-auth-form"
 import { useRouter, useSearchParams } from "next/navigation"
 import { apiClient } from "@/lib/api-client"
@@ -28,7 +28,6 @@ export function LoginForm() {
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [authStep, setAuthStep] = useState<"login" | "2fa_verify">("login")
   const [userIdFor2FA, setUserIdFor2FA] = useState<string | null>(null)
-  const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -108,10 +107,8 @@ export function LoginForm() {
           const welcomeMessage = localStorage.getItem("welcomeMessage") || `Bienvenido de nuevo, ${response.user.name}.`
           const userRole = response.user.role || "user"
 
-          toast({
-            title: "Inicio de sesión exitoso",
+          toast.success("Inicio de sesión exitoso", {
             description: welcomeMessage,
-            variant: "default",
           })
 
           // Redirect based on role or use search params
@@ -121,25 +118,19 @@ export function LoginForm() {
           // Track failed login
           trackFormSubmission('login', false)
           
-          toast({
-            title: "Error de inicio de sesión",
+          toast.error("Error de inicio de sesión", {
             description: response.error || "Credenciales inválidas. Por favor, verifica tu correo y contraseña.",
-            variant: "destructive",
           })
         }
       } catch (error) {
         console.error("Login error:", error)
-        toast({
-          title: "Error de conexión",
+        toast.error("Error de conexión", {
           description: "No se pudo conectar con el servidor. Inténtalo de nuevo.",
-          variant: "destructive",
         })
       }
     } else {
-      toast({
-        title: "Error de validación",
+      toast.error("Error de validación", {
         description: "Por favor, corrige los errores en el formulario.",
-        variant: "destructive",
       })
     }
 
@@ -148,10 +139,8 @@ export function LoginForm() {
 
   const handle2FAVerificationSuccess = () => {
     // Complete the authentication process
-    toast({
-      title: "Autenticación completada",
+    toast.success("Autenticación completada", {
       description: "Bienvenido de nuevo a Eventu.",
-      variant: "default",
     })
 
     // Get redirect URL from search params or default to /mi-cuenta

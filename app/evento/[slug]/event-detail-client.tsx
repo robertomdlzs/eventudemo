@@ -1,6 +1,6 @@
 "use client"
 
-import { Event } from "@/lib/types"
+import { EventData } from "@/lib/events-data"
 import { Calendar, Clock, MapPin, Users, Star, Ticket, Info, AlertCircle, Plus, Minus, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,7 @@ import { useCart } from "@/hooks/use-cart"
 import { useRouter } from "next/navigation"
 
 interface EventDetailClientProps {
-  event: Event
+  event: EventData
 }
 
 export default function EventDetailClient({ event }: EventDetailClientProps) {

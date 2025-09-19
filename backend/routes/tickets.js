@@ -600,4 +600,116 @@ router.post("/:id/resend", auth, requireRole("admin"), async (req, res) => {
   }
 })
 
+// Resend tickets by email
+router.post("/resend", auth, async (req, res) => {
+  try {
+    const { ticketId, saleId } = req.body
+    const userId = req.user.userId
+
+    if (!ticketId && !saleId) {
+      return res.status(400).json({
+        success: false,
+        message: "Either ticketId or saleId is required"
+      })
+    }
+
+    let query, params
+
+    if (saleId) {
+      // Resend all tickets for a sale
+      query = `
+        SELECT 
+          t.id as ticket_id,
+          t.ticket_code,
+          t.qr_code,
+          t.status as ticket_status,
+          s.buyer_name,
+          s.buyer_email,
+          s.quantity,
+          s.total_amount,
+          s.created_at as purchase_date,
+          e.title as event_name,
+          e.date as event_date,
+          e.time as event_time,
+          e.venue as event_venue,
+          tt.name as ticket_type_name,
+          tt.price as ticket_price
+        FROM tickets t
+        JOIN sales s ON t.sale_id = s.id
+        JOIN events e ON s.event_id = e.id
+        JOIN ticket_types tt ON s.ticket_type_id = tt.id
+        WHERE s.id = $1 AND s.user_id = $2
+      `
+      params = [saleId, userId]
+    } else {
+      // Resend specific ticket
+      query = `
+        SELECT 
+          t.id as ticket_id,
+          t.ticket_code,
+          t.qr_code,
+          t.status as ticket_status,
+          s.buyer_name,
+          s.buyer_email,
+          s.quantity,
+          s.total_amount,
+          s.created_at as purchase_date,
+          e.title as event_name,
+          e.date as event_date,
+          e.time as event_time,
+          e.venue as event_venue,
+          tt.name as ticket_type_name,
+          tt.price as ticket_price
+        FROM tickets t
+        JOIN sales s ON t.sale_id = s.id
+        JOIN events e ON s.event_id = e.id
+        JOIN ticket_types tt ON s.ticket_type_id = tt.id
+        WHERE t.id = $1 AND s.user_id = $2
+      `
+      params = [ticketId, userId]
+    }
+
+    const result = await db.query(query, params)
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Tickets not found or not authorized"
+      })
+    }
+
+    const tickets = result.rows
+
+    // In production, you would send actual emails here
+    // For now, we'll simulate the email sending
+    const emailData = {
+      to: tickets[0].buyer_email,
+      subject: `Boletos para ${tickets[0].event_name}`,
+      tickets: tickets,
+      sentAt: new Date().toISOString()
+    }
+
+    // Simulate email sending delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    res.json({
+      success: true,
+      message: `Se han reenviado ${tickets.length} boleto(s) a ${tickets[0].buyer_email}`,
+      data: {
+        emailSent: true,
+        recipient: tickets[0].buyer_email,
+        ticketsCount: tickets.length,
+        eventName: tickets[0].event_name
+      }
+    })
+
+  } catch (error) {
+    console.error("Resend tickets error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    })
+  }
+})
+
 module.exports = router

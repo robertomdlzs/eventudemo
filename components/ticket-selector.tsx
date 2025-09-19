@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MinusCircle, PlusCircle, ShoppingCart } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useCart } from "@/hooks/use-cart"
+import { useRouter } from "next/navigation"
 import { PriceDisplay } from "@/components/ui/price-display"
 
 interface Ticket {
@@ -28,6 +30,8 @@ export default TicketSelector
 function TicketSelector({ tickets = [], eventId }: TicketSelectorProps) {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({})
   const { toast } = useToast()
+  const { addToCart } = useCart()
+  const router = useRouter()
 
   // Handle case where tickets is undefined or empty
   if (!tickets || tickets.length === 0) {
@@ -79,28 +83,37 @@ function TicketSelector({ tickets = [], eventId }: TicketSelectorProps) {
       return
     }
 
-    const selectedItems = Object.entries(quantities)
-      .filter(([, quantity]) => quantity > 0)
-      .map(([ticketId, quantity]) => {
+    // Agregar cada tipo de boleta seleccionada al carrito
+    Object.entries(quantities).forEach(([ticketId, quantity]) => {
+      if (quantity > 0) {
         const ticket = tickets.find((t) => t.id === ticketId)
-        return {
-          ticketId,
-          name: ticket?.name,
-          price: ticket?.price,
-          quantity,
+        if (ticket) {
+          const cartItem = {
+            id: `${eventId}-${ticketId}`,
+            eventId: eventId,
+            eventTitle: "Evento", // Se puede obtener del contexto del evento
+            eventSlug: eventId,
+            ticketTypeId: ticketId,
+            ticketTypeName: ticket.name,
+            quantity: quantity,
+            price: ticket.price,
+            eventDate: undefined,
+            eventLocation: undefined
+          }
+          
+          console.log('Agregando item al carrito:', cartItem)
+          addToCart(cartItem)
         }
-      })
-
-    // Aquí iría la lógica para añadir al carrito (ej. API call, context update)
-    console.log("Añadir al carrito:", { eventId, selectedItems, subtotal })
+      }
+    })
 
     toast({
       title: "Boletos añadidos al carrito",
       description: `Se han añadido ${totalTicketsSelected} boletos a tu carrito.`,
     })
 
-    // Opcional: resetear cantidades después de añadir al carrito
-    setQuantities({})
+    // Redirigir al carrito
+    router.push('/carrito')
   }
 
   return (

@@ -41,12 +41,7 @@ function FeaturedEventsCarousel({ events = [] }: FeaturedEventsCarouselProps) {
   }
 
   if (events.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Próximos Eventos</h2>
-        <p className="text-white/80 mb-8">No hay eventos destacados disponibles en este momento</p>
-      </div>
-    )
+    return null
   }
 
   const currentEvent = events[currentIndex]
@@ -61,74 +56,81 @@ function FeaturedEventsCarousel({ events = [] }: FeaturedEventsCarouselProps) {
 
   return (
     <div className="relative">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Próximos Eventos</h2>
-        <p className="text-white/80 mb-8">Descubre los eventos más esperados</p>
-      </div>
-
-      <div className="relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-        <div className="grid md:grid-cols-2 gap-0 min-h-[400px]">
+      <div className="relative overflow-hidden rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl">
+        <div className="grid md:grid-cols-2 gap-0 min-h-[500px]">
           {/* Imagen del evento */}
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden group">
             <Image
               src={currentEvent.image || "/placeholder.svg"}
               alt={currentEvent.title}
               width={600}
-              height={400}
-              className="w-full h-full object-cover"
+              height={500}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/30" />
 
             {/* Badge de categoría */}
-            <div className="absolute top-4 left-4">
-              <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30">
+            <div className="absolute top-6 left-6">
+              <Badge className="bg-gradient-to-r from-white/25 to-white/15 backdrop-blur-md text-white border-white/20 shadow-lg px-4 py-2 text-sm font-medium">
                 {currentEvent.categoryDisplay}
               </Badge>
             </div>
 
             {/* Indicadores de precio */}
-            <div className="absolute bottom-4 left-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2">
-                <span className="text-white font-bold text-lg">Desde {formatPrice(currentEvent.price || 0)}</span>
+            <div className="absolute bottom-6 left-6">
+              <div className="bg-gradient-to-r from-white/25 to-white/15 backdrop-blur-md rounded-xl px-4 py-3 shadow-lg border border-white/20">
+                <span className="text-white font-bold text-xl">Desde {formatPrice(currentEvent.price || 0)}</span>
               </div>
             </div>
+
+            {/* Efecto de brillo sutil */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
 
           {/* Información del evento */}
-          <div className="p-8 flex flex-col justify-center">
-            <div className="space-y-4">
+          <div className="p-10 flex flex-col justify-center bg-gradient-to-br from-white/5 to-white/10">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">{currentEvent.title}</h3>
-                <p className="text-white/80 text-lg leading-relaxed">{currentEvent.description}</p>
+                <h3 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">{currentEvent.title}</h3>
+                <p className="text-white/85 text-lg leading-relaxed line-clamp-3">{currentEvent.description}</p>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center text-white/90">
-                  <Calendar className="h-5 w-5 mr-3 text-amber-400" />
-                  <span className="font-medium">{currentEvent.date}</span>
+              <div className="space-y-4">
+                <div className="flex items-center text-white/90 group">
+                  <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm mr-4 group-hover:bg-white/20 transition-colors duration-300">
+                    <Calendar className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <span className="font-medium text-lg">{currentEvent.date}</span>
                 </div>
-                <div className="flex items-center text-white/90">
-                  <MapPin className="h-5 w-5 mr-3 text-amber-400" />
-                  <span className="font-medium">{currentEvent.locationDisplay}</span>
+                <div className="flex items-center text-white/90 group">
+                  <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm mr-4 group-hover:bg-white/20 transition-colors duration-300">
+                    <MapPin className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <span className="font-medium text-lg">{currentEvent.locationDisplay}</span>
                 </div>
                 {currentEvent.capacity && (
-                  <div className="flex items-center text-white/90">
-                    <Users className="h-5 w-5 mr-3 text-amber-400" />
-                    <span className="font-medium">
+                  <div className="flex items-center text-white/90 group">
+                    <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm mr-4 group-hover:bg-white/20 transition-colors duration-300">
+                      <Users className="h-5 w-5 text-amber-400" />
+                    </div>
+                    <span className="font-medium text-lg">
                       {currentEvent.soldTickets || 0} / {currentEvent.capacity} asistentes
                     </span>
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-4 pt-6">
                 <Link href={`/evento/${currentEvent.slug}`}>
-                  <Button className="bg-white text-neutral-900 hover:bg-white/90 font-bold px-6">Ver Detalles</Button>
+                  <Button className="bg-gradient-to-r from-white to-white/90 text-neutral-900 hover:from-white/90 hover:to-white/80 font-bold px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    Ver Detalles
+                  </Button>
                 </Link>
                 <Link href={`/evento/${currentEvent.slug}/comprar`}>
                   <Button
                     variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 font-bold px-6 bg-transparent"
+                    className="border-white/30 text-white hover:bg-white/10 font-bold px-8 py-3 text-lg bg-transparent backdrop-blur-sm hover:border-white/50 transition-all duration-300 transform hover:scale-105"
                   >
                     Comprar Ahora
                   </Button>
@@ -138,13 +140,13 @@ function FeaturedEventsCarousel({ events = [] }: FeaturedEventsCarouselProps) {
           </div>
         </div>
 
-        {/* Controles de navegación */}
+        {/* Controles de navegación mejorados */}
         {events.length > 1 && (
           <>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-white/30"
+              className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/15 backdrop-blur-md hover:bg-white/25 text-white border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 w-12 h-12"
               onClick={prevSlide}
             >
               <ChevronLeft className="h-6 w-6" />
@@ -152,7 +154,7 @@ function FeaturedEventsCarousel({ events = [] }: FeaturedEventsCarouselProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-white/30"
+              className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/15 backdrop-blur-md hover:bg-white/25 text-white border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 w-12 h-12"
               onClick={nextSlide}
             >
               <ChevronRight className="h-6 w-6" />
@@ -161,14 +163,16 @@ function FeaturedEventsCarousel({ events = [] }: FeaturedEventsCarouselProps) {
         )}
       </div>
 
-      {/* Indicadores de puntos */}
+      {/* Indicadores de puntos mejorados */}
       {events.length > 1 && (
-        <div className="flex justify-center mt-6 space-x-2">
+        <div className="flex justify-center mt-8 space-x-3">
           {events.map((_, index) => (
             <button
               key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentIndex ? "bg-white scale-110" : "bg-white/40 hover:bg-white/60"
+              className={`w-4 h-4 rounded-full transition-all duration-300 shadow-lg ${
+                index === currentIndex 
+                  ? "bg-white scale-125 shadow-white/50" 
+                  : "bg-white/40 hover:bg-white/60 hover:scale-110"
               }`}
               onClick={() => goToSlide(index)}
             />

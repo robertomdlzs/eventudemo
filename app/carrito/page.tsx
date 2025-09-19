@@ -88,22 +88,18 @@ export default function CarritoPage() {
 
   const handleCheckout = () => {
     if (cart.items.length > 0) {
-      // FUNCIONALIDAD DE PAGOS DESACTIVADA
-      alert('La funcionalidad de pagos está temporalmente desactivada. Por favor, contacta con el organizador del evento para más información.')
-      return
+      // FUNCIONALIDAD DE PAGOS HABILITADA
+      // Verificar autenticación
+      const token = localStorage.getItem("auth_token")
+      const userStr = localStorage.getItem("current_user")
       
-      // Código original comentado:
-      // // Verificar autenticación
-      // const token = localStorage.getItem("auth_token")
-      // const userStr = localStorage.getItem("current_user")
-      // 
-      // if (token && userStr) {
-      //   // Usuario autenticado, ir al checkout
-      //   router.push('/checkout')
-      // } else {
-      //   // Usuario no autenticado, redirigir al login con redirect
-      //   router.push('/login?redirect=/checkout')
-      // }
+      if (token && userStr) {
+        // Usuario autenticado, ir al checkout
+        router.push('/checkout')
+      } else {
+        // Usuario no autenticado, redirigir al login con redirect
+        router.push('/login?redirect=/checkout')
+      }
     }
   }
 
@@ -346,10 +342,8 @@ export default function CarritoPage() {
                     className="w-full" 
                     size="lg"
                     onClick={handleCheckout}
-                    variant="outline"
-                    disabled
                   >
-                    Pagos Temporalmente Desactivados
+                    Proceder al Pago
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
