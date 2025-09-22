@@ -261,4 +261,4 @@ Para soporte técnico o preguntas:
 
 ---
 
-**Nota**: Este proyecto ha sido optimizado y limpiado para mantener solo los archivos esenciales para el funcionamiento del sistema.
+**Nota**: Este proyecto ha sido optimizado y limpiado para mantener solo los archivos esenciales para el funcionamiento del sistema.# eventudemo
